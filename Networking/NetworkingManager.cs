@@ -2,11 +2,24 @@
 using Photon.Pun;
 using Photon.Realtime;
 using System;
+using System.Reflection;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Collections.Generic;
 
 namespace UnboundLib
 {
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
+    public class UnboundRPC : Attribute
+    {
+        public string Key { get; private set; }
+
+        public UnboundRPC(string key)
+        {
+            this.Key = key;
+        }
+    }
+
     public static class NetworkingManager
     {
         private static bool initialized = false;
@@ -27,13 +40,53 @@ namespace UnboundLib
         };
 
         public delegate void PhotonEvent(object[] objects);
+
         private static Dictionary<string, PhotonEvent> events = new Dictionary<string, PhotonEvent>();
+        private static Dictionary<string, MethodInfo> rpcHandlers = new Dictionary<string, MethodInfo>();
 
         private static byte ModEventCode = 69;
 
         static NetworkingManager()
         {
             PhotonNetwork.NetworkingClient.EventReceived += OnEvent;
+        }
+
+        public static void RegisterRPCHandlers()
+        {
+            var assembly = Assembly.GetCallingAssembly();
+            var assemblyName = assembly.GetName();
+
+            // Gather all methods in all classes, in the calling assembly, that have the UnboundRPC attribute
+            var methods = assembly.GetTypes()
+                                  .SelectMany(t => t.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+                                  .Where(m => m.GetCustomAttributes(typeof(UnboundRPC), false).Length > 0)
+                                  .ToArray();
+
+            foreach (var method in methods)
+            {
+                foreach (var rpcAttribute in method.GetCustomAttributes<UnboundRPC>())
+                {
+                    var eventName = $"{assemblyName}_RPC_{rpcAttribute.Key}";
+
+                    if (!rpcHandlers.ContainsKey(eventName))
+                    {
+                        NetworkingManager.RegisterRPCHandler(eventName, method);
+                    }
+                }
+            }
+        }
+
+        public static void RPC(string key, params object[] args)
+        {
+            var assembly = Assembly.GetCallingAssembly();
+            var eventName = $"{assembly.GetName()}_RPC_{key}";
+
+            if (!rpcHandlers.ContainsKey(eventName))
+            {
+                throw new Exception($"Could not find RPC method registered with the key: {key}");
+            }
+
+            NetworkingManager.RaiseEvent(eventName, args);
         }
 
         public static void RegisterEvent(string eventName, PhotonEvent handler)
@@ -45,6 +98,17 @@ namespace UnboundLib
 
             events.Add(eventName, handler);
         }
+
+        public static void RegisterRPCHandler(string key, MethodInfo handler)
+        {
+            if (rpcHandlers.ContainsKey(key))
+            {
+                throw new Exception($"An RPC handler is already registered with the key: {key}");
+            }
+
+            rpcHandlers.Add(key, handler);
+        }
+
         public static void RaiseEvent(string eventName, params object[] data)
         {
             if (data == null) data = new object[0];
@@ -53,6 +117,7 @@ namespace UnboundLib
             allData.AddRange(data);
             PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), raiseEventOptionsAll, sendOptions);
         }
+
         public static void RaiseEventOthers(string eventName, params object[] data)
         {
             if (data == null) data = new object[0];
@@ -79,9 +144,14 @@ namespace UnboundLib
 
             try
             {
-                if (events.TryGetValue((string)data[0], out PhotonEvent handler))
+                if (events.TryGetValue((string)data[0], out PhotonEvent eventHandler))
                 {
-                    handler?.Invoke(data.Skip(1).ToArray());
+                    eventHandler?.Invoke(data.Skip(1).ToArray());
+                }
+
+                if (rpcHandlers.TryGetValue((string)data[0], out MethodInfo rpcHandler))
+                {
+                    rpcHandler?.Invoke(null, data.Skip(1).ToArray());
                 }
             }
             catch (Exception e)
