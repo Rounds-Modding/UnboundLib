@@ -10,7 +10,7 @@ using TMPro;
 
 namespace UnboundLib
 {
-    [BepInPlugin(ModId, ModName, "1.0.0.2")]
+    [BepInPlugin(ModId, ModName, "1.0.0.3")]
     [BepInProcess("Rounds.exe")]
     public class Unbound : BaseUnityPlugin
     {
@@ -140,9 +140,9 @@ namespace UnboundLib
             {
                 showModUi = !showModUi;
             }
-
-            GameManager.lockInput = showModUi;
+            GameManager.lockInput = showModUi || DevConsole.isTyping;
         }
+        
         void OnGUI()
         {
             if (!showModUi) return;
@@ -181,7 +181,7 @@ namespace UnboundLib
             }
             GUILayout.EndVertical();
         }
-        
+
         private void OnJoinedRoomAction()
         {
             NetworkingManager.RaiseEventOthers(NetworkEventType.StartHandshake);
