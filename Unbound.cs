@@ -11,7 +11,7 @@ using UnboundLib.Networking;
 
 namespace UnboundLib
 {
-    [BepInPlugin(ModId, ModName, "1.0.0.3")]
+    [BepInPlugin(ModId, ModName, "1.0.0.4")]
     [BepInProcess("Rounds.exe")]
     public class Unbound : BaseUnityPlugin
     {
