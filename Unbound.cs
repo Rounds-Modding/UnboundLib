@@ -7,6 +7,7 @@ using Photon.Pun;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using UnboundLib.Networking;
 
 namespace UnboundLib
 {
@@ -198,6 +199,7 @@ namespace UnboundLib
             OnLeftRoom?.Invoke();
         }
 
+        [UnboundRPC]
         public static void BuildInfoPopup(string message)
         {
             var popup = new GameObject("Info Popup").AddComponent<InfoPopup>();

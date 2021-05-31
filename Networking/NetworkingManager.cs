@@ -67,7 +67,7 @@ namespace UnboundLib
         {
             if (data == null) data = new object[0];
             var allData = new List<object>();
-            allData.Add(targetType);
+            allData.Add(targetType.ToString());
             allData.Add(methodName);
             allData.AddRange(data);
             PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), raiseEventOptionsAll, sendOptions);
@@ -76,7 +76,7 @@ namespace UnboundLib
         {
             if (data == null) data = new object[0];
             var allData = new List<object>();
-            allData.Add(targetType);
+            allData.Add(targetType.ToString());
             allData.Add(methodName);
             allData.AddRange(data);
             PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), raiseEventOptionsOthers, sendOptions);
@@ -99,10 +99,10 @@ namespace UnboundLib
 
             try
             {
-                if (data[0] is Type)
+                var type = Type.GetType((string)data[0]);
+                if (type != null)
                 {
-                    var t = (Type)data[0];
-                    var method = (from m in t.GetMethods()
+                    var method = (from m in type.GetMethods()
                                   let attr = m.GetCustomAttribute<UnboundRPC>()
                                   where attr != null
                                   let name = attr.EventID == null ? m.Name : attr.EventID
