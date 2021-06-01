@@ -15,13 +15,11 @@ namespace UnboundLib
 
         private static RaiseEventOptions raiseEventOptionsAll = new RaiseEventOptions
         {
-            Receivers = ReceiverGroup.All,
-            CachingOption = EventCaching.AddToRoomCache
+            Receivers = ReceiverGroup.All
         };
         private static RaiseEventOptions raiseEventOptionsOthers = new RaiseEventOptions
         {
-            Receivers = ReceiverGroup.Others,
-            CachingOption = EventCaching.AddToRoomCache
+            Receivers = ReceiverGroup.Others
         };
         private static SendOptions sendOptions = new SendOptions
         {
@@ -47,39 +45,37 @@ namespace UnboundLib
 
             events.Add(eventName, handler);
         }
-        public static void RaiseEvent(string eventName, params object[] data)
-        {
+        public static void RaiseEvent(string eventName, RaiseEventOptions options, params object[] data) {
             if (data == null) data = new object[0];
             var allData = new List<object>();
             allData.Add(eventName);
             allData.AddRange(data);
-            PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), raiseEventOptionsAll, sendOptions);
+            PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), options, sendOptions);
+        }
+        public static void RaiseEvent(string eventName, params object[] data)
+        {
+            RaiseEvent(eventName, raiseEventOptionsAll, data);
         }
         public static void RaiseEventOthers(string eventName, params object[] data)
         {
+            RaiseEvent(eventName, raiseEventOptionsOthers, data);
+        }
+        public static void RPC(Type targetType, string methodName, RaiseEventOptions options, params object[] data)
+        {
             if (data == null) data = new object[0];
             var allData = new List<object>();
-            allData.Add(eventName);
+            allData.Add(targetType.AssemblyQualifiedName);
+            allData.Add(methodName);
             allData.AddRange(data);
-            PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), raiseEventOptionsOthers, sendOptions);
+            PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), options, sendOptions);
         }
         public static void RPC(Type targetType, string methodName, params object[] data)
         {
-            if (data == null) data = new object[0];
-            var allData = new List<object>();
-            allData.Add(targetType.AssemblyQualifiedName);
-            allData.Add(methodName);
-            allData.AddRange(data);
-            PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), raiseEventOptionsAll, sendOptions);
+            RPC(targetType, methodName, raiseEventOptionsAll, data);
         }
         public static void RPC_Others(Type targetType, string methodName, params object[] data)
         {
-            if (data == null) data = new object[0];
-            var allData = new List<object>();
-            allData.Add(targetType.AssemblyQualifiedName);
-            allData.Add(methodName);
-            allData.AddRange(data);
-            PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), raiseEventOptionsOthers, sendOptions);
+            RPC(targetType, methodName, raiseEventOptionsOthers, data);
         }
 
         public static void OnEvent(EventData photonEvent)
