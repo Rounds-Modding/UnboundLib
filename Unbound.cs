@@ -8,10 +8,11 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnboundLib.Networking;
+using UnityEngine.UI;
 
 namespace UnboundLib
 {
-    [BepInPlugin(ModId, ModName, "1.0.0.5")]
+    [BepInPlugin(ModId, ModName, "1.0.0.6")]
     [BepInProcess("Rounds.exe")]
     public class Unbound : BaseUnityPlugin
     {
@@ -62,24 +63,37 @@ namespace UnboundLib
             // Add UNBOUND text to the main menu screen
             TextMeshProUGUI text = null;
             bool firstTime = true;
+            bool canCreate = true;
 
             On.MainMenuHandler.Awake += (orig, self) =>
             {
-                orig(self);
+                canCreate = true;
                 this.ExecuteAfterSeconds(firstTime ? 4f : 0.1f, () =>
                 {
-                    text = CreateTextAt("UNBOUND", new Vector2(Screen.width / 2, Screen.height * 0.75f + 25));
-                    text.fontSize /= 2.5f;
+                    if (!canCreate) return;
+                    var pos = new Vector2(Screen.width / 2, Screen.height * 0.75f + 25);
+                    text = CreateTextAt("UNBOUND", Vector2.zero);
+                    text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                    text.fontSize = 30;
                     text.color = (Color.yellow + Color.red) / 2;
                     text.font = ((TextMeshProUGUI)FindObjectOfType<ListMenuButton>().GetFieldValue("text")).font;
+                    text.transform.SetParent(MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group"), true);
+                    text.transform.SetAsFirstSibling();
+                    text.rectTransform.localScale = Vector3.one;
+                    text.rectTransform.localPosition = new Vector3(0, 325, text.rectTransform.localPosition.z);
+
                 });
                 firstTime = false;
+
+                orig(self);
             };
             
             On.MainMenuHandler.Close += (orig, self) =>
             {
+                canCreate = false;
+                if (text != null) Destroy(text.gameObject);
+
                 orig(self);
-                Destroy(text.gameObject);
             };
         }
 
@@ -225,9 +239,9 @@ namespace UnboundLib
             handShakeActions.Add(() => NetworkingManager.RaiseEventOthers($"ModLoader_{modId}_StartHandshake"));
         }
 
-        private static TextMeshProUGUI CreateTextAt(string text, Vector2 position)
+        public static TextMeshProUGUI CreateTextAt(string text, Vector2 position)
         {
-            var newText = new GameObject("Timer").AddComponent<TextMeshProUGUI>();
+            var newText = new GameObject("Unbound Text Object").AddComponent<TextMeshProUGUI>();
             newText.text = text;
             newText.fontSize = 100;
             newText.transform.SetParent(Instance.canvas.transform);
