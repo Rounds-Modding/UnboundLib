@@ -67,7 +67,7 @@ namespace UnboundLib
         {
             if (data == null) data = new object[0];
             var allData = new List<object>();
-            allData.Add(targetType.ToString());
+            allData.Add(targetType.AssemblyQualifiedName);
             allData.Add(methodName);
             allData.AddRange(data);
             PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), raiseEventOptionsAll, sendOptions);
@@ -76,7 +76,7 @@ namespace UnboundLib
         {
             if (data == null) data = new object[0];
             var allData = new List<object>();
-            allData.Add(targetType.ToString());
+            allData.Add(targetType.AssemblyQualifiedName);
             allData.Add(methodName);
             allData.AddRange(data);
             PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), raiseEventOptionsOthers, sendOptions);
@@ -94,7 +94,7 @@ namespace UnboundLib
             }
             catch (Exception e)
             {
-                return;
+                Debug.LogError(e.ToString());
             }
 
             try
