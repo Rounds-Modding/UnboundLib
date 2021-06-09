@@ -28,6 +28,7 @@ namespace UnboundLib
 
         public delegate void PhotonEvent(object[] objects);
         private static Dictionary<string, PhotonEvent> events = new Dictionary<string, PhotonEvent>();
+        private static Dictionary<Tuple<Type, string>, MethodInfo> rpcMethodCache = new Dictionary<Tuple<Type, string>, MethodInfo>();
 
         private static byte ModEventCode = 69;
 
@@ -63,6 +64,16 @@ namespace UnboundLib
         public static void RPC(Type targetType, string methodName, RaiseEventOptions options, params object[] data)
         {
             if (data == null) data = new object[0];
+
+            if (PhotonNetwork.OfflineMode || PhotonNetwork.CurrentRoom == null) {
+                var methodInfo = GetRPCMethod(targetType, methodName);
+                if (methodInfo != null)
+                {
+                    methodInfo.Invoke(null, data.ToArray());
+                }
+                return;
+            }
+
             var allData = new List<object>();
             allData.Add(targetType.AssemblyQualifiedName);
             allData.Add(methodName);
@@ -98,15 +109,10 @@ namespace UnboundLib
                 var type = Type.GetType((string)data[0]);
                 if (type != null)
                 {
-                    var method = (from m in type.GetMethods()
-                                  let attr = m.GetCustomAttribute<UnboundRPC>()
-                                  where attr != null
-                                  let name = attr.EventID == null ? m.Name : attr.EventID
-                                  where (string)data[1] == name
-                                  select m).FirstOrDefault();
-                    if (method != null)
+                    var methodInfo = GetRPCMethod(type, (string) data[1]);
+                    if (methodInfo != null)
                     {
-                        method.Invoke(null, data.Skip(2).ToArray());
+                        methodInfo.Invoke(null, data.Skip(2).ToArray());
                     }
                 }
                 else if (events.TryGetValue((string)data[0], out PhotonEvent handler))
@@ -118,6 +124,23 @@ namespace UnboundLib
             {
                 Debug.LogError("Network Error: \n" + e.ToString());
             }
+        }
+
+        private static MethodInfo GetRPCMethod(Type type, string methodName) {
+            var key = new Tuple<Type, string>(type, methodName);
+
+            if (!rpcMethodCache.ContainsKey(key))
+            {
+                var methodInfo = (from m in type.GetMethods()
+                                  let attr = m.GetCustomAttribute<UnboundRPC>()
+                                  where attr != null
+                                  let name = attr.EventID == null ? m.Name : attr.EventID
+                                  where methodName == name
+                                  select m).FirstOrDefault();
+                rpcMethodCache.Add(key, methodInfo);
+            }
+
+            return rpcMethodCache[key];
         }
     }
 }
