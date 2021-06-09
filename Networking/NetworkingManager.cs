@@ -65,7 +65,7 @@ namespace UnboundLib
         {
             if (data == null) data = new object[0];
 
-            if (PhotonNetwork.OfflineMode) {
+            if (PhotonNetwork.OfflineMode || PhotonNetwork.CurrentRoom == null) {
                 var methodInfo = GetRPCMethod(targetType, methodName);
                 if (methodInfo != null)
                 {
