@@ -9,10 +9,12 @@ using System.Linq;
 using TMPro;
 using UnboundLib.Networking;
 using UnityEngine.UI;
+using System.IO;
+using System.Reflection;
 
 namespace UnboundLib
 {
-    [BepInPlugin(ModId, ModName, "1.0.0.7")]
+    [BepInPlugin(ModId, ModName, "1.0.8")]
     [BepInProcess("Rounds.exe")]
     public class Unbound : BaseUnityPlugin
     {
@@ -28,7 +30,8 @@ namespace UnboundLib
             {
                 if (_canvas == null)
                 {
-                    _canvas = new GameObject("").AddComponent<Canvas>();
+                    _canvas = new GameObject("UnboundLib Canvas").AddComponent<Canvas>();
+                    _canvas.gameObject.AddComponent<GraphicRaycaster>();
                     _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
                     _canvas.pixelPerfect = false;
                     DontDestroyOnLoad(_canvas);
@@ -57,6 +60,9 @@ namespace UnboundLib
         internal static List<Action> handShakeActions = new List<Action>();
 
         private static bool showModUi = false;
+
+        private static AssetBundle UIAssets;
+        private static GameObject modalPrefab;
 
         public Unbound()
         {
@@ -96,7 +102,7 @@ namespace UnboundLib
                 orig(self);
             };
         }
-
+        
         void Awake()
         {
             if (Instance == null)
@@ -112,8 +118,20 @@ namespace UnboundLib
             // Patch game with Harmony
             var harmony = new Harmony(ModId);
             harmony.PatchAll();
+
+            // Load embedded assets
+            LoadAssets();
         }
-        
+
+        void LoadAssets()
+        {
+            UIAssets = Jotunn.Utils.AssetUtils.LoadAssetBundleFromResources("unboundui", typeof(Unbound).Assembly);
+            if (UIAssets != null)
+            {
+                modalPrefab = UIAssets.LoadAsset<GameObject>("Modal");
+            }
+        }
+
         void Start()
         {
             // store default cards
@@ -160,6 +178,16 @@ namespace UnboundLib
         
         void OnGUI()
         {
+            if (GUILayout.Button("Test Modal"))
+            {
+                BuildModal()
+                    .Title("Doja Cat")
+                    .Message("They said \"Doja hit so sticky, \" I said, \"Thank you very much\" Bent the whole world over and said, \"Spank you very much\" Cheese like pizzeria, have a seat bitch, please, Ikea From the Westside like Maria, I'm hot like grits, Madea Beat the pussy up call PETA, I rock the boat like Aaliyah (ayy) I rock a bob like Sia (ayy), Doja on deck, bitch, re-up (okay)")
+                    .ConfirmButton("Confirm", () => BuildInfoPopup("Confirmed"))
+                    .CancelButton("Cancel", () => BuildInfoPopup("Cancelled"))
+                    .Show();
+            }
+
             if (!showModUi) return;
 
             Vector2 center = new Vector2(Screen.width / 2, Screen.height / 2);
@@ -219,6 +247,10 @@ namespace UnboundLib
             var popup = new GameObject("Info Popup").AddComponent<InfoPopup>();
             popup.rectTransform.SetParent(Instance.canvas.transform);
             popup.Build(message);
+        }
+        public static ModalHandler BuildModal()
+        {
+            return Instantiate(modalPrefab, Instance.canvas.transform).AddComponent<ModalHandler>();
         }
 
         public static void RegisterGUI(string modName, Action guiAction)
