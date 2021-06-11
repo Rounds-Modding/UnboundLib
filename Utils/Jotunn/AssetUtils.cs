@@ -89,24 +89,7 @@ namespace Jotunn.Utils
 
             return null;
         }
-
-        /// <summary>
-        ///     Loads a mesh from a .obj file at runtime.
-        /// </summary>
-        /// <param name="meshPath">Mesh path relative to "plugins" BepInEx folder</param>
-        /// <returns>Texture2D loaded, or null if invalid path</returns>
-        public static Mesh LoadMesh(string meshPath)
-        {
-            string path = Path.Combine(BepInEx.Paths.PluginPath, meshPath);
-
-            if (!File.Exists(path))
-            {
-                return null;
-            }
-
-            return ObjImporter.ImportFile(path);
-        }
-
+        
         /// <summary>
         ///     Loads an asset bundle at runtime.
         /// </summary>
