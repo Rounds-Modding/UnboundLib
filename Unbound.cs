@@ -178,16 +178,6 @@ namespace UnboundLib
         
         void OnGUI()
         {
-            if (GUILayout.Button("Test Modal"))
-            {
-                BuildModal()
-                    .Title("Doja Cat")
-                    .Message("They said \"Doja hit so sticky, \" I said, \"Thank you very much\" Bent the whole world over and said, \"Spank you very much\" Cheese like pizzeria, have a seat bitch, please, Ikea From the Westside like Maria, I'm hot like grits, Madea Beat the pussy up call PETA, I rock the boat like Aaliyah (ayy) I rock a bob like Sia (ayy), Doja on deck, bitch, re-up (okay)")
-                    .ConfirmButton("Confirm", () => BuildInfoPopup("Confirmed"))
-                    .CancelButton("Cancel", () => BuildInfoPopup("Cancelled"))
-                    .Show();
-            }
-
             if (!showModUi) return;
 
             Vector2 center = new Vector2(Screen.width / 2, Screen.height / 2);
