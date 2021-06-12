@@ -61,14 +61,14 @@ namespace UnboundLib.Cards
                 DestroyChildren(newCardInfo.cardBase.GetComponent<CardInfoDisplayer>().grid);
 
                 // Apply card data
-                newCardInfo.cardStats = customCard.GetStats();
+                newCardInfo.cardStats = customCard.GetStats() ?? new CardInfoStat[0];
                 newCard.gameObject.name = newCardInfo.cardName = customCard.GetTitle();
                 newCardInfo.cardDestription = customCard.GetDescription();
                 newCardInfo.sourceCard = newCardInfo;
                 newCardInfo.rarity = customCard.GetRarity();
                 newCardInfo.colorTheme = customCard.GetTheme();
                 newCardInfo.allowMultiple = true;
-                newCardInfo.cardArt = customCard.GetCardArt();
+                newCardInfo.cardArt = customCard.GetCardArt() ?? new GameObject();
                 
                 // Fix sort order issue
                 newCardInfo.cardBase.transform.position -= Camera.main.transform.forward * 0.5f;
