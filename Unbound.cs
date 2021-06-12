@@ -14,7 +14,7 @@ using System.Reflection;
 
 namespace UnboundLib
 {
-    [BepInPlugin(ModId, ModName, "1.0.8")]
+    [BepInPlugin(ModId, ModName, "1.0.9")]
     [BepInProcess("Rounds.exe")]
     public class Unbound : BaseUnityPlugin
     {
