@@ -8,9 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnboundLib.Networking;
+using UnboundLib.GameModes;
 using UnityEngine.UI;
-using System.IO;
-using System.Reflection;
+using ExitGames.Client.Photon;
 
 namespace UnboundLib
 {
@@ -120,8 +120,9 @@ namespace UnboundLib
             var harmony = new Harmony(ModId);
             harmony.PatchAll();
 
-            // Load embedded assets
             LoadAssets();
+            PhotonPeer.RegisterType(typeof(GameSettings), 200, GameSettings.Serialize, GameSettings.Deserialize);
+            GameModeHandler.Init();
         }
 
         void Start()
@@ -170,6 +171,11 @@ namespace UnboundLib
             if (Input.GetKeyDown(KeyCode.F1))
             {
                 showModUi = !showModUi;
+            }
+
+            if (Input.GetKeyDown(KeyCode.F2))
+            {
+                UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
             }
             GameManager.lockInput = showModUi || DevConsole.isTyping;
         }
