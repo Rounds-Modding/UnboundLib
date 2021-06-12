@@ -29,6 +29,13 @@ namespace UnboundLib
             get { return transform.Find("Foreground/Buttons/Whatever").gameObject; }
         }
 
+        void Start()
+        {
+            // automatically destroy the modal 1 second after it's been dismissed
+            confirmButton.GetComponent<Button>().onClick.AddListener(() => Destroy(gameObject, 1f));
+            cancelButton.GetComponent<Button>().onClick.AddListener(() => Destroy(gameObject, 1f));
+        }
+
         public ModalHandler Title(string text)
         {
             title.text = text;

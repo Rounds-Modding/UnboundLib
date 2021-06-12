@@ -61,6 +61,7 @@ namespace UnboundLib.Cards
                 newCardInfo.ExecuteAfterFrames(5, () =>
                 {
                     Destroy(newCard.transform.GetChild(0).gameObject);
+                    Destroy(newCard.transform.Find("CardBase(Clone)(Clone)/Canvas/Front/Background/Art").GetChild(0).gameObject);
                 });
                 DestroyChildren(newCardInfo.cardBase.GetComponent<CardInfoDisplayer>().grid);
 
@@ -85,7 +86,10 @@ namespace UnboundLib.Cards
                 PhotonNetwork.PrefabPool.RegisterPrefab(newCard.gameObject.name, newCard);
 
                 // Add this card to the list of all custom cards
-                Unbound.moddedCards.Add(newCardInfo);
+                Unbound.activeCards.Add(newCardInfo);
+
+                // Register card with the toggle menu
+                CardToggleMenuHandler.Instance.AddCardToggle(newCardInfo);
             });
         }
         

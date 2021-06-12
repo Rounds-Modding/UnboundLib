@@ -49,7 +49,8 @@ namespace UnboundLib
 
         internal static CardInfo templateCard;
         internal static CardInfo[] defaultCards;
-        internal static List<CardInfo> moddedCards = new List<CardInfo>();
+        internal static List<CardInfo> activeCards = new List<CardInfo>();
+        internal static List<CardInfo> inactiveCards = new List<CardInfo>();
 
         public delegate void OnJoinedDelegate();
         public delegate void OnLeftDelegate();
@@ -61,7 +62,7 @@ namespace UnboundLib
 
         private static bool showModUi = false;
 
-        private static AssetBundle UIAssets;
+        internal static AssetBundle UIAssets;
         private static GameObject modalPrefab;
 
         public Unbound()
@@ -123,15 +124,6 @@ namespace UnboundLib
             LoadAssets();
         }
 
-        void LoadAssets()
-        {
-            UIAssets = Jotunn.Utils.AssetUtils.LoadAssetBundleFromResources("unboundui", typeof(Unbound).Assembly);
-            if (UIAssets != null)
-            {
-                modalPrefab = UIAssets.LoadAsset<GameObject>("Modal");
-            }
-        }
-
         void Start()
         {
             // store default cards
@@ -146,7 +138,7 @@ namespace UnboundLib
             // recieve mod handshake
             NetworkingManager.RegisterEvent(NetworkEventType.FinishHandshake, (data) =>
             {
-                CardChoice.instance.cards = moddedCards.ToArray();
+                CardChoice.instance.cards = activeCards.ToArray();
             });
 
             // fetch card to use as a template for all custom cards
@@ -154,7 +146,7 @@ namespace UnboundLib
                             where c.cardName.ToLower() == "huge"
                             select c).FirstOrDefault();
             defaultCards = CardChoice.instance.cards;
-            moddedCards.AddRange(defaultCards);
+            activeCards.AddRange(defaultCards);
 
             // hook up Photon callbacks
             var networkEvents = gameObject.AddComponent<NetworkEventCallbacks>();
@@ -166,7 +158,7 @@ namespace UnboundLib
         {
             if (GameManager.instance.isPlaying && PhotonNetwork.OfflineMode)
             {
-                CardChoice.instance.cards = moddedCards.ToArray();
+                CardChoice.instance.cards = activeCards.ToArray();
             }
 
             if (Input.GetKeyDown(KeyCode.F1))
@@ -184,6 +176,7 @@ namespace UnboundLib
             Vector2 size = new Vector2(400, 100 * GUIListeners.Count);
             
             GUILayout.BeginVertical();
+
             bool showingSpecificMod = false;
             foreach (var md in GUIListeners.Keys)
             {
@@ -203,6 +196,12 @@ namespace UnboundLib
 
             if (showingSpecificMod) return;
 
+            GUILayout.Label("UnboundLib Options");
+            if (GUILayout.Button("Toggle Cards"))
+            {
+                CardToggleMenuHandler.Instance.Show();
+            }
+
             GUILayout.Label("Mod Options:");
             foreach (var md in GUIListeners.Keys)
             {
@@ -213,6 +212,16 @@ namespace UnboundLib
                 }
             }
             GUILayout.EndVertical();
+        }
+
+        void LoadAssets()
+        {
+            UIAssets = Jotunn.Utils.AssetUtils.LoadAssetBundleFromResources("unboundui", typeof(Unbound).Assembly);
+            if (UIAssets != null)
+            {
+                modalPrefab = UIAssets.LoadAsset<GameObject>("Modal");
+                Instantiate(UIAssets.LoadAsset<GameObject>("Card Toggle Menu"), canvas.transform).AddComponent<CardToggleMenuHandler>();
+            }
         }
 
         private void OnJoinedRoomAction()
