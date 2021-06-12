@@ -61,7 +61,9 @@ namespace UnboundLib.Cards
                 newCardInfo.ExecuteAfterFrames(5, () =>
                 {
                     Destroy(newCard.transform.GetChild(0).gameObject);
-                    Destroy(newCard.transform.Find("CardBase(Clone)(Clone)/Canvas/Front/Background/Art").GetChild(0).gameObject);
+                    var artContainer = newCard.transform.Find("CardBase(Clone)(Clone)/Canvas/Front/Background/Art");
+                    if (artContainer != null && artContainer.childCount > 1)
+                        Destroy(artContainer.GetChild(0).gameObject);
                 });
                 DestroyChildren(newCardInfo.cardBase.GetComponent<CardInfoDisplayer>().grid);
 
