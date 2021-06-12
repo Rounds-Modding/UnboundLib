@@ -148,6 +148,12 @@ namespace UnboundLib
             defaultCards = CardChoice.instance.cards;
             activeCards.AddRange(defaultCards);
 
+            // register default cards with toggle menu
+            foreach (var card in defaultCards)
+            {
+                CardToggleMenuHandler.Instance.AddCardToggle(card, false);
+            }
+
             // hook up Photon callbacks
             var networkEvents = gameObject.AddComponent<NetworkEventCallbacks>();
             networkEvents.OnJoinedRoomEvent += OnJoinedRoomAction;

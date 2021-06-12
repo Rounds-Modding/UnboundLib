@@ -57,14 +57,7 @@ namespace UnboundLib.Cards
                 var customCard = newCard.AddComponent<T>();
                 customCard.isPrefab = true;
 
-                // Remove superfluous card base
-                newCardInfo.ExecuteAfterFrames(5, () =>
-                {
-                    Destroy(newCard.transform.GetChild(0).gameObject);
-                    var artContainer = newCard.transform.Find("CardBase(Clone)(Clone)/Canvas/Front/Background/Art");
-                    if (artContainer != null && artContainer.childCount > 1)
-                        Destroy(artContainer.GetChild(0).gameObject);
-                });
+                // Clear default card info
                 DestroyChildren(newCardInfo.cardBase.GetComponent<CardInfoDisplayer>().grid);
 
                 // Apply card data
@@ -92,6 +85,21 @@ namespace UnboundLib.Cards
 
                 // Register card with the toggle menu
                 CardToggleMenuHandler.Instance.AddCardToggle(newCardInfo);
+
+                // Post-creation clean up
+                newCardInfo.ExecuteAfterFrames(5, () =>
+                {
+                    // Destroy extra card face
+                    Destroy(newCard.transform.GetChild(0).gameObject);
+
+                    // Destroy extra art object
+                    var artContainer = newCard.transform.Find("CardBase(Clone)(Clone)/Canvas/Front/Background/Art");
+                    if (artContainer != null && artContainer.childCount > 1)
+                        Destroy(artContainer.GetChild(0).gameObject);
+
+                    // Disable "prefab"
+                    newCard.SetActive(false);
+                });
             });
         }
         

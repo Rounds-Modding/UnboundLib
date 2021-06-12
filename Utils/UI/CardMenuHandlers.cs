@@ -31,9 +31,13 @@ namespace UnboundLib
         {
             get { return GetComponent<Animator>(); }
         }
-        private Transform content
+        private Transform modCardsContent
         {
-            get { return transform.Find("Viewport/Content"); }
+            get { return transform.Find("Mod Cards/Content"); }
+        }
+        private Transform defaultCardsContent
+        {
+            get { return transform.Find("Default Cards/Content"); }
         }
 
         void Awake()
@@ -56,9 +60,9 @@ namespace UnboundLib
         {
             animator.Play("Fade-out");
         }
-        public void AddCardToggle(CardInfo info)
+        public void AddCardToggle(CardInfo info, bool isModded = true)
         {
-            Instantiate(TogglePrefab, content).AddComponent<CardToggleHandler>()
+            Instantiate(TogglePrefab, isModded ? modCardsContent : defaultCardsContent).AddComponent<CardToggleHandler>()
                 .SetName(info.cardName)
                 .SetActions(
                 () =>
@@ -110,7 +114,7 @@ namespace UnboundLib
             onButton.onClick.AddListener(() =>
             {
                 animator.Play("Switch Off");
-                cardName.alpha = 0.5f;
+                cardName.alpha = 0.25f;
             });
             offButton.onClick.AddListener(() =>
             {
