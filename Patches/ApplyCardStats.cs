@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using UnboundLib.Cards;
 
 namespace UnboundLib.Patches
