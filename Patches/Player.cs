@@ -41,7 +41,7 @@ namespace UnboundLib.Patches
         {
             if (__instance.data.view.IsMine)
             {
-                GameModeHandler.AddHook(GameModeHooks.HookGameStart, (gm) =>
+                GameModeManager.AddHook(GameModeHooks.HookGameStart, (gm) =>
                 {
                     if (gm.Name != "Sandbox")
                     {

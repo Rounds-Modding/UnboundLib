@@ -27,6 +27,10 @@ namespace UnboundLib.GameModes
 
         void ChangeSetting(string name, object value);
 
+        void PlayerJoined(Player player);
+
+        void PlayerDied(Player killedPlayer, int playersAlive);
+
         /// <summary>
         ///     When true, should tell the game mode to activate and run any initialization code it might have.
         ///     When false, should tell the game mode to deactivate and hide any possible visual elements it might've drawn.

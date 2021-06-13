@@ -9,7 +9,7 @@
 
         public override GameSettings Settings { get; protected set; }
 
-        public ArmsRaceHandler(string id) : base(id)
+        public ArmsRaceHandler() : base("Arms race")
         {
             this.Settings = new GameSettings()
             {
@@ -21,6 +21,16 @@
         public override void SetActive(bool active)
         {
             this.GameMode.gameObject.SetActive(active);
+        }
+
+        public override void PlayerJoined(Player player)
+        {
+            this.GameMode.PlayerJoined(player);
+        }
+
+        public override void PlayerDied(Player killedPlayer, int playersAlive)
+        {
+            this.GameMode.PlayerDied(killedPlayer, playersAlive);
         }
 
         public override void StartGame()

@@ -10,7 +10,6 @@ using TMPro;
 using UnboundLib.Networking;
 using UnboundLib.GameModes;
 using UnityEngine.UI;
-using ExitGames.Client.Photon;
 
 namespace UnboundLib
 {
@@ -121,8 +120,7 @@ namespace UnboundLib
             harmony.PatchAll();
 
             LoadAssets();
-            PhotonPeer.RegisterType(typeof(GameSettings), 200, GameSettings.Serialize, GameSettings.Deserialize);
-            GameModeHandler.Init();
+            GameModeManager.Init();
         }
 
         void Start()
