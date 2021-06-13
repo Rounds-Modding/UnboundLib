@@ -74,9 +74,9 @@ namespace UnboundLib.GameModes
             };
         }
 
-        public static void TriggerHook(string handler, string hook)
+        public static void TriggerHook(string hook)
         {
-            GameModeManager.handlers[handler].TriggerHook(hook);
+            GameModeManager.CurrentHandler?.TriggerHook(hook);
         }
 
         public static void AddHook(string key, Action<IGameModeHandler> action)

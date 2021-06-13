@@ -11,15 +11,15 @@ namespace UnboundLib.Patches
     {
         static void Prefix()
         {
-            GameModeManager.TriggerHook("Sandbox", GameModeHooks.HookInitStart);
-            GameModeManager.TriggerHook("Sandbox", GameModeHooks.HookInitEnd);
-            GameModeManager.TriggerHook("Sandbox", GameModeHooks.HookGameStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookInitStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookInitEnd);
+            GameModeManager.TriggerHook(GameModeHooks.HookGameStart);
         }
 
         static void Postfix()
         {
-            GameModeManager.TriggerHook("Sandbox", GameModeHooks.HookRoundStart);
-            GameModeManager.TriggerHook("Sandbox", GameModeHooks.HookBattleStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookRoundStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookBattleStart);
         }
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)

@@ -30,22 +30,22 @@ namespace UnboundLib.Patches
 
         internal static void TriggerPlayerPickStart()
         {
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookPlayerPickStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookPlayerPickStart);
         }
 
         internal static void TriggerPlayerPickEnd()
         {
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookPlayerPickEnd);
+            GameModeManager.TriggerHook(GameModeHooks.HookPlayerPickEnd);
         }
 
         internal static void TriggerPickStart()
         {
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookPickStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookPickStart);
         }
 
         internal static void TriggerPickEnd()
         {
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookPickEnd);
+            GameModeManager.TriggerHook(GameModeHooks.HookPickEnd);
         }
     }
 
@@ -54,12 +54,12 @@ namespace UnboundLib.Patches
     {
         static void Prefix()
         {
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookInitStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookInitStart);
         }
 
         static void Postfix()
         {
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookInitEnd);
+            GameModeManager.TriggerHook(GameModeHooks.HookInitEnd);
         }
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -104,7 +104,7 @@ namespace UnboundLib.Patches
     {
         static void Prefix()
         {
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookGameStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookGameStart);
         }
 
         static IEnumerator Postfix(IEnumerator e)
@@ -115,9 +115,9 @@ namespace UnboundLib.Patches
                 yield return e.Current;
             }
 
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookRoundStart);
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookPointStart);
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookBattleStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookRoundStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookPointStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookBattleStart);
         }
     }
 
@@ -248,7 +248,7 @@ namespace UnboundLib.Patches
     {
         static void Prefix()
         {
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookPointEnd);
+            GameModeManager.TriggerHook(GameModeHooks.HookPointEnd);
         }
     }
 
@@ -263,8 +263,8 @@ namespace UnboundLib.Patches
                 yield return e.Current;
             }
 
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookPointStart);
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookBattleStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookPointStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookBattleStart);
         }
     }
 
@@ -279,9 +279,9 @@ namespace UnboundLib.Patches
                 yield return e.Current;
             }
 
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookRoundStart);
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookPointStart);
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookBattleStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookRoundStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookPointStart);
+            GameModeManager.TriggerHook(GameModeHooks.HookBattleStart);
         }
     }
 
@@ -290,8 +290,8 @@ namespace UnboundLib.Patches
     {
         static void Prefix()
         {
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookPointEnd);
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookRoundEnd);
+            GameModeManager.TriggerHook(GameModeHooks.HookPointEnd);
+            GameModeManager.TriggerHook(GameModeHooks.HookRoundEnd);
         }
     }
 
@@ -300,9 +300,9 @@ namespace UnboundLib.Patches
     {
         static void Prefix()
         {
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookPointEnd);
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookRoundEnd);
-            GameModeManager.TriggerHook("ArmsRace", GameModeHooks.HookGameEnd);
+            GameModeManager.TriggerHook(GameModeHooks.HookPointEnd);
+            GameModeManager.TriggerHook(GameModeHooks.HookRoundEnd);
+            GameModeManager.TriggerHook(GameModeHooks.HookGameEnd);
         }
     }
 }
