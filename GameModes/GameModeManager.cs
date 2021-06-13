@@ -104,6 +104,11 @@ namespace UnboundLib.GameModes
 
         public static void SetGameMode(string id)
         {
+            GameModeManager.SetGameMode(id, true);
+        }
+
+        public static void SetGameMode(string id, bool setActive)
+        {
             if (id != null && !GameModeManager.handlers.ContainsKey(id))
             {
                 throw new ArgumentException($"No such game mode handler: {id}");
@@ -134,7 +139,11 @@ namespace UnboundLib.GameModes
             {
                 PlayerAssigner.instance.InvokeMethod("SetPlayersCanJoin", true);
 
-                GameModeManager.CurrentHandler.SetActive(true);
+                if (setActive)
+                {
+                    GameModeManager.CurrentHandler.SetActive(true);
+                }
+
                 var pmPlayerDied = (Action<Player, int>) pm.GetFieldValue("PlayerDiedAction");
                 pm.SetPropertyValue("PlayerJoinedAction", Delegate.Combine(pm.PlayerJoinedAction, new Action<Player>(GameModeManager.CurrentHandler.PlayerJoined)));
                 pm.SetFieldValue("PlayerDiedAction", Delegate.Combine(pmPlayerDied, new Action<Player, int>(GameModeManager.CurrentHandler.PlayerDied)));

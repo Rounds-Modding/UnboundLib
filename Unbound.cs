@@ -1,19 +1,19 @@
-﻿using System;
-using System.Collections;
-using UnityEngine;
-using BepInEx;
+﻿using BepInEx;
 using HarmonyLib;
 using Photon.Pun;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
-using UnboundLib.Networking;
 using UnboundLib.GameModes;
+using UnboundLib.Networking;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace UnboundLib
 {
-    [BepInPlugin(ModId, ModName, "1.1.0")]
+    [BepInPlugin(ModId, ModName, "1.1.1")]
     [BepInProcess("Rounds.exe")]
     public class Unbound : BaseUnityPlugin
     {
@@ -82,7 +82,7 @@ namespace UnboundLib
                     text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                     text.fontSize = 30;
                     text.color = (Color.yellow + Color.red) / 2;
-                    text.font = ((TextMeshProUGUI)FindObjectOfType<ListMenuButton>().GetFieldValue("text")).font;
+                    text.font = ((TextMeshProUGUI) FindObjectOfType<ListMenuButton>().GetFieldValue("text")).font;
                     text.transform.SetParent(MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group"), true);
                     text.transform.SetAsFirstSibling();
                     text.rectTransform.localScale = Vector3.one;
@@ -93,7 +93,7 @@ namespace UnboundLib
 
                 orig(self);
             };
-            
+
             On.MainMenuHandler.Close += (orig, self) =>
             {
                 canCreate = false;
@@ -102,7 +102,7 @@ namespace UnboundLib
                 orig(self);
             };
         }
-        
+
         void Awake()
         {
             if (Instance == null)
@@ -126,18 +126,35 @@ namespace UnboundLib
         void Start()
         {
             // store default cards
-            defaultCards = (CardInfo[])CardChoice.instance.cards.Clone();
+            defaultCards = (CardInfo[]) CardChoice.instance.cards.Clone();
 
             // request mod handshake
             NetworkingManager.RegisterEvent(NetworkEventType.StartHandshake, (data) =>
             {
-                NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake);
+                if (PhotonNetwork.IsMasterClient)
+                {
+                    NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake,
+                                                 GameModeManager.CurrentHandlerID,
+                                                 GameModeManager.CurrentHandler?.Settings);
+                }
+                else
+                {
+                    NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake);
+                }
+
                 CardChoice.instance.cards = defaultCards;
             });
+
             // recieve mod handshake
             NetworkingManager.RegisterEvent(NetworkEventType.FinishHandshake, (data) =>
             {
                 CardChoice.instance.cards = activeCards.ToArray();
+
+                if (data.Length > 0)
+                {
+                    GameModeManager.SetGameMode((string) data[0], false);
+                    GameModeManager.CurrentHandler.SetSettings((GameSettings) data[1]);
+                }
             });
 
             // fetch card to use as a template for all custom cards
@@ -158,7 +175,7 @@ namespace UnboundLib
             networkEvents.OnJoinedRoomEvent += OnJoinedRoomAction;
             networkEvents.OnLeftRoomEvent += OnLeftRoomAction;
         }
-        
+
         void Update()
         {
             if (GameManager.instance.isPlaying && PhotonNetwork.OfflineMode)
@@ -173,14 +190,14 @@ namespace UnboundLib
 
             GameManager.lockInput = showModUi || DevConsole.isTyping;
         }
-        
+
         void OnGUI()
         {
             if (!showModUi) return;
 
             Vector2 center = new Vector2(Screen.width / 2, Screen.height / 2);
             Vector2 size = new Vector2(400, 100 * GUIListeners.Count);
-            
+
             GUILayout.BeginVertical();
 
             bool showingSpecificMod = false;
