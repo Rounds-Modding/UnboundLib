@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using HarmonyLib;
-using UnityEngine;
 using UnboundLib.Cards;
 
-namespace UnboundLib
+namespace UnboundLib.Patches
 {
     [HarmonyPatch(typeof(ApplyCardStats), "ApplyStats")]
     class ApplyCardStats_Patch
@@ -26,24 +22,6 @@ namespace UnboundLib
             {
                 customAbility.OnAddCard(player, gun, gunAmmo, characterData, healthHandler, gravity, block, characterStatModifiers);
             }
-        }
-    }
-
-    [HarmonyPatch(typeof(CardBarHandler), "AddCard")]
-    class CardBarHandler_Patch
-    {
-        static void Prefix(int teamId, CardInfo card)
-        {
-            CardData.AddCard(teamId, card.cardName);
-        }
-    }
-
-    [HarmonyPatch(typeof(CardBar), "OnHover")]
-    class CardBar_Patch
-    {
-        static void Postfix(CardBar __instance, CardInfo card, Vector3 hoverPos, GameObject ___currentCard)
-        {
-            ___currentCard.SetActive(true);
         }
     }
 }

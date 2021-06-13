@@ -8,13 +8,12 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnboundLib.Networking;
+using UnboundLib.GameModes;
 using UnityEngine.UI;
-using System.IO;
-using System.Reflection;
 
 namespace UnboundLib
 {
-    [BepInPlugin(ModId, ModName, "1.0.9")]
+    [BepInPlugin(ModId, ModName, "1.1.0")]
     [BepInProcess("Rounds.exe")]
     public class Unbound : BaseUnityPlugin
     {
@@ -120,8 +119,8 @@ namespace UnboundLib
             var harmony = new Harmony(ModId);
             harmony.PatchAll();
 
-            // Load embedded assets
             LoadAssets();
+            GameModeManager.Init();
         }
 
         void Start()
@@ -171,6 +170,7 @@ namespace UnboundLib
             {
                 showModUi = !showModUi;
             }
+
             GameManager.lockInput = showModUi || DevConsole.isTyping;
         }
         

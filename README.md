@@ -27,3 +27,68 @@ Create a class for your card, extend the **CustomCard** class, implement its met
   	{
 	  CustomCard.BuildCard<TestCard>();
   	}
+
+# GameMode Framework
+The GameMode framework provides a modding-friendly API for custom game modes, allowing mods to target them without having to know about their existence.
+
+Custom game modes are defined in two layers: the actual game mode class that does all the heavy gameplay logic, and a handler class that provides an interface
+between mods and the game mode.
+
+## Hooks
+The framework offers a flexible hook system. With hooks, mods can trigger actions at specific points of time as a game is running, without needing to know
+anything about the specific game mode or its implementation.
+
+### Triggering hooks
+Game modes can trigger hooks whenever they wish:
+
+```csharp
+private void RoundStart() {
+  // Hook keys are case-insensitive
+  GameModeManager.TriggerHook("RoundStart");
+
+  // A healthy set of predefined keys is provided to make hooking on to them easier.
+  // Predefined keys should be used in favour of custom ones when possible.
+  GameModeManager.TriggerHook(GameModeHooks.HookRoundStart);
+}
+```
+
+### Registering hooks
+and mods can register hook listeners wherever they wish:
+
+```csharp
+private void Init() {
+  // Hooks are called with the game mode that triggered the hook, which is always the currently active game mode
+  GameModeManager.AddHook(GameModeHooks.HookRoundStart, (gm) => UnityEngine.Debug.Log(gm.Name));
+}
+```
+
+The existing game modes in ROUNDS, namely Arms Race and Sandbox, have also been patched to trigger hooks.
+
+## Settings
+The framework also adds a setting system to help mods change common game mode settings easily. Settings provide an easy-to-use method for mods to change gameplay,
+but they place a lot of responsibility onto game modes to provide sufficient settings.
+
+### Using settings in a game mode
+
+```csharp
+private void CheckPoints() {
+	if (p1Points >= (int)GameModeManager.CurrentHandler.Settings["pointsToWinRound"]) {
+	  WinRound();
+	}
+}
+```
+
+### Changing settings (in a mod)
+
+```csharp
+private void Init() {
+	GameModeManager.AddHook(GameModeHooks.HookInitEnd, (gm) =>
+	{
+		gm.ChangeSetting("pointsToWinRound", 10);
+	});
+}
+```
+
+---
+
+See [/GameModes](./GameModes) for implementation details and example `GameModeHandler`s.
