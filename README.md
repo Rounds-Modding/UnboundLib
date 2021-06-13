@@ -73,7 +73,7 @@ but they place a lot of responsibility onto game modes to provide sufficient set
 ```csharp
 private void CheckPoints() {
 	if (p1Points >= (int)GameModeManager.CurrentHandler.Settings["pointsToWinRound"]) {
-	  WinRound();
+		WinRound();
 	}
 }
 ```
