@@ -171,10 +171,6 @@ namespace UnboundLib
                 showModUi = !showModUi;
             }
 
-            if (Input.GetKeyDown(KeyCode.F2))
-            {
-                UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-            }
             GameManager.lockInput = showModUi || DevConsole.isTyping;
         }
         

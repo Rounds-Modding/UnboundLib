@@ -69,7 +69,7 @@ namespace UnboundLib.GameModes
                         GameModeManager.handlers[id].SetActive(false);
                     }
 
-                    GameModeManager.CurrentHandler?.SetActive(true);
+                    GameModeManager.SetGameMode(null);
                 }
             };
         }
