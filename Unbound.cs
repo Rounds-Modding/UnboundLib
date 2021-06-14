@@ -13,7 +13,7 @@ using UnityEngine.UI;
 
 namespace UnboundLib
 {
-    [BepInPlugin(ModId, ModName, "1.1.1")]
+    [BepInPlugin(ModId, ModName, "1.1.2")]
     [BepInProcess("Rounds.exe")]
     public class Unbound : BaseUnityPlugin
     {
