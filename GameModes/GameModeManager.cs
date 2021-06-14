@@ -170,6 +170,7 @@ namespace UnboundLib.GameModes
         private static void AddGameMode(string id, Type type)
         {
             var go = new GameObject($"[GameMode] {id}");
+            go.SetActive(false);
             go.transform.SetParent(GameObject.Find("/Game/Code/Game Modes").transform);
             go.AddComponent(type);
         }
