@@ -11,7 +11,7 @@ namespace UnboundLib
 {
     public static class NetworkingManager
     {
-        private static bool initialized = false;
+        //private static bool initialized = false;
 
         private static RaiseEventOptions raiseEventOptionsAll = new RaiseEventOptions
         {

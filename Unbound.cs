@@ -50,6 +50,7 @@ namespace UnboundLib
         internal static CardInfo[] defaultCards;
         internal static List<CardInfo> activeCards = new List<CardInfo>();
         internal static List<CardInfo> inactiveCards = new List<CardInfo>();
+        internal static List<string> levels = new List<string>();
 
         public delegate void OnJoinedDelegate();
         public delegate void OnLeftDelegate();
@@ -145,7 +146,7 @@ namespace UnboundLib
                 CardChoice.instance.cards = defaultCards;
             });
 
-            // recieve mod handshake
+            // receive mod handshake
             NetworkingManager.RegisterEvent(NetworkEventType.FinishHandshake, (data) =>
             {
                 CardChoice.instance.cards = activeCards.ToArray();
@@ -163,6 +164,9 @@ namespace UnboundLib
                             select c).FirstOrDefault();
             defaultCards = CardChoice.instance.cards;
             activeCards.AddRange(defaultCards);
+            
+            // add default levels to level list
+            levels.AddRange(MapManager.instance.levels);
 
             // register default cards with toggle menu
             foreach (var card in defaultCards)
@@ -181,6 +185,7 @@ namespace UnboundLib
             if (GameManager.instance.isPlaying && PhotonNetwork.OfflineMode)
             {
                 CardChoice.instance.cards = activeCards.ToArray();
+                MapManager.instance.levels = levels.ToArray();
             }
 
             if (Input.GetKeyDown(KeyCode.F1))
@@ -312,6 +317,14 @@ namespace UnboundLib
             Instance.StartCoroutine(FadeIn(newText.gameObject.AddComponent<CanvasGroup>(), 4));
 
             return newText;
+        }
+
+        public static void BuildLevel(AssetBundle assetBundle)
+        {
+            foreach (var path in assetBundle.GetAllScenePaths())
+            {
+                levels.Add(path);
+            }
         }
 
         private static IEnumerator FadeIn(CanvasGroup target, float seconds)
