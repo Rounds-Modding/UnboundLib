@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using TMPro;
 using UnboundLib.GameModes;
 using UnboundLib.Networking;
@@ -324,6 +325,58 @@ namespace UnboundLib
             foreach (var path in assetBundle.GetAllScenePaths())
             {
                 levels.Add(path);
+            }
+        }
+        // loads a map in via its name and it start with /
+        internal static void SpawnMap(string message)
+        {
+            if (!message.StartsWith("/"))
+            {
+                return;
+            }
+            // search code copied from card search 
+            try
+            {
+                var currentLevels = MapManager.instance.levels;
+                var num = -1;
+                var num2 = 0f;
+                for (var i = 0; i < currentLevels.Length; i++)
+                {
+                    var text = currentLevels[i].ToUpper();
+                    text = text.Replace(" ", "");
+                    text = text.Replace("ASSETS", "");
+                    text = text.Replace(".UNITY", "");
+                    text = Regex.Replace(text, "/.*/", string.Empty);
+                    var text2 = message.ToUpper();
+                    text2 = text2.Replace(" ", "_");
+                    text2 = text2.Replace("/", "");
+                    var num3 = 0f;
+                    for (int j = 0; j < text2.Length; j++)
+                    {
+                        if (text.Length > j && text2[j] == text[j])
+                        {
+                            num3 += 1f / text2.Length;
+                        }
+                    }
+                    num3 -= (float)Mathf.Abs(text2.Length - text.Length) * 0.001f;
+                    if (num3 > 0.1f && num3 > num2)
+                    {
+                        num2 = num3;
+                        num = i;
+                    }
+                }
+                if (num != -1)
+                {
+                    MapManager.instance.LoadLevelFromID(num, false, true);
+                    
+                    foreach (var player in PlayerManager.instance.players)
+                    {
+                        player.data.healthHandler.Revive();
+                    }
+                }
+            }
+            catch
+            {
             }
         }
 
