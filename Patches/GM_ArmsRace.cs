@@ -28,39 +28,30 @@ namespace UnboundLib.Patches
             return nestedType;
         }
 
-        internal static void TriggerPlayerPickStart()
+        internal static IEnumerator TriggerPlayerPickStart()
         {
-            GameModeManager.TriggerHook(GameModeHooks.HookPlayerPickStart);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookPlayerPickStart);
         }
 
-        internal static void TriggerPlayerPickEnd()
+        internal static IEnumerator TriggerPlayerPickEnd()
         {
-            GameModeManager.TriggerHook(GameModeHooks.HookPlayerPickEnd);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookPlayerPickEnd);
         }
 
-        internal static void TriggerPickStart()
+        internal static IEnumerator TriggerPickStart()
         {
-            GameModeManager.TriggerHook(GameModeHooks.HookPickStart);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookPickStart);
         }
 
-        internal static void TriggerPickEnd()
+        internal static IEnumerator TriggerPickEnd()
         {
-            GameModeManager.TriggerHook(GameModeHooks.HookPickEnd);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookPickEnd);
         }
     }
 
-    [HarmonyPatch(typeof(GM_ArmsRace), "Start")]
-    class GM_ArmsRace_Patch_Start
+    [HarmonyPatch(typeof(GM_ArmsRace), "PlayerJoined")]
+    public class GM_ArmsRace_Patch_Start
     {
-        static void Prefix()
-        {
-            GameModeManager.TriggerHook(GameModeHooks.HookInitStart);
-        }
-
-        static void Postfix()
-        {
-            GameModeManager.TriggerHook(GameModeHooks.HookInitEnd);
-        }
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
@@ -95,29 +86,26 @@ namespace UnboundLib.Patches
                 }
             }
 
-            return newInstructions;
+            return list;
         }
     }
 
     [HarmonyPatch(typeof(GM_ArmsRace), "DoStartGame")]
     class GM_ArmsRace_Patch_DoStartGame
     {
-        static void Prefix()
-        {
-            GameModeManager.TriggerHook(GameModeHooks.HookGameStart);
-        }
-
         static IEnumerator Postfix(IEnumerator e)
         {
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookGameStart);
+
             // We need to iterate through yields like this to get the postfix in the correct place
             while (e.MoveNext())
             {
                 yield return e.Current;
             }
 
-            GameModeManager.TriggerHook(GameModeHooks.HookRoundStart);
-            GameModeManager.TriggerHook(GameModeHooks.HookPointStart);
-            GameModeManager.TriggerHook(GameModeHooks.HookBattleStart);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookRoundStart);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookPointStart);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookBattleStart);
         }
     }
 
@@ -129,7 +117,7 @@ namespace UnboundLib.Patches
             return AccessTools.Method(ArmsRacePatchUtils.GetMethodNestedType("DoStartGame"), "MoveNext");
         }
 
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator gen)
         {
             var list = instructions.ToList();
             var newInstructions = new List<CodeInstruction>();
@@ -151,28 +139,36 @@ namespace UnboundLib.Patches
                 {
                     newInstructions.Add(list[i]);
                     newInstructions.Add(list[i + 1]);
+                    newInstructions.Add(new CodeInstruction(OpCodes.Ldarg_0));
                     newInstructions.Add(new CodeInstruction(OpCodes.Call, m_triggerPickStart));
+                    gen.AddYieldReturn(newInstructions);
                     i++;
                     continue;
                 }
 
                 if (list[i].LoadsField(f_cardChoiceVisualsInstance) && list[i + 4].Calls(m_cardChoiceVisualsShow))
                 {
+                    newInstructions.Add(new CodeInstruction(OpCodes.Ldarg_0));
                     newInstructions.Add(new CodeInstruction(OpCodes.Call, m_triggerPlayerPickStart));
+                    gen.AddYieldReturn(newInstructions);
                 }
 
                 if (list[i].Calls(m_cardChoiceInstancePick))
                 {
-                    newInstructions.AddRange(list.GetRange(i, 8));
+                    newInstructions.AddRange(list.GetRange(i, 10));
+                    newInstructions.Add(new CodeInstruction(OpCodes.Ldarg_0));
                     newInstructions.Add(new CodeInstruction(OpCodes.Call, m_triggerPlayerPickEnd));
-                    i += 7;
+                    gen.AddYieldReturn(newInstructions);
+                    i += 9;
                     continue;
                 }
 
                 if (list[i].Calls(m_cardChoiceVisualsHide))
                 {
                     newInstructions.Add(list[i]);
+                    newInstructions.Add(new CodeInstruction(OpCodes.Ldarg_0));
                     newInstructions.Add(new CodeInstruction(OpCodes.Call, m_triggerPickEnd));
+                    gen.AddYieldReturn(newInstructions);
                     continue;
                 }
 
@@ -191,7 +187,7 @@ namespace UnboundLib.Patches
             return AccessTools.Method(ArmsRacePatchUtils.GetMethodNestedType("RoundTransition"), "MoveNext");
         }
 
-        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator gen)
         {
             var list = instructions.ToList();
             var newInstructions = new List<CodeInstruction>();
@@ -213,7 +209,9 @@ namespace UnboundLib.Patches
                 {
                     newInstructions.Add(list[i]);
                     newInstructions.Add(list[i + 1]);
+                    newInstructions.Add(new CodeInstruction(OpCodes.Ldarg_0));
                     newInstructions.Add(new CodeInstruction(OpCodes.Call, m_triggerPickStart));
+                    gen.AddYieldReturn(newInstructions);
                     i++;
                     continue;
                 }
@@ -222,10 +220,17 @@ namespace UnboundLib.Patches
                     list[i + 1].LoadsField(f_cardChoiceInstance) &&
                     list[i + 10].Calls(m_cardChoiceInstancePick))
                 {
+                    newInstructions.Add(new CodeInstruction(OpCodes.Ldarg_0));
                     newInstructions.Add(new CodeInstruction(OpCodes.Call, m_triggerPlayerPickStart));
-                    newInstructions.AddRange(list.GetRange(i, 19));
+                    gen.AddYieldReturn(newInstructions);
+
+                    newInstructions.AddRange(list.GetRange(i, 20));
+
+                    newInstructions.Add(new CodeInstruction(OpCodes.Ldarg_0));
                     newInstructions.Add(new CodeInstruction(OpCodes.Call, m_triggerPlayerPickEnd));
-                    i += 18;
+                    gen.AddYieldReturn(newInstructions);
+
+                    i += 19;
                     continue;
                 }
 
@@ -233,7 +238,9 @@ namespace UnboundLib.Patches
                     list[i + 1].opcode == OpCodes.Ldc_I4_1 &&
                     list[i + 2].Calls(m_showPlayers))
                 {
+                    newInstructions.Add(new CodeInstruction(OpCodes.Ldarg_0));
                     newInstructions.Add(new CodeInstruction(OpCodes.Call, m_triggerPickEnd));
+                    gen.AddYieldReturn(newInstructions);
                 }
 
                 newInstructions.Add(list[i]);
@@ -243,28 +250,21 @@ namespace UnboundLib.Patches
         }
     }
 
-    [HarmonyPatch(typeof(GM_ArmsRace), "PointOver")]
-    class GM_ArmsRace_Patch_PointOver
-    {
-        static void Prefix()
-        {
-            GameModeManager.TriggerHook(GameModeHooks.HookPointEnd);
-        }
-    }
-
     [HarmonyPatch(typeof(GM_ArmsRace), "PointTransition")]
     class GM_ArmsRace_Patch_PointTransition
     {
         static IEnumerator Postfix(IEnumerator e)
         {
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookPointEnd);
+
             // We need to iterate through yields like this to get the postfix in the correct place
             while (e.MoveNext())
             {
                 yield return e.Current;
             }
 
-            GameModeManager.TriggerHook(GameModeHooks.HookPointStart);
-            GameModeManager.TriggerHook(GameModeHooks.HookBattleStart);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookPointStart);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookBattleStart);
         }
     }
 
@@ -273,36 +273,35 @@ namespace UnboundLib.Patches
     {
         static IEnumerator Postfix(IEnumerator e)
         {
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookPointEnd);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookRoundEnd);
+
             // We need to iterate through yields like this to get the postfix in the correct place
             while (e.MoveNext())
             {
                 yield return e.Current;
             }
 
-            GameModeManager.TriggerHook(GameModeHooks.HookRoundStart);
-            GameModeManager.TriggerHook(GameModeHooks.HookPointStart);
-            GameModeManager.TriggerHook(GameModeHooks.HookBattleStart);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookRoundStart);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookPointStart);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookBattleStart);
         }
     }
 
-    [HarmonyPatch(typeof(GM_ArmsRace), "RoundOver")]
-    class GM_ArmsRace_Patch_RoundOver
-    {
-        static void Prefix()
-        {
-            GameModeManager.TriggerHook(GameModeHooks.HookPointEnd);
-            GameModeManager.TriggerHook(GameModeHooks.HookRoundEnd);
-        }
-    }
-
-    [HarmonyPatch(typeof(GM_ArmsRace), "GameOver")]
+    [HarmonyPatch(typeof(GM_ArmsRace), "GameOverTransition")]
     class GM_ArmsRace_Patch_GameOver
     {
-        static void Prefix()
+        static IEnumerator Postfix(IEnumerator e)
         {
-            GameModeManager.TriggerHook(GameModeHooks.HookPointEnd);
-            GameModeManager.TriggerHook(GameModeHooks.HookRoundEnd);
-            GameModeManager.TriggerHook(GameModeHooks.HookGameEnd);
+            // We're really adding a prefix, but we get access to the IEnumerator in the postfix
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookPointEnd);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookRoundEnd);
+            yield return GameModeManager.TriggerHook(GameModeHooks.HookGameEnd);
+
+            while (e.MoveNext())
+            {
+                yield return e.Current;
+            }
         }
     }
 }

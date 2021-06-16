@@ -1,12 +1,33 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnboundLib.GameModes
 {
-    public abstract class GameModeHandler<T> : IGameModeHandler where T : Component
+    public abstract class GameModeHandler<T> : IGameModeHandler where T : MonoBehaviour
     {
-        public void AddHook(string key, Action<IGameModeHandler> action)
+        public MonoBehaviour GameMode {
+            get
+            {
+                return GameModeManager.GetGameMode<T>(this.gameModeId);
+            }
+        }
+
+        public abstract GameSettings Settings { get; protected set; }
+        public abstract string Name { get; }
+
+        // Used to find the correct game mode from scene
+        private readonly string gameModeId;
+
+        private Dictionary<string, Func<IGameModeHandler, IEnumerator>> hooks = new Dictionary<string, Func<IGameModeHandler, IEnumerator>>();
+
+        protected GameModeHandler(string gameModeId)
+        {
+            this.gameModeId = gameModeId;
+        }
+
+        public void AddHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
             // Case-insensitive keys for QoL
             key = key.ToLower();
@@ -21,40 +42,20 @@ namespace UnboundLib.GameModes
             }
         }
 
-        public void RemoveHook(string key, Action<IGameModeHandler> action)
+        public void RemoveHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
             this.hooks[key.ToLower()] -= action;
         }
 
-        public void TriggerHook(string key)
+        public IEnumerator TriggerHook(string key)
         {
-            Action<IGameModeHandler> hook;
+            Func<IGameModeHandler, IEnumerator> hook;
             this.hooks.TryGetValue(key.ToLower(), out hook);
 
             if (hook != null)
             {
-                hook(this);
+                yield return hook(this);
             }
-        }
-
-        public T GameMode {
-            get
-            {
-                return GameModeManager.GetGameMode<T>(this.gameModeId);
-            }
-        }
-
-        public abstract GameSettings Settings { get; protected set; }
-        public abstract string Name { get; }
-
-        // Used to find the correct game mode from scene
-        private readonly string gameModeId;
-
-        private Dictionary<string, Action<IGameModeHandler>> hooks = new Dictionary<string, Action<IGameModeHandler>>();
-
-        protected GameModeHandler(string gameModeId)
-        {
-            this.gameModeId = gameModeId;
         }
 
         public void SetSettings(GameSettings settings)

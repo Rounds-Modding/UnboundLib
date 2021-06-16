@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnboundLib.GameModes;
@@ -41,14 +42,17 @@ namespace UnboundLib.Patches
         {
             if (__instance.data.view.IsMine)
             {
-                GameModeManager.AddHook(GameModeHooks.HookGameStart, (gm) =>
-                {
-                    if (gm.Name != "Sandbox")
-                    {
-                        __instance.GetFaceOffline();
-                    }
-                });
+                GameModeManager.AddHook(GameModeHooks.HookGameStart, gm => OnGameStart(gm, __instance));
             }
+        }
+
+        static IEnumerator OnGameStart(IGameModeHandler gm, Player player)
+        {
+            if (gm.Name != "Sandbox")
+            {
+                player.GetFaceOffline();
+            }
+            yield break;
         }
     }
 }
