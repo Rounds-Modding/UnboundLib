@@ -37,6 +37,11 @@ namespace UnboundLib.GameModes
 
         public void AddHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
+            if (action == null)
+            {
+                return;
+            }
+
             // Case-insensitive keys for QoL
             key = key.ToLower();
 
@@ -62,9 +67,9 @@ namespace UnboundLib.GameModes
 
             if (hooks != null)
             {
-                foreach (var h in hooks)
+                foreach (var hook in hooks)
                 {
-                    if (h != null) yield return h(this);
+                    yield return hook(this);
                 }
             }
         }
