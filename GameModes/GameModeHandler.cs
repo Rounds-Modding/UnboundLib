@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using UnityEngine;
 
 namespace UnboundLib.GameModes
@@ -26,7 +25,6 @@ namespace UnboundLib.GameModes
 
         public abstract GameSettings Settings { get; protected set; }
         public abstract string Name { get; }
-        public abstract ReadOnlyDictionary<int, TeamScore> TeamScore { get; }
 
         // Used to find the correct game mode from scene
         private readonly string gameModeId;

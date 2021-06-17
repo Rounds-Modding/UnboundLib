@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.ObjectModel;
 using UnityEngine;
 
 namespace UnboundLib.GameModes
@@ -19,8 +18,6 @@ namespace UnboundLib.GameModes
         MonoBehaviour GameMode { get; }
 
         GameSettings Settings { get; }
-
-        ReadOnlyDictionary<int, TeamScore> TeamScore { get; }
 
         string Name { get; }
 

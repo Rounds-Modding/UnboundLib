@@ -1,7 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.Collections.Generic;
-
-namespace UnboundLib.GameModes
+﻿namespace UnboundLib.GameModes
 {
     public class SandboxHandler : GameModeHandler<GM_Test>
     {
@@ -11,21 +8,6 @@ namespace UnboundLib.GameModes
         }
 
         public override GameSettings Settings { get; protected set; }
-
-        public override ReadOnlyDictionary<int, TeamScore> TeamScore
-        {
-            get
-            {
-                var dict = new Dictionary<int, TeamScore>();
-
-                foreach (var player in PlayerManager.instance.players)
-                {
-                    dict.Add(player.teamID, new TeamScore(0, 0));
-                }
-
-                return new ReadOnlyDictionary<int, TeamScore>(dict);
-            }
-        }
 
         public SandboxHandler() : base("Test") {
             this.Settings = new GameSettings();

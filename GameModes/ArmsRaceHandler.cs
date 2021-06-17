@@ -12,19 +12,6 @@ namespace UnboundLib.GameModes
 
         public override GameSettings Settings { get; protected set; }
 
-        public override ReadOnlyDictionary<int, TeamScore> TeamScore {
-            get
-            {
-                var dict = new Dictionary<int, TeamScore>()
-                {
-                    { 0, new TeamScore(GM_ArmsRace.instance.p1Points, GM_ArmsRace.instance.p1Rounds) },
-                    { 1, new TeamScore(GM_ArmsRace.instance.p2Points, GM_ArmsRace.instance.p2Rounds) }
-                };
-
-                return new ReadOnlyDictionary<int, TeamScore>(dict);
-            }
-        }
-
         public ArmsRaceHandler() : base("Arms race")
         {
             this.Settings = new GameSettings()
