@@ -20,7 +20,7 @@ namespace UnboundLib.GameModes
         // Used to find the correct game mode from scene
         private readonly string gameModeId;
 
-        private Dictionary<string, Func<IGameModeHandler, IEnumerator>> hooks = new Dictionary<string, Func<IGameModeHandler, IEnumerator>>();
+        private Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>> hooks = new Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>>();
 
         protected GameModeHandler(string gameModeId)
         {
@@ -34,27 +34,30 @@ namespace UnboundLib.GameModes
 
             if (!this.hooks.ContainsKey(key))
             {
-                this.hooks.Add(key, action);
+                this.hooks.Add(key, new List<Func<IGameModeHandler, IEnumerator>> { action });
             }
             else
             {
-                this.hooks[key] += action;
+                this.hooks[key].Add(action);
             }
         }
 
         public void RemoveHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
-            this.hooks[key.ToLower()] -= action;
+            this.hooks[key.ToLower()].Remove(action);
         }
 
         public IEnumerator TriggerHook(string key)
         {
-            Func<IGameModeHandler, IEnumerator> hook;
-            this.hooks.TryGetValue(key.ToLower(), out hook);
+            List<Func<IGameModeHandler, IEnumerator>> hooks;
+            this.hooks.TryGetValue(key.ToLower(), out hooks);
 
-            if (hook != null)
+            if (hooks != null)
             {
-                yield return hook(this);
+                foreach (var h in hooks)
+                {
+                    if (h != null) yield return h(this);
+                }
             }
         }
 
