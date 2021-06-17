@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using UnityEngine;
 
 namespace UnboundLib.GameModes
 {
@@ -13,15 +15,17 @@ namespace UnboundLib.GameModes
     /// </summary>
     public interface IGameModeHandler
     {
+        MonoBehaviour GameMode { get; }
+
         GameSettings Settings { get; }
 
         string Name { get; }
 
-        void RemoveHook(string key, Action<IGameModeHandler> action);
+        void RemoveHook(string key, Func<IGameModeHandler, IEnumerator> action);
 
-        void AddHook(string key, Action<IGameModeHandler> action);
+        void AddHook(string key, Func<IGameModeHandler, IEnumerator> action);
 
-        void TriggerHook(string key);
+        IEnumerator TriggerHook(string key);
 
         void SetSettings(GameSettings settings);
 
@@ -43,5 +47,10 @@ namespace UnboundLib.GameModes
         ///     Should tell the game mode to start the game.
         /// </summary>
         void StartGame();
+    }
+
+    public interface IGameModeHandler<T> : IGameModeHandler where T : MonoBehaviour
+    {
+        new T GameMode { get; }
     }
 }

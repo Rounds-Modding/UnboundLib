@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
+using HarmonyLib;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -188,6 +191,71 @@ namespace UnboundLib
         #endregion
 
         #region Reflection
+
+        // Harmony transpiler helpers
+
+        /// <summary>
+        ///     Inserts `yield return` into a statement at the specified index. One should also add `new CodeInstruction(OpCodes.Ldarg_0)`
+        ///     before the statement to yield.
+        /// </summary>
+        /// <param name="gen">The ILGenerator you got from a Harmony transpiler</param>
+        /// <param name="instructions">
+        ///     Instructions to which the yield should be added to. These instructions do not have to be complete, but they must include
+        ///     the jump table of the IEnumerator function you are patching. The jump table is among the first few instructions of a method,
+        ///     identified by a switch operation.
+        /// </param>
+        /// <param name="index">
+        ///     Index at which the yield statement should be added. Typically the index is directly after the statement you wish to yield.
+        /// </param>
+        public static void InsertYieldReturn(this ILGenerator gen, List<CodeInstruction> instructions, int index)
+        {
+            /* The second instruction in an IEnumerator method loads a state variable, from which we can get the declaring type.
+             * For example if an instruction calls PlayerManager::DoStuff(), then PlayerManager is the declaring type.
+             */
+            var declaringType = ((FieldInfo)instructions[1].operand).DeclaringType;
+
+            // Finding docs about generated IL code is impossible, but the fields we care about seem to be named <>1__state and <>2__current
+            var f_state = ExtensionMethods.GetFieldInfo(declaringType, "<>1__state");
+            var f_current = ExtensionMethods.GetFieldInfo(declaringType, "<>2__current");
+
+            // IEnumerator methods contain a jump table within the first few instructions
+            var jumpTable = instructions.Find(ins => ins.opcode == OpCodes.Switch);
+            var jumpTableLabels = ((Label[]) jumpTable.operand).ToList();
+
+            /* IEnumerator works by saving a jump table index to a state variable before `yield return`. When the method is called
+             * again, the jump table index is used to jump to the correct label, from where execution then continues. We're adding
+             * a new `yield return` to the instructions, so we need to create labels and determine the correct jump table index.
+             */
+            int nextReturnIndex = jumpTableLabels.Count;
+            var newLabel = gen.DefineLabel();
+
+            jumpTableLabels.Add(newLabel);
+            jumpTable.operand = jumpTableLabels.ToArray();
+
+            var newInstructions = new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Stfld, f_current),
+                new CodeInstruction(OpCodes.Ldarg_0),
+
+                // Save index of the new label and return
+                new CodeInstruction(OpCodes.Ldc_I4, nextReturnIndex),
+                new CodeInstruction(OpCodes.Stfld, f_state),
+                new CodeInstruction(OpCodes.Ldc_I4_1),
+                new CodeInstruction(OpCodes.Ret),
+
+                // Jump here when the method is called again
+                new CodeInstruction(OpCodes.Ldarg_0).WithLabels(newLabel),
+                new CodeInstruction(OpCodes.Ldc_I4_M1),
+                new CodeInstruction(OpCodes.Stfld, f_state)
+            };
+
+            instructions.InsertRange(index, newInstructions);
+        }
+
+        public static void AddYieldReturn(this ILGenerator gen, List<CodeInstruction> instructions)
+        {
+            gen.InsertYieldReturn(instructions, instructions.Count);
+        }
 
         // methods
         public static MethodInfo GetMethodInfo(Type type, string methodName)
