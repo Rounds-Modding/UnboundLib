@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace UnboundLib.GameModes
 {
+    /// <inheritdoc/>
     public abstract class GameModeHandler<T> : IGameModeHandler<T> where T : MonoBehaviour
     {
         public T GameMode {
@@ -100,8 +101,14 @@ namespace UnboundLib.GameModes
 
         public abstract void PlayerDied(Player killedPlayer, int playersAlive);
 
+        public abstract TeamScore GetTeamScore(int teamID);
+
+        public abstract void SetTeamScore(int teamID, TeamScore score);
+
         public abstract void SetActive(bool active);
 
         public abstract void StartGame();
+
+        public abstract void ResetGame();
     }
 }

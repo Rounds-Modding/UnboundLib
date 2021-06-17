@@ -1,6 +1,6 @@
 ﻿namespace UnboundLib.GameModes
 {
-    class SandboxHandler : GameModeHandler<GM_Test>
+    public class SandboxHandler : GameModeHandler<GM_Test>
     {
         public override string Name
         {
@@ -23,6 +23,13 @@
             this.GameMode.InvokeMethod("PlayerDied", killedPlayer, playersAlive);
         }
 
+        public override TeamScore GetTeamScore(int teamID)
+        {
+            return new TeamScore(0, 0);
+        }
+
+        public override void SetTeamScore(int teamID, TeamScore score) { }
+
         public override void SetActive(bool active)
         {
             if (!active)
@@ -34,6 +41,11 @@
         public override void StartGame()
         {
             this.GameMode.gameObject.SetActive(true);
+        }
+
+        public override void ResetGame()
+        {
+            PlayerManager.instance.InvokeMethod("ResetCharacters");
         }
     }
 }

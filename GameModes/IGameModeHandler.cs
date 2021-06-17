@@ -36,6 +36,20 @@ namespace UnboundLib.GameModes
         void PlayerDied(Player killedPlayer, int playersAlive);
 
         /// <summary>
+        ///     Should return the current score of a team. This value should reflect the state of the actual game when applicable.
+        /// </summary>
+        /// <param name="teamID">The ID of the team whose score should be returned.</param>
+        /// <returns></returns>
+        TeamScore GetTeamScore(int teamID);
+
+        /// <summary>
+        ///     Sets the current score of a team. Changing the score should reflect in the actual game when applicable.
+        /// </summary>
+        /// <param name="teamID">ID of the team whose score should be changed.</param>
+        /// <param name="score">Score to set for the team.</param>
+        void SetTeamScore(int teamID, TeamScore score);
+
+        /// <summary>
         ///     When true, should tell the game mode to activate and run any initialization code it might have.
         ///     When false, should tell the game mode to deactivate and hide any possible visual elements it might've drawn.
         ///     Typical behaviour is to activate or disable the game mode's gameobject.
@@ -47,6 +61,11 @@ namespace UnboundLib.GameModes
         ///     Should tell the game mode to start the game.
         /// </summary>
         void StartGame();
+
+        /// <summary>
+        ///     Should tell the game mode to reset any state, such as player score and cards. The game should NOT restart.
+        /// </summary>
+        void ResetGame();
     }
 
     public interface IGameModeHandler<T> : IGameModeHandler where T : MonoBehaviour
