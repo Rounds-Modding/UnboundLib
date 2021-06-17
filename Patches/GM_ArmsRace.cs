@@ -49,7 +49,7 @@ namespace UnboundLib.Patches
         }
     }
 
-    [HarmonyPatch(typeof(GM_ArmsRace), "PlayerJoined")]
+    [HarmonyPatch(typeof(GM_ArmsRace), "Start")]
     public class GM_ArmsRace_Patch_Start
     {
 
@@ -289,7 +289,7 @@ namespace UnboundLib.Patches
     }
 
     [HarmonyPatch(typeof(GM_ArmsRace), "GameOverTransition")]
-    class GM_ArmsRace_Patch_GameOver
+    class GM_ArmsRace_Patch_GameOverTransition
     {
         static IEnumerator Postfix(IEnumerator e)
         {
