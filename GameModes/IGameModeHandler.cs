@@ -48,4 +48,9 @@ namespace UnboundLib.GameModes
         /// </summary>
         void StartGame();
     }
+
+    public interface IGameModeHandler<T> : IGameModeHandler where T : MonoBehaviour
+    {
+        new T GameMode { get; }
+    }
 }

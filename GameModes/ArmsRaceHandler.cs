@@ -25,17 +25,17 @@
 
         public override void PlayerJoined(Player player)
         {
-            ((GM_ArmsRace)this.GameMode).PlayerJoined(player);
+            this.GameMode.PlayerJoined(player);
         }
 
         public override void PlayerDied(Player killedPlayer, int playersAlive)
         {
-            ((GM_ArmsRace) this.GameMode).PlayerDied(killedPlayer, playersAlive);
+            this.GameMode.PlayerDied(killedPlayer, playersAlive);
         }
 
         public override void StartGame()
         {
-            ((GM_ArmsRace) this.GameMode).StartGame();
+            this.GameMode.StartGame();
         }
 
         public override void ChangeSetting(string name, object value)
@@ -45,7 +45,7 @@
             if (name == "roundsToWinGame")
             {
                 int roundsToWinGame = (int) value;
-                ((GM_ArmsRace) this.GameMode).roundsToWinGame = roundsToWinGame;
+                this.GameMode.roundsToWinGame = roundsToWinGame;
                 UIHandler.instance.InvokeMethod("SetNumberOfRounds", roundsToWinGame);
             }
 

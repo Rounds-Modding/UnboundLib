@@ -5,12 +5,20 @@ using UnityEngine;
 
 namespace UnboundLib.GameModes
 {
-    public abstract class GameModeHandler<T> : IGameModeHandler where T : MonoBehaviour
+    public abstract class GameModeHandler<T> : IGameModeHandler<T> where T : MonoBehaviour
     {
-        public MonoBehaviour GameMode {
+        public T GameMode {
             get
             {
                 return GameModeManager.GetGameMode<T>(this.gameModeId);
+            }
+        }
+
+        MonoBehaviour IGameModeHandler.GameMode
+        {
+            get
+            {
+                return this.GameMode;
             }
         }
 
