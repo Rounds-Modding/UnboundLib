@@ -1,7 +1,4 @@
-﻿using System.Collections.ObjectModel;
-using System.Collections.Generic;
-
-namespace UnboundLib.GameModes
+﻿namespace UnboundLib.GameModes
 {
     public class ArmsRaceHandler : GameModeHandler<GM_ArmsRace>
     {
