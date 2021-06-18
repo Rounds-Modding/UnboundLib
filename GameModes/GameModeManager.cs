@@ -12,6 +12,7 @@ namespace UnboundLib.GameModes
     {
         private static Dictionary<string, IGameModeHandler> handlers = new Dictionary<string, IGameModeHandler>();
         private static Dictionary<string, Type> gameModes = new Dictionary<string, Type>();
+        private static Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>> hooks = new Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>>();
 
         public static Action<IGameModeHandler> OnGameModeChanged { get; set; }
 
@@ -74,27 +75,43 @@ namespace UnboundLib.GameModes
             };
         }
 
-        public static IEnumerator TriggerHook(string hook)
+        public static IEnumerator TriggerHook(string key)
         {
-            yield return GameModeManager.CurrentHandler?.TriggerHook(hook);
+            List<Func<IGameModeHandler, IEnumerator>> hooks;
+            GameModeManager.hooks.TryGetValue(key.ToLower(), out hooks);
+
+            if (hooks != null && GameModeManager.CurrentHandler != null)
+            {
+                foreach (var hook in hooks)
+                {
+                    yield return hook(GameModeManager.CurrentHandler);
+                }
+            }
         }
 
         public static void AddHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
-            key = key.ToLower();
-            foreach (var handler in GameModeManager.handlers.Values)
+            if (action == null)
             {
-                handler.AddHook(key, action);
+                return;
+            }
+
+            // Case-insensitive keys for QoL
+            key = key.ToLower();
+
+            if (!GameModeManager.hooks.ContainsKey(key))
+            {
+                GameModeManager.hooks.Add(key, new List<Func<IGameModeHandler, IEnumerator>> { action });
+            }
+            else
+            {
+                GameModeManager.hooks[key].Add(action);
             }
         }
 
         public static void RemoveHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
-            key = key.ToLower();
-            foreach (var handler in GameModeManager.handlers.Values)
-            {
-                handler.RemoveHook(key, action);
-            }
+            GameModeManager.hooks[key.ToLower()].Remove(action);
         }
 
         public static T GetGameMode<T>(string gameModeId) where T : Component

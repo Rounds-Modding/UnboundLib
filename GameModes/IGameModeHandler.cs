@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace UnboundLib.GameModes
 {
@@ -20,12 +18,6 @@ namespace UnboundLib.GameModes
         GameSettings Settings { get; }
 
         string Name { get; }
-
-        void RemoveHook(string key, Func<IGameModeHandler, IEnumerator> action);
-
-        void AddHook(string key, Func<IGameModeHandler, IEnumerator> action);
-
-        IEnumerator TriggerHook(string key);
 
         void SetSettings(GameSettings settings);
 
