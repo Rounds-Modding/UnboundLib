@@ -1,12 +1,12 @@
 ﻿using HarmonyLib;
 using System;
-using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnboundLib.GameModes;
+using UnityEngine;
 
 namespace UnboundLib.Patches
 {
@@ -188,6 +188,12 @@ namespace UnboundLib.Patches
             return AccessTools.Method(ArmsRacePatchUtils.GetMethodNestedType("RoundTransition"), "MoveNext");
         }
 
+        static void ResetPoints()
+        {
+            GM_ArmsRace.instance.p1Points = 0;
+            GM_ArmsRace.instance.p2Points = 0;
+        }
+
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator gen)
         {
             var list = instructions.ToList();
@@ -198,6 +204,8 @@ namespace UnboundLib.Patches
             var f_pickPhase = ExtensionMethods.GetFieldInfo(typeof(GM_ArmsRace), "pickPhase");
             var f_playerManagerInstance = AccessTools.Field(typeof(PlayerManager), "instance");
             var m_showPlayers = ExtensionMethods.GetMethodInfo(typeof(PlayerManager), "SetPlayersVisible");
+            var m_winSequence = ExtensionMethods.GetMethodInfo(typeof(PointVisualizer), "DoWinSequence");
+            var m_startCoroutine = ExtensionMethods.GetMethodInfo(typeof(MonoBehaviour), "StartCoroutine", new Type[] { typeof(IEnumerator) });
 
             var m_triggerPickStart = ExtensionMethods.GetMethodInfo(typeof(ArmsRacePatchUtils), "TriggerPickStart");
             var m_triggerPickEnd = ExtensionMethods.GetMethodInfo(typeof(ArmsRacePatchUtils), "TriggerPickEnd");
@@ -206,6 +214,16 @@ namespace UnboundLib.Patches
 
             for (int i = 0; i < list.Count; i++)
             {
+                if (list[i].Calls(m_winSequence) &&
+                    list[i + 1].Calls(m_startCoroutine) &&
+                    list[i + 2].opcode == OpCodes.Pop)
+                {
+                    newInstructions.AddRange(list.GetRange(i, 3));
+                    newInstructions.Add(CodeInstruction.Call(typeof(GM_ArmsRace_TranspilerPatch_RoundTransition), "ResetPoints"));
+                    i += 2;
+                    continue;
+                }
+
                 if (list[i].LoadsField(f_pickPhase))
                 {
                     newInstructions.Add(list[i]);
@@ -303,6 +321,33 @@ namespace UnboundLib.Patches
             {
                 yield return e.Current;
             }
+        }
+    }
+
+    [HarmonyPatch(typeof(GM_ArmsRace), "RoundOver")]
+    class GM_ArmsRace_Patch_RoundOver
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator gen)
+        {
+            // Do not set p1Points and p2Points to zero in RoundOver. We want to do it only after we've displayed them in RoundTransition.
+            var list = instructions.ToList();
+            var newInstructions = new List<CodeInstruction>();
+
+            var f_p1Points = ExtensionMethods.GetFieldInfo(typeof(GM_ArmsRace), "p1Points");
+            var f_p2Points = ExtensionMethods.GetFieldInfo(typeof(GM_ArmsRace), "p2Points");
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (i < list.Count - 2 && (list[i + 2].StoresField(f_p1Points) || list[i + 2].StoresField(f_p2Points)))
+                {
+                    i += 2;
+                    continue;
+                }
+
+                newInstructions.Add(list[i]);
+            }
+
+            return newInstructions;
         }
     }
 }
