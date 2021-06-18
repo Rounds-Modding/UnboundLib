@@ -1,0 +1,99 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+		<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+		<ProjectGuid>{2F32C3B2-635E-40DE-869E-6BC48A85989E}</ProjectGuid>
+		<OutputType>Library</OutputType>
+		<NoStandardLibraries>false</NoStandardLibraries>
+		<AssemblyName>UnboundLib</AssemblyName>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DebugSymbols>false</DebugSymbols>
+		<Optimize>true</Optimize>
+		<DebugType>none</DebugType>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DebugSymbols>true</DebugSymbols>
+		<DefineConstants>DEBUG</DefineConstants>
+		<Optimize>false</Optimize>
+		<DebugType>portable</DebugType>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<TargetFramework>net461</TargetFramework>
+		<LangVersion>7.1</LangVersion>
+	</PropertyGroup>
+	
+	<PropertyGroup>
+		<RoundsFolder>C:\Program Files (x86)\Steam\steamapps\common\ROUNDS</RoundsFolder>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="..\AssetsEmbedded\unboundui" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="..\AssetsEmbedded\unboundui" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="0Harmony">
+			<HintPath>..\Assemblies\0Harmony.dll</HintPath>
+		</Reference>
+		<Reference Include="BepInEx">
+			<HintPath>..\Assemblies\BepInEx.dll</HintPath>
+		</Reference>
+		<Reference Include="MMHOOK_Assembly-CSharp">
+			<HintPath>..\Assemblies\MMHOOK_Assembly-CSharp.dll</HintPath>
+		</Reference>
+		<Reference Include="Assembly-CSharp">
+			<HintPath>$(RoundsFolder)\Assembly-CSharp.dll</HintPath>
+		</Reference>
+		<Reference Include="Photon3Unity3D">
+			<HintPath>$(RoundsFolder)\Photon3Unity3D.dll</HintPath>
+		</Reference>
+		<Reference Include="PhotonRealtime">
+			<HintPath>$(RoundsFolder)\PhotonRealtime.dll</HintPath>
+		</Reference>
+		<Reference Include="PhotonUnityNetworking">
+			<HintPath>$(RoundsFolder)\PhotonUnityNetworking.dll</HintPath>
+		</Reference>
+		<Reference Include="PhotonUnityNetworking.Utilities">
+			<HintPath>$(RoundsFolder)\PhotonUnityNetworking.Utilities.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.TextMeshPro">
+			<HintPath>$(RoundsFolder)\Unity.TextMeshPro.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine">
+			<HintPath>$(RoundsFolder)\UnityEngine.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AnimationModule">
+			<HintPath>$(RoundsFolder)\UnityEngine.AnimationModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AssetBundleModule">
+			<HintPath>$(RoundsFolder)\UnityEngine.AssetBundleModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.CoreModule">
+			<HintPath>$(RoundsFolder)\UnityEngine.CoreModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.IMGUIModule">
+			<HintPath>$(RoundsFolder)\UnityEngine.IMGUIModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.TextRenderingModule">
+			<HintPath>$(RoundsFolder)\UnityEngine.TextRenderingModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UI">
+			<HintPath>$(RoundsFolder)\UnityEngine.UI.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UIElementsModule">
+			<HintPath>$(RoundsFolder)\UnityEngine.UIElementsModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UIModule">
+			<HintPath>$(RoundsFolder)\UnityEngine.UIModule.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+</Project>
