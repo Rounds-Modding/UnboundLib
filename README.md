@@ -10,8 +10,9 @@ Example usage:
 ```c#
 	private const string MessageEvent = "YourMod_MessageEvent";
 
-	NetworkingManager.RegisterEvent(MessageEvent, (data) => {
-	  ModLoader.BuildInfoPopup("Test Event Message: " + (string)data[0]);    // should print "Test Event Message: Hello World!"
+	NetworkingManager.RegisterEvent(MessageEvent, (data) =>
+	{
+		ModLoader.BuildInfoPopup("Test Event Message: " + (string)data[0]);    // should print "Test Event Message: Hello World!"
 	});
 
 	// send event to other clients only
@@ -51,26 +52,41 @@ The framework offers a flexible hook system. With hooks, mods can trigger action
 anything about the specific game mode or its implementation.
 
 ### Triggering hooks
-Game modes can trigger hooks whenever they wish:
+Game modes can trigger async hooks whenever they wish:
 
 ```csharp
-private void RoundStart() {
-  // Hook keys are case-insensitive
-  GameModeManager.TriggerHook("RoundStart");
+private IEnumerator RoundStart()
+{
+	// Hook keys are case-insensitive
+	yield return GameModeManager.TriggerHook("RoundStart");
 
-  // A healthy set of predefined keys is provided to make hooking on to them easier.
-  // Predefined keys should be used in favour of custom ones when possible.
-  GameModeManager.TriggerHook(GameModeHooks.HookRoundStart);
+	// A healthy set of predefined keys is provided to make hooking on to them easier.
+	// Predefined keys should be used in favour of custom ones when possible.
+	yield return GameModeManager.TriggerHook(GameModeHooks.HookRoundStart);
 }
 ```
 
 ### Registering hooks
-and mods can register hook listeners wherever they wish:
+Mods can register hook listeners wherever they wish:
 
 ```csharp
-private void Init() {
-  // Hooks are called with the game mode that triggered the hook, which is always the currently active game mode
-  GameModeManager.AddHook(GameModeHooks.HookRoundStart, (gm) => UnityEngine.Debug.Log(gm.Name));
+private void Init()
+{
+	// Hooks are called with the game mode that triggered the hook, which is always the currently active game mode
+	GameModeManager.AddHook(GameModeHooks.HookRoundStart, this.OnRoundStart);
+}
+
+private IEnumerator OnRoundStart(IGameModeHandler gm)
+{
+	// Triggers are IEnumerators so they support yields
+	yield return new WaitForSeconds(2f);
+
+	UnityEngine.Debug.Log(gm.Name);
+
+	/* Since triggers are IEnumerators, they must be executed within a coroutine. This means triggers are guaranteed to
+	 * be able to disrupt the execution of the current game mode.
+	 */
+	gm.GameMode.StopAllCoroutines();
 }
 ```
 
@@ -83,8 +99,10 @@ but they place a lot of responsibility onto game modes to provide sufficient set
 ### Using settings in a game mode
 
 ```csharp
-private void CheckPoints() {
-	if (p1Points >= (int)GameModeManager.CurrentHandler.Settings["pointsToWinRound"]) {
+private void CheckPoints()
+{
+	if (p1Points >= (int)GameModeManager.CurrentHandler.Settings["pointsToWinRound"])
+	{
 		WinRound();
 	}
 }
@@ -93,11 +111,14 @@ private void CheckPoints() {
 ### Changing settings (in a mod)
 
 ```csharp
-private void Init() {
-	GameModeManager.AddHook(GameModeHooks.HookInitEnd, (gm) =>
-	{
-		gm.ChangeSetting("pointsToWinRound", 10);
-	});
+private void Init()
+{
+	GameModeManager.AddHook(GameModeHooks.HookInitEnd, this.OnInitEnd);
+}
+
+private IEnumerator OnInitEnd(GameModeHandler gm)
+{
+	gm.ChangeSetting("pointsToWinRound", 10);
 }
 ```
 

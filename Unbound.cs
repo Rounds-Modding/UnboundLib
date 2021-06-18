@@ -14,7 +14,7 @@ using UnityEngine.UI;
 
 namespace UnboundLib
 {
-    [BepInPlugin(ModId, ModName, "1.1.2")]
+    [BepInPlugin(ModId, ModName, "2.1.0")]
     [BepInProcess("Rounds.exe")]
     public class Unbound : BaseUnityPlugin
     {
@@ -102,6 +102,18 @@ namespace UnboundLib
                 if (text != null) Destroy(text.gameObject);
 
                 orig(self);
+            };
+
+            IEnumerator ArmsRaceStartCoroutine(On.GM_ArmsRace.orig_Start orig, GM_ArmsRace self)
+            {
+                yield return GameModeManager.TriggerHook(GameModeHooks.HookInitStart);
+                orig(self);
+                yield return GameModeManager.TriggerHook(GameModeHooks.HookInitEnd);
+            }
+
+            On.GM_ArmsRace.Start += (orig, self) =>
+            {
+                self.StartCoroutine(ArmsRaceStartCoroutine(orig, self));
             };
         }
 

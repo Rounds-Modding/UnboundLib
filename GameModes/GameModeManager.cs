@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,7 +8,6 @@ using ExitGames.Client.Photon;
 
 namespace UnboundLib.GameModes
 {
-
     public static class GameModeManager
     {
         private static Dictionary<string, IGameModeHandler> handlers = new Dictionary<string, IGameModeHandler>();
@@ -74,12 +74,12 @@ namespace UnboundLib.GameModes
             };
         }
 
-        public static void TriggerHook(string hook)
+        public static IEnumerator TriggerHook(string hook)
         {
-            GameModeManager.CurrentHandler?.TriggerHook(hook);
+            yield return GameModeManager.CurrentHandler?.TriggerHook(hook);
         }
 
-        public static void AddHook(string key, Action<IGameModeHandler> action)
+        public static void AddHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
             key = key.ToLower();
             foreach (var handler in GameModeManager.handlers.Values)
@@ -88,7 +88,7 @@ namespace UnboundLib.GameModes
             }
         }
 
-        public static void RemoveHook(string key, Action<IGameModeHandler> action)
+        public static void RemoveHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
             key = key.ToLower();
             foreach (var handler in GameModeManager.handlers.Values)
