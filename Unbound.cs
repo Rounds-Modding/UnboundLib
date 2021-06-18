@@ -14,7 +14,7 @@ using UnityEngine.UI;
 
 namespace UnboundLib
 {
-    [BepInPlugin(ModId, ModName, "2.1.1")]
+    [BepInPlugin(ModId, ModName, "2.1.2")]
     [BepInProcess("Rounds.exe")]
     public class Unbound : BaseUnityPlugin
     {
