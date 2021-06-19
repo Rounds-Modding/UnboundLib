@@ -10,18 +10,18 @@ This is a helpful utility for ROUNDS modders aimed at simplifying certain common
 The **NetworkingManager** abstracts the default Photon networking capabilities away into an easy-to-use interface you can use for communication between clients.
 Example usage:
 ```c#
-	private const string MessageEvent = "YourMod_MessageEvent";
+private const string MessageEvent = "YourMod_MessageEvent";
 
-	NetworkingManager.RegisterEvent(MessageEvent, (data) =>
-	{
-		ModLoader.BuildInfoPopup("Test Event Message: " + (string)data[0]);    // should print "Test Event Message: Hello World!"
-	});
+NetworkingManager.RegisterEvent(MessageEvent, (data) =>
+{
+	ModLoader.BuildInfoPopup("Test Event Message: " + (string)data[0]);    // should print "Test Event Message: Hello World!"
+});
 
-	// send event to other clients only
-	NetworkingManager.RaiseEventOthers(MessageEvent, "Hello World!");
-	
-	// send event to other clients AND yourself
-	NetworkingManager.RaiseEvent(MessageEvent, "Hello World!");
+// send event to other clients only
+NetworkingManager.RaiseEventOthers(MessageEvent, "Hello World!");
+
+// send event to other clients AND yourself
+NetworkingManager.RaiseEvent(MessageEvent, "Hello World!");
 ```
 
 ## CustomCard Framework
