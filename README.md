@@ -133,7 +133,7 @@ See [/GameModes](./GameModes) for implementation details and example `GameModeHa
 Building the project is likely to work without having to change anything. However, if your ROUNDS installation resides in somewhere other than `C:\Program Files (x86)\Steam\steamapps\common\ROUNDS`,
 you will need to change the path we have pre-configured for you:
 
-1. Copy `Source/UnboundLib.csproj.user.dist` to `Source/UnboundLib.csproj.user`
-2. Change the ROUNDS installation folder path inside `Source/UnboundLib.csproj.user`
+1. Copy `UnboundLib/UnboundLib.csproj.user.dist` to `UnboundLib/UnboundLib.csproj.user`
+2. Change the ROUNDS installation folder path inside `UnboundLib/UnboundLib.csproj.user`
 
 You can now open the project solution with Visual Studio, and you're set.
