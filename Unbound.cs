@@ -178,14 +178,27 @@ namespace UnboundLib
             defaultCards = CardChoice.instance.cards;
             activeCards.AddRange(defaultCards);
             
-            // add default levels to level list
-            levels.AddRange(MapManager.instance.levels);
 
             // register default cards with toggle menu
             foreach (var card in defaultCards)
             {
                 CardToggleMenuHandler.Instance.AddCardToggle(card, false);
             }
+
+            // add default levels to level list
+            levels.AddRange(MapManager.instance.levels);
+
+            // add custom levels to map list
+            this.ExecuteAfterSeconds(0.1f, () =>
+            {
+                MapManager.instance.levels = levels.ToArray();
+                On.MainMenuHandler.Awake += (orig, self) =>
+                {
+                    MapManager.instance.levels = levels.ToArray();
+                    orig(self);
+                };
+                
+            });
 
             // hook up Photon callbacks
             var networkEvents = gameObject.AddComponent<NetworkEventCallbacks>();
@@ -198,7 +211,6 @@ namespace UnboundLib
             if (GameManager.instance.isPlaying && PhotonNetwork.OfflineMode)
             {
                 CardChoice.instance.cards = activeCards.ToArray();
-                MapManager.instance.levels = levels.ToArray();
             }
 
             if (Input.GetKeyDown(KeyCode.F1))
@@ -359,6 +371,7 @@ namespace UnboundLib
                     text = text.Replace("ASSETS", "");
                     text = text.Replace(".UNITY", "");
                     text = Regex.Replace(text, "/.*/", string.Empty);
+                    text = text.Replace("/", "");
                     var text2 = message.ToUpper();
                     text2 = text2.Replace(" ", "_");
                     text2 = text2.Replace("/", "");
