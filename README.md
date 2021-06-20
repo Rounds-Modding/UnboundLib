@@ -4,7 +4,9 @@ For more mods, news, and support join us on discord here: https://discord.gg/mGf
 # UnboundLib
 This is a helpful utility for ROUNDS modders aimed at simplifying certain common tasks.
 
-# NetworkingManager
+# Usage
+
+## NetworkingManager
 The **NetworkingManager** abstracts the default Photon networking capabilities away into an easy-to-use interface you can use for communication between clients.
 Example usage:
 ```c#
@@ -22,7 +24,7 @@ NetworkingManager.RaiseEventOthers(MessageEvent, "Hello World!");
 NetworkingManager.RaiseEvent(MessageEvent, "Hello World!");
 ```
 
-# CustomCard Framework
+## CustomCard Framework
 Create a class for your card, extend the **CustomCard** class, implement its methods, and then in your mod initialization register your card like so:
 ```c#
 void Start()
@@ -31,7 +33,7 @@ void Start()
 }
 ```
 
-# CustomMap Framework
+## CustomMap Framework
 First create a map in unity by using the package and export you're scene to a AssetBundle. Then in your mod initialization register your map like so:
 
 ```c#
@@ -41,17 +43,17 @@ void Start()
 }
 ```
 
-# GameMode Framework
+## GameMode Framework
 The GameMode framework provides a modding-friendly API for custom game modes, allowing mods to target them without having to know about their existence.
 
 Custom game modes are defined in two layers: the actual game mode class that does all the heavy gameplay logic, and a handler class that provides an interface
 between mods and the game mode.
 
-## Hooks
+### Hooks
 The framework offers a flexible hook system. With hooks, mods can trigger actions at specific points of time as a game is running, without needing to know
 anything about the specific game mode or its implementation.
 
-### Triggering hooks
+#### Triggering hooks
 Game modes can trigger async hooks whenever they wish:
 
 ```csharp
@@ -66,7 +68,7 @@ private IEnumerator RoundStart()
 }
 ```
 
-### Registering hooks
+#### Registering hooks
 Mods can register hook listeners wherever they wish:
 
 ```csharp
@@ -92,11 +94,11 @@ private IEnumerator OnRoundStart(IGameModeHandler gm)
 
 The existing game modes in ROUNDS, namely Arms Race and Sandbox, have also been patched to trigger hooks.
 
-## Settings
+### Settings
 The framework also adds a setting system to help mods change common game mode settings easily. Settings provide an easy-to-use method for mods to change gameplay,
 but they place a lot of responsibility onto game modes to provide sufficient settings.
 
-### Using settings in a game mode
+#### Using settings in a game mode
 
 ```csharp
 private void CheckPoints()
@@ -108,7 +110,7 @@ private void CheckPoints()
 }
 ```
 
-### Changing settings (in a mod)
+#### Changing settings (in a mod)
 
 ```csharp
 private void Init()
@@ -125,3 +127,13 @@ private IEnumerator OnInitEnd(GameModeHandler gm)
 ---
 
 See [/GameModes](./GameModes) for implementation details and example `GameModeHandler`s.
+
+# Development
+
+Building the project is likely to work without having to change anything. However, if your ROUNDS installation resides in somewhere other than `C:\Program Files (x86)\Steam\steamapps\common\ROUNDS`,
+you will need to change the path we have pre-configured for you:
+
+1. Copy `Source/UnboundLib.csproj.user.dist` to `Source/UnboundLib.csproj.user`
+2. Change the ROUNDS installation folder path inside `Source/UnboundLib.csproj.user`
+
+You can now open the project solution with Visual Studio, and you're set.
