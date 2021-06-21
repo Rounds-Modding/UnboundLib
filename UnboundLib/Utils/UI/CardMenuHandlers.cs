@@ -74,6 +74,7 @@ namespace UnboundLib
                     if (!Unbound.inactiveCards.Contains(info))
                     {
                         Unbound.inactiveCards.Add(info);
+                        Unbound.inactiveCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
                     }
                 },
                 () =>
@@ -81,6 +82,7 @@ namespace UnboundLib
                     if (!Unbound.activeCards.Contains(info))
                     {
                         Unbound.activeCards.Add(info);
+                        Unbound.activeCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
                     }
                     if (Unbound.inactiveCards.Contains(info))
                     {
