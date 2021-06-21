@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace UnboundLib.Patches
 {
-
     [HarmonyPatch(typeof(CardBar), "OnHover")]
     class CardBar_Patch
     {
