@@ -75,7 +75,7 @@ jobs:
           mv UnboundLib/bin/Release/net461/UnboundLib.dll UnboundLib.dll
 
       - name: Publish to NuGet
-        run: dotnet nuget push "UnboundLib/bin/Release/*.nupkg" -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push "UnboundLib/release/*.nupkg" -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
 
       - name: Create GH Release
         uses: softprops/action-gh-release@v1
