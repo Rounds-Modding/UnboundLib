@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnboundLib.Networking;
 using UnityEngine.Events;
 
 namespace UnboundLib
@@ -115,6 +116,7 @@ namespace UnboundLib
         }
 
         public CardInfo info;
+        public bool Value { get; private set; } = true;
 
         void Awake()
         {
@@ -122,11 +124,13 @@ namespace UnboundLib
             {
                 animator.Play("Switch Off");
                 cardName.alpha = 0.25f;
+                Value = false;
             });
             offButton.onClick.AddListener(() =>
             {
                 animator.Play("Switch On");
                 cardName.alpha = 1f;
+                Value = true;
             });
 
             toggles.Add(this);
@@ -151,6 +155,10 @@ namespace UnboundLib
 
         public void SetValue(bool enabled)
         {
+            NetworkingManager.RPC(typeof(CardToggleHandler), nameof(Toggle), info.cardName, enabled);
+        }
+        private void SetValue(string name, bool enabled)
+        {
             if (enabled)
             {
                 offButton.onClick?.Invoke();
@@ -158,6 +166,31 @@ namespace UnboundLib
             else
             {
                 onButton.onClick?.Invoke();
+            }
+        }
+
+        [UnboundRPC]
+        private static void Toggle(string name, bool enabled)
+        {
+            var picker = toggles.FirstOrDefault(c => c.info.cardName.ToUpper() == name.ToUpper());
+
+            if (picker == null)
+            {
+                NetworkingManager.RPC_Others(typeof(CardToggleHandler), nameof(RejectToggle), name, !enabled);
+            }
+            else
+            {
+                picker.SetValue(name, enabled);
+            }
+        }
+        [UnboundRPC]
+        private static void RejectToggle(string name, bool enabled)
+        {
+            var picker = toggles.FirstOrDefault(c => c.info.cardName.ToUpper() == name.ToUpper());
+
+            if (picker != null)
+            {
+                picker.SetValue(name, enabled);
             }
         }
     }

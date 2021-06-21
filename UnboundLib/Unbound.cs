@@ -20,7 +20,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.1.2";
+        public const string Version = "2.1.3";
 
         public static Unbound Instance { get; private set; }
 
@@ -130,6 +130,15 @@ namespace UnboundLib
             {
                 self.StartCoroutine(ArmsRaceStartCoroutine(orig, self));
             };
+
+
+            // apply cards on game start
+            IEnumerator ResetCardsOnStart(IGameModeHandler gm)
+            {
+                CardChoice.instance.cards = activeCards.ToArray();
+                yield break;
+            }
+            GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsOnStart);
         }
 
         private void Awake()
@@ -172,16 +181,14 @@ namespace UnboundLib
                 }
 
                 CardChoice.instance.cards = defaultCards;
-
-                // attempt to syncronize levels and cards with other players
-                NetworkingManager.RPC_Others(typeof(Unbound), nameof(CardHandshake), activeCards.Select(c => c.cardName).ToArray());
-                NetworkingManager.RPC_Others(typeof(Unbound), nameof(MapHandshake), activeLevels);
             });
 
             // receive mod handshake
             NetworkingManager.RegisterEvent(NetworkEventType.FinishHandshake, (data) =>
             {
-                //CardChoice.instance.cards = activeCards.ToArray();
+                // attempt to syncronize levels and cards with other players
+                CardChoice.instance.cards = activeCards.ToArray();
+                NetworkingManager.RPC(typeof(Unbound), nameof(RPC_MapHandshake), (object)activeLevels.ToArray());
 
                 if (data.Length > 0)
                 {
@@ -281,7 +288,16 @@ namespace UnboundLib
 
         private void OnJoinedRoomAction()
         {
+            CardChoice.instance.cards = defaultCards;
             NetworkingManager.RaiseEventOthers(NetworkEventType.StartHandshake);
+
+            if (!PhotonNetwork.IsMasterClient)
+            {
+                var cardSelection = new List<CardInfo>();
+                cardSelection.AddRange(activeCards);
+                cardSelection.AddRange(inactiveCards);
+                NetworkingManager.RPC(typeof(Unbound), nameof(RPC_CardHandshake), (object)cardSelection.Select(c => c.cardName).ToArray());
+            }
 
             OnJoinedRoom?.Invoke();
             foreach (var handshake in handShakeActions)
@@ -291,25 +307,22 @@ namespace UnboundLib
         }
         private void OnLeftRoomAction()
         {
-            CardChoice.instance.cards = defaultCards;
             OnLeftRoom?.Invoke();
         }
-
+        
         [UnboundRPC]
-        private static void CardHandshake(string[] cards)
+        private static void RPC_CardHandshake(string[] cards)
         {
+            if (!PhotonNetwork.IsMasterClient) return;
+
             foreach (var c in CardToggleHandler.toggles)
             {
-                if (!cards.Contains(c.info.cardName))
-                {
-                    c.SetValue(false);
-                }
+                c.SetValue(cards.Contains(c.info.cardName) && c.Value);
             }
-
-            CardChoice.instance.cards = activeCards.ToArray();
         }
+
         [UnboundRPC]
-        private static void MapHandshake(string[] maps)
+        private static void RPC_MapHandshake(string[] maps)
         {
             var difference = maps.Except(activeLevels).ToArray();
 
@@ -322,6 +335,7 @@ namespace UnboundLib
 
             MapManager.instance.levels = activeLevels.ToArray();
         }
+
         [UnboundRPC]
         public static void BuildInfoPopup(string message)
         {
@@ -329,10 +343,20 @@ namespace UnboundLib
             popup.rectTransform.SetParent(Instance.canvas.transform);
             popup.Build(message);
         }
+
+        [UnboundRPC]
+        public static void BuildModal(string title, string message)
+        {
+            BuildModal()
+                .Title(title)
+                .Message(message)
+                .Show();
+        }
         public static ModalHandler BuildModal()
         {
             return Instantiate(modalPrefab, Instance.canvas.transform).AddComponent<ModalHandler>();
         }
+
 
         public static void RegisterGUI(string modName, Action guiAction)
         {
