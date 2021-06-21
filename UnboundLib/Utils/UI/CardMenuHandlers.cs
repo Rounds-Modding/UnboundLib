@@ -63,6 +63,7 @@ namespace UnboundLib
         public void AddCardToggle(CardInfo info, bool isModded = true)
         {
             Instantiate(TogglePrefab, isModded ? modCardsContent : defaultCardsContent).AddComponent<CardToggleHandler>()
+                .Register(info)
                 .SetName(info.cardName)
                 .SetActions(
                 () =>
@@ -76,7 +77,7 @@ namespace UnboundLib
                         Unbound.inactiveCards.Add(info);
                         Unbound.inactiveCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
                     }
-                },
+                }, 
                 () =>
                 {
                     if (!Unbound.activeCards.Contains(info))
@@ -94,6 +95,8 @@ namespace UnboundLib
 
     internal class CardToggleHandler : MonoBehaviour
     {
+        internal static List<CardToggleHandler> toggles = new List<CardToggleHandler>();
+
         private TextMeshProUGUI cardName
         {
             get { return transform.Find("Name").GetComponent<TextMeshProUGUI>();  }
@@ -111,6 +114,8 @@ namespace UnboundLib
             get { return transform.Find("Material").GetComponent<Animator>(); }
         }
 
+        public CardInfo info;
+
         void Awake()
         {
             onButton.onClick.AddListener(() =>
@@ -123,8 +128,15 @@ namespace UnboundLib
                 animator.Play("Switch On");
                 cardName.alpha = 1f;
             });
+
+            toggles.Add(this);
         }
 
+        public CardToggleHandler Register(CardInfo info)
+        {
+            this.info = info;
+            return this;
+        }
         public CardToggleHandler SetName(string name)
         {
             cardName.text = name;
@@ -135,6 +147,18 @@ namespace UnboundLib
             onButton.onClick.AddListener(disable);
             offButton.onClick.AddListener(enable);
             return this;
+        }
+
+        public void SetValue(bool enabled)
+        {
+            if (enabled)
+            {
+                offButton.onClick?.Invoke();
+            }
+            else
+            {
+                onButton.onClick?.Invoke();
+            }
         }
     }
 }

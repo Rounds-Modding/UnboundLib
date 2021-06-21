@@ -49,10 +49,14 @@ namespace UnboundLib
         }
 
         internal static CardInfo templateCard;
+
         internal static CardInfo[] defaultCards;
         internal static List<CardInfo> activeCards = new List<CardInfo>();
         internal static List<CardInfo> inactiveCards = new List<CardInfo>();
-        internal static List<string> levels = new List<string>();
+
+        internal static string[] defaultLevels;
+        internal static List<string> activeLevels = new List<string>();
+        internal static List<string> inactiveLevels = new List<string>();
 
         public delegate void OnJoinedDelegate();
         public delegate void OnLeftDelegate();
@@ -76,6 +80,17 @@ namespace UnboundLib
 
             On.MainMenuHandler.Awake += (orig, self) =>
             {
+                // reapply cards and levels
+                this.ExecuteAfterSeconds(0.1f, () =>
+                {
+                    activeLevels.AddRange(inactiveLevels);
+                    inactiveLevels.Clear();
+                    MapManager.instance.levels = activeLevels.ToArray();
+                    CardChoice.instance.cards = activeCards.ToArray();
+                });
+
+
+                // create unbound text
                 canCreate = true;
                 this.ExecuteAfterSeconds(firstTime ? 4f : 0.1f, () =>
                 {
@@ -117,7 +132,7 @@ namespace UnboundLib
             };
         }
 
-        void Awake()
+        private void Awake()
         {
             if (Instance == null)
             {
@@ -137,7 +152,7 @@ namespace UnboundLib
             GameModeManager.Init();
         }
 
-        void Start()
+        private void Start()
         {
             // store default cards
             defaultCards = (CardInfo[]) CardChoice.instance.cards.Clone();
@@ -157,12 +172,16 @@ namespace UnboundLib
                 }
 
                 CardChoice.instance.cards = defaultCards;
+
+                // attempt to syncronize levels and cards with other players
+                NetworkingManager.RPC_Others(typeof(Unbound), nameof(CardHandshake), activeCards.Select(c => c.cardName).ToArray());
+                NetworkingManager.RPC_Others(typeof(Unbound), nameof(MapHandshake), activeLevels);
             });
 
             // receive mod handshake
             NetworkingManager.RegisterEvent(NetworkEventType.FinishHandshake, (data) =>
             {
-                CardChoice.instance.cards = activeCards.ToArray();
+                //CardChoice.instance.cards = activeCards.ToArray();
 
                 if (data.Length > 0)
                 {
@@ -183,9 +202,10 @@ namespace UnboundLib
             {
                 CardToggleMenuHandler.Instance.AddCardToggle(card, false);
             }
-            
-            // add default levels to level list
-            levels.AddRange(MapManager.instance.levels);
+
+            // add default activeLevels to level list
+            defaultLevels = MapManager.instance.levels;
+            activeLevels.AddRange(MapManager.instance.levels);
 
             // hook up Photon callbacks
             var networkEvents = gameObject.AddComponent<NetworkEventCallbacks>();
@@ -193,13 +213,8 @@ namespace UnboundLib
             networkEvents.OnLeftRoomEvent += OnLeftRoomAction;
         }
 
-        void Update()
+        private void Update()
         {
-            if (GameManager.instance.isPlaying && PhotonNetwork.OfflineMode)
-            {
-                CardChoice.instance.cards = activeCards.ToArray();
-            }
-
             if (Input.GetKeyDown(KeyCode.F1))
             {
                 showModUi = !showModUi;
@@ -208,7 +223,7 @@ namespace UnboundLib
             GameManager.lockInput = showModUi || DevConsole.isTyping;
         }
 
-        void OnGUI()
+        private void OnGUI()
         {
             if (!showModUi) return;
 
@@ -254,7 +269,7 @@ namespace UnboundLib
             GUILayout.EndVertical();
         }
 
-        void LoadAssets()
+        private void LoadAssets()
         {
             UIAssets = Jotunn.Utils.AssetUtils.LoadAssetBundleFromResources("unboundui", typeof(Unbound).Assembly);
             if (UIAssets != null)
@@ -280,6 +295,33 @@ namespace UnboundLib
             OnLeftRoom?.Invoke();
         }
 
+        [UnboundRPC]
+        private static void CardHandshake(string[] cards)
+        {
+            foreach (var c in CardToggleHandler.toggles)
+            {
+                if (!cards.Contains(c.info.cardName))
+                {
+                    c.SetValue(false);
+                }
+            }
+
+            CardChoice.instance.cards = activeCards.ToArray();
+        }
+        [UnboundRPC]
+        private static void MapHandshake(string[] maps)
+        {
+            var difference = maps.Except(activeLevels).ToArray();
+
+            inactiveLevels.AddRange(difference);
+
+            foreach (var c in difference)
+            {
+                activeLevels.Remove(c);
+            }
+
+            MapManager.instance.levels = activeLevels.ToArray();
+        }
         [UnboundRPC]
         public static void BuildInfoPopup(string message)
         {
@@ -336,11 +378,11 @@ namespace UnboundLib
             // extract scene paths
             foreach (var path in assetBundle.GetAllScenePaths())
             {
-                levels.Add(path);
+                activeLevels.Add(path);
             }
 
             // update map list
-            MapManager.instance.levels = levels.ToArray();
+            MapManager.instance.levels = activeLevels.ToArray();
         }
         // loads a map in via its name prefixed with a forward-slash
         internal static void SpawnMap(string message)
