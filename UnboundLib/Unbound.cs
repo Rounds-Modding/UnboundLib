@@ -90,8 +90,6 @@ namespace UnboundLib
                     text.transform.SetAsFirstSibling();
                     text.rectTransform.localScale = Vector3.one;
                     text.rectTransform.localPosition = new Vector3(0, 325, text.rectTransform.localPosition.z);
-                    // Add custom levels to map list
-                    MapManager.instance.levels = levels.ToArray();
                 });
                 firstTime = false;
 
@@ -333,14 +331,18 @@ namespace UnboundLib
             return newText;
         }
 
-        public static void BuildLevel(AssetBundle assetBundle)
+        public static void RegisterMaps(AssetBundle assetBundle)
         {
+            // extract scene paths
             foreach (var path in assetBundle.GetAllScenePaths())
             {
                 levels.Add(path);
             }
+
+            // update map list
+            MapManager.instance.levels = levels.ToArray();
         }
-        // loads a map in via its name and it start with /
+        // loads a map in via its name prefixed with a forward-slash
         internal static void SpawnMap(string message)
         {
             if (!message.StartsWith("/"))
@@ -351,37 +353,41 @@ namespace UnboundLib
             try
             {
                 var currentLevels = MapManager.instance.levels;
-                var num = -1;
-                var num2 = 0f;
+                var levelId = -1;
+                var bestMatches = 0f;
+
+                // parse message
+                var formattedMessage = message.ToUpper()
+                    .Replace(" ", "_")
+                    .Replace("/", "");
+
                 for (var i = 0; i < currentLevels.Length; i++)
                 {
-                    var text = currentLevels[i].ToUpper();
-                    text = text.Replace(" ", "");
-                    text = text.Replace("ASSETS", "");
-                    text = text.Replace(".UNITY", "");
+                    var text = currentLevels[i].ToUpper()
+                        .Replace(" ", "")
+                        .Replace("ASSETS", "")
+                        .Replace(".UNITY", "")
+                        .Replace("/", "");
                     text = Regex.Replace(text, "/.*/", string.Empty);
-                    text = text.Replace("/", "");
-                    var text2 = message.ToUpper();
-                    text2 = text2.Replace(" ", "_");
-                    text2 = text2.Replace("/", "");
-                    var num3 = 0f;
-                    for (int j = 0; j < text2.Length; j++)
+
+                    var currentMatches = 0f;
+                    for (int j = 0; j < formattedMessage.Length; j++)
                     {
-                        if (text.Length > j && text2[j] == text[j])
+                        if (text.Length > j && formattedMessage[j] == text[j])
                         {
-                            num3 += 1f / text2.Length;
+                            currentMatches += 1f / formattedMessage.Length;
                         }
                     }
-                    num3 -= (float)Mathf.Abs(text2.Length - text.Length) * 0.001f;
-                    if (num3 > 0.1f && num3 > num2)
+                    currentMatches -= (float)Mathf.Abs(formattedMessage.Length - text.Length) * 0.001f;
+                    if (currentMatches > 0.1f && currentMatches > bestMatches)
                     {
-                        num2 = num3;
-                        num = i;
+                        bestMatches = currentMatches;
+                        levelId = i;
                     }
                 }
-                if (num != -1)
+                if (levelId != -1)
                 {
-                    MapManager.instance.LoadLevelFromID(num, false, true);
+                    MapManager.instance.LoadLevelFromID(levelId, false, true);
                     
                     foreach (var player in PlayerManager.instance.players)
                     {
@@ -389,8 +395,18 @@ namespace UnboundLib
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                BuildModal()
+                    .Title("Error Loading Level")
+                    .Message($"No map found named:\n{message}\n\nError:\n{e.ToString()}")
+                    .CancelButton("Copy", () =>
+                    {
+                        BuildInfoPopup("Copied Message!");
+                        GUIUtility.systemCopyBuffer = e.ToString();
+                    })
+                    .CancelButton("Cancel", () => { })
+                    .Show();
             }
         }
 
