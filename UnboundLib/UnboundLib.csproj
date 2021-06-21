@@ -6,6 +6,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>UnboundLib</RootNamespace>
     <AssemblyName>UnboundLib</AssemblyName>
+    <Authors>RoundsModding</Authors>
     <TargetFramework>net461</TargetFramework>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
