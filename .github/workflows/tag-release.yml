@@ -62,7 +62,7 @@ jobs:
         run: |
           wget -O bepinex.zip "https://rounds.thunderstore.io/package/download/BepInEx/BepInExPack_ROUNDS/5.4.1100/"
           unzip bepinex.zip -d ~/BepInExRaw
-          steamcmd +login ${{ secrets.STEAM_USERNAME }} ${{ secrets.STEAM_PASSWORD }} +force_install_dir ~/ROUNDS_INSTALL +app_update 1557740 validate +exit
+          steamcmd +@sSteamCmdForcePlatformType windows +login ${{ secrets.STEAM_USERNAME }} ${{ secrets.STEAM_PASSWORD }} +force_install_dir ~/ROUNDS_INSTALL +app_update 1557740 validate +exit
           mv ~/BepInExRaw/BepInExPack_ROUNDS/* ~/ROUNDS_INSTALL/
 
       - name: Create Environment.props
