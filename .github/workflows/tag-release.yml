@@ -1,0 +1,86 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build_release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: 'main'
+
+      - name: Get ROUNDS version id
+        id: roundsversion
+        run: echo "::set-output name=roundsversion::$(curl -s https://api.steamcmd.net/v1/info/1557740 | jq -r ".data.\"1557740\".depots.branches.public.buildid")"
+
+      - name: Get the version
+        id: get_version
+        run: |
+          echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+          echo ::set-output name=VERSION_NUMBER::${GITHUB_REF/refs\/tags\/v/}
+
+      - name: Install NuGet
+        uses: nuget/setup-nuget@v1
+
+      - name: Restore project dependencies
+        run: |
+          nuget restore UnboundLib.sln
+          dotnet restore UnboundLib/UnboundLib.csproj
+
+      - name: Restore tools
+        run: |
+          dotnet tool restore
+
+      - name: Get build commands
+        run: |
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+          echo "deb https://download.mono-project.com/repo/ubuntu stable-bionic main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list
+          wget https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+          sudo dpkg -i packages-microsoft-prod.deb
+          sudo apt-get update
+          sudo apt-get install -y mono-roslyn mono-complete mono-dbg msbuild unzip dirmngr dotnet-sdk-5.0 dotnet-runtime-5.0
+
+      - name: Cache ROUNDS
+        id: cacherounds
+        uses: actions/cache@v2
+        with:
+          path: ~/ROUNDS_INSTALL
+          key: ${{ steps.roundsversion.outputs.roundsversion }}-BepInExPack-5.4.1100
+
+      - name: Install SteamCMD
+        if: steps.cacherounds.outputs.cache-hit != 'true'
+        uses: CyberAndrii/setup-steamcmd@v1
+
+      - name: Prepare ROUNDS dependencies
+        if: steps.cacherounds.outputs.cache-hit != 'true'
+        run: |
+          wget -O bepinex.zip "https://rounds.thunderstore.io/package/download/BepInEx/BepInExPack_ROUNDS/5.4.1100/"
+          unzip bepinex.zip -d ~/BepInExRaw
+          steamcmd +@sSteamCmdForcePlatformType windows +login ${{ secrets.STEAM_USERNAME }} ${{ secrets.STEAM_PASSWORD }} +force_install_dir ~/ROUNDS_INSTALL +app_update 1557740 validate +exit
+          mv ~/BepInExRaw/BepInExPack_ROUNDS/* ~/ROUNDS_INSTALL/
+
+      - name: Create Environment.props
+        run: |
+          echo "<?xml version=\"1.0\" encoding=\"utf-8\"?><Project ToolsVersion=\"Current\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\"><PropertyGroup><RoundsFolder>$HOME/ROUNDS_INSTALL</RoundsFolder></PropertyGroup></Project>" > UnboundLib/UnboundLib.csproj.user
+
+      - name: Build solution
+        run: |
+          msbuild UnboundLib.sln /p:Configuration=Release
+          mv UnboundLib/bin/Release/net461/UnboundLib.dll UnboundLib.dll
+
+      - name: Publish to NuGet
+        run: dotnet nuget push "release/*.nupkg" -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Create GH Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            UnboundLib.dll
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

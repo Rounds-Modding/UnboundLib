@@ -14,12 +14,13 @@ using UnityEngine.UI;
 
 namespace UnboundLib
 {
-    [BepInPlugin(ModId, ModName, "2.1.2")]
+    [BepInPlugin(ModId, ModName, Version)]
     [BepInProcess("Rounds.exe")]
     public class Unbound : BaseUnityPlugin
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
+        public const string Version = "2.1.2";
 
         public static Unbound Instance { get; private set; }
 
