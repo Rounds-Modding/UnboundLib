@@ -20,7 +20,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.1.2";
+        public const string Version = "2.1.3";
 
         public static Unbound Instance { get; private set; }
 
