@@ -126,7 +126,7 @@ private IEnumerator OnInitEnd(GameModeHandler gm)
 
 ---
 
-See [/GameModes](./GameModes) for implementation details and example `GameModeHandler`s.
+See [/UnboundLib/GameModes](./UnboundLib/GameModes) for implementation details and example `GameModeHandler`s.
 
 # Development
 
