@@ -6,7 +6,6 @@ using UnboundLib.GameModes;
 
 namespace UnboundLib.Patches
 {
-
     [HarmonyPatch(typeof(Player), "Start")]
     class Player_Patch_Start
     {
@@ -37,12 +36,16 @@ namespace UnboundLib.Patches
                 }
             }
         }
+    }
 
+    [HarmonyPatch(typeof(Player), "Awake")]
+    class Player_Patch_Awake
+    {
         static void Postfix(Player __instance)
         {
             if (__instance.data.view.IsMine)
             {
-                GameModeManager.AddHook(GameModeHooks.HookGameStart, gm => OnGameStart(gm, __instance));
+                GameModeManager.AddOnceHook(GameModeHooks.HookGameStart, gm => OnGameStart(gm, __instance));
             }
         }
 

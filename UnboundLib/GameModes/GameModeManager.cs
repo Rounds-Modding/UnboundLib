@@ -13,6 +13,7 @@ namespace UnboundLib.GameModes
         private static Dictionary<string, IGameModeHandler> handlers = new Dictionary<string, IGameModeHandler>();
         private static Dictionary<string, Type> gameModes = new Dictionary<string, Type>();
         private static Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>> hooks = new Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>>();
+        private static Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>> onceHooks = new Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>>();
 
         public static Action<IGameModeHandler> OnGameModeChanged { get; set; }
 
@@ -77,8 +78,12 @@ namespace UnboundLib.GameModes
 
         public static IEnumerator TriggerHook(string key)
         {
+            key = key.ToLower();
+
             List<Func<IGameModeHandler, IEnumerator>> hooks;
-            GameModeManager.hooks.TryGetValue(key.ToLower(), out hooks);
+            List<Func<IGameModeHandler, IEnumerator>> onceHooks;
+            GameModeManager.hooks.TryGetValue(key, out hooks);
+            GameModeManager.onceHooks.TryGetValue(key, out onceHooks);
 
             if (hooks != null && GameModeManager.CurrentHandler != null)
             {
@@ -87,6 +92,41 @@ namespace UnboundLib.GameModes
                     yield return hook(GameModeManager.CurrentHandler);
                 }
             }
+
+            if (onceHooks != null && GameModeManager.CurrentHandler != null)
+            {
+                foreach (var hook in onceHooks)
+                {
+                    GameModeManager.RemoveHook(key, hook);
+                }
+
+                GameModeManager.onceHooks.Remove(key);
+            }
+        }
+
+        /// <summary>
+        ///     Adds a hook that is automatically removed after it's triggered once.
+        /// </summary>
+        public static void AddOnceHook(string key, Func<IGameModeHandler, IEnumerator> action)
+        {
+            if (action == null)
+            {
+                return;
+            }
+
+            // Case-insensitive keys for QoL
+            key = key.ToLower();
+
+            if (!GameModeManager.onceHooks.ContainsKey(key))
+            {
+                GameModeManager.onceHooks.Add(key, new List<Func<IGameModeHandler, IEnumerator>> { action });
+            }
+            else
+            {
+                GameModeManager.onceHooks[key].Add(action);
+            }
+
+            GameModeManager.AddHook(key, action);
         }
 
         public static void AddHook(string key, Func<IGameModeHandler, IEnumerator> action)
