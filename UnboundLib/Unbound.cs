@@ -180,15 +180,6 @@ namespace UnboundLib
                     NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake);
                 }
 
-                // send available card pool to the master client
-                if (!PhotonNetwork.IsMasterClient)
-                {
-                    var cardSelection = new List<CardInfo>();
-                    cardSelection.AddRange(activeCards);
-                    cardSelection.AddRange(inactiveCards);
-                    NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_CardHandshake), (object)cardSelection.Select(c => c.cardName).ToArray());
-                }
-
                 CardChoice.instance.cards = defaultCards;
             });
 
@@ -301,6 +292,16 @@ namespace UnboundLib
                 CardChoice.instance.cards = defaultCards;
             NetworkingManager.RaiseEventOthers(NetworkEventType.StartHandshake);
 
+            // send available card pool to the master client
+            if (!PhotonNetwork.IsMasterClient)
+            {
+                var cardSelection = new List<CardInfo>();
+                cardSelection.AddRange(activeCards);
+                cardSelection.AddRange(inactiveCards);
+                NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_CardHandshake), (object)cardSelection.Select(c => c.cardName).ToArray());
+            }
+
+
             OnJoinedRoom?.Invoke();
             foreach (var handshake in handShakeActions)
             {
@@ -316,6 +317,8 @@ namespace UnboundLib
         private static void RPC_CardHandshake(string[] cards)
         {
             if (!PhotonNetwork.IsMasterClient) return;
+
+            BuildModal("Cards", string.Join(", ", cards));
 
             // disable any cards which aren't shared by other players
             foreach (var c in CardToggleHandler.toggles)
