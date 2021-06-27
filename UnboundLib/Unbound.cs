@@ -432,9 +432,9 @@ namespace UnboundLib
                     var text = currentLevels[i].ToUpper()
                         .Replace(" ", "")
                         .Replace("ASSETS", "")
-                        .Replace(".UNITY", "")
-                        .Replace("/", "");
+                        .Replace(".UNITY", "");
                     text = Regex.Replace(text, "/.*/", string.Empty);
+                    text = text.Replace("/", "");
 
                     var currentMatches = 0f;
                     for (int j = 0; j < formattedMessage.Length; j++)
