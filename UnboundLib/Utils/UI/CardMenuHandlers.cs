@@ -176,7 +176,7 @@ namespace UnboundLib
         {
             var picker = toggles.FirstOrDefault(c => c.info.cardName.ToUpper() == name.ToUpper());
 
-            if (picker == null)
+            if (picker == null && enabled)
             {
                 NetworkingManager.RPC_Others(typeof(CardToggleHandler), nameof(RejectToggle), name, !enabled);
             }
