@@ -180,10 +180,14 @@ namespace UnboundLib
                     NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake);
                 }
 
-                var cardSelection = new List<CardInfo>();
-                cardSelection.AddRange(activeCards);
-                cardSelection.AddRange(inactiveCards);
-                NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_CardHandshake), (object)cardSelection.Select(c => c.cardName).ToArray());
+                // send available card pool to the master client
+                if (!PhotonNetwork.IsMasterClient)
+                {
+                    var cardSelection = new List<CardInfo>();
+                    cardSelection.AddRange(activeCards);
+                    cardSelection.AddRange(inactiveCards);
+                    NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_CardHandshake), (object)cardSelection.Select(c => c.cardName).ToArray());
+                }
 
                 CardChoice.instance.cards = defaultCards;
             });
@@ -311,9 +315,25 @@ namespace UnboundLib
         [UnboundRPC]
         private static void RPC_CardHandshake(string[] cards)
         {
+            if (!PhotonNetwork.IsMasterClient) return;
+
+            // disable any cards which aren't shared by other players
             foreach (var c in CardToggleHandler.toggles)
             {
                 c.SetValue(cards.Contains(c.info.cardName) && c.Value);
+            }
+
+            // reply to all users with new list of valid cards
+            NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_HostCardHandshakeResponse), (object)activeCards.Select(c => c.cardName).ToArray());
+        }
+
+        [UnboundRPC]
+        private static void RPC_HostCardHandshakeResponse(string[] cards)
+        {
+            // enable only cards that the host has specified are allowed
+            foreach (var c in CardToggleHandler.toggles)
+            {
+                c.SetValue(cards.Contains(c.info.cardName));
             }
         }
 
