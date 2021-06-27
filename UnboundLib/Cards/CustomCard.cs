@@ -82,6 +82,7 @@ namespace UnboundLib.Cards
 
                 // Add this card to the list of all custom cards
                 Unbound.activeCards.Add(newCardInfo);
+                Unbound.activeCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
 
                 // Register card with the toggle menu
                 CardToggleMenuHandler.Instance.AddCardToggle(newCardInfo);

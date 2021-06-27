@@ -131,12 +131,20 @@ namespace UnboundLib
 
             if (!rpcMethodCache.ContainsKey(key))
             {
-                var methodInfo = (from m in type.GetMethods()
+                var methodInfo = (from m in type.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
                                   let attr = m.GetCustomAttribute<UnboundRPC>()
                                   where attr != null
                                   let name = attr.EventID == null ? m.Name : attr.EventID
                                   where methodName == name
                                   select m).FirstOrDefault();
+                if (methodInfo == null)
+                {
+                    throw new Exception($"There is no method '{type.FullName}#{methodName}' found");
+                }
+                else if (!methodInfo.IsStatic)
+                {
+                    throw new Exception($"UnboundRPC methods must be static! Correct this for method '{type.FullName}#{methodInfo.Name}'");
+                }
                 rpcMethodCache.Add(key, methodInfo);
             }
 
