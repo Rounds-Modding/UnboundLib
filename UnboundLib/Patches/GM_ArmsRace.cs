@@ -290,10 +290,17 @@ namespace UnboundLib.Patches
     [HarmonyPatch(typeof(GM_ArmsRace), "RoundTransition")]
     class GM_ArmsRace_Patch_RoundTransition
     {
-        static IEnumerator Postfix(IEnumerator e)
+        static IEnumerator Postfix(IEnumerator e, GM_ArmsRace __instance, int winningTeamID)
         {
             yield return GameModeManager.TriggerHook(GameModeHooks.HookPointEnd);
             yield return GameModeManager.TriggerHook(GameModeHooks.HookRoundEnd);
+
+            // Check game over after round end trigger to allow more control in triggers
+            if (__instance.p1Rounds >= __instance.roundsToWinGame || __instance.p2Rounds >= __instance.roundsToWinGame)
+            {
+                __instance.InvokeMethod("GameOver", winningTeamID);
+                yield break;
+            }
 
             // We need to iterate through yields like this to get the postfix in the correct place
             while (e.MoveNext())
@@ -313,8 +320,6 @@ namespace UnboundLib.Patches
         static IEnumerator Postfix(IEnumerator e)
         {
             // We're really adding a prefix, but we get access to the IEnumerator in the postfix
-            yield return GameModeManager.TriggerHook(GameModeHooks.HookPointEnd);
-            yield return GameModeManager.TriggerHook(GameModeHooks.HookRoundEnd);
             yield return GameModeManager.TriggerHook(GameModeHooks.HookGameEnd);
 
             while (e.MoveNext())
@@ -341,6 +346,35 @@ namespace UnboundLib.Patches
                 if (i < list.Count - 2 && (list[i + 2].StoresField(f_p1Points) || list[i + 2].StoresField(f_p2Points)))
                 {
                     i += 2;
+                    continue;
+                }
+
+                newInstructions.Add(list[i]);
+            }
+
+            return newInstructions;
+        }
+    }
+
+    [HarmonyPatch(typeof(GM_ArmsRace), "RPCA_NextRound")]
+    class GM_ArmsRace_Patch_RPCA_NextRound
+    {
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator gen)
+        {
+            // Do not call GameOver in RPCA_NextRound. We move game over check to RoundTransition to handle triggers better.
+            var list = instructions.ToList();
+            var newInstructions = new List<CodeInstruction>();
+
+            var m_gameOver = ExtensionMethods.GetMethodInfo(typeof(GM_ArmsRace), "GameOver");
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i].opcode == OpCodes.Ldarg_2 && list[i + 1].Calls(m_gameOver))
+                {
+                    newInstructions.Add(list[i]);
+                    newInstructions.Add(new CodeInstruction(OpCodes.Ldarg_1));
+                    newInstructions.Add(CodeInstruction.Call(typeof(GM_ArmsRace), "RoundOver"));
+                    i++;
                     continue;
                 }
 
