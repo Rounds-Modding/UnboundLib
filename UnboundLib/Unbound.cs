@@ -317,9 +317,7 @@ namespace UnboundLib
         private static void RPC_CardHandshake(string[] cards)
         {
             if (!PhotonNetwork.IsMasterClient) return;
-
-            BuildModal("Cards", string.Join(", ", cards));
-
+            
             // disable any cards which aren't shared by other players
             foreach (var c in CardToggleHandler.toggles)
             {
