@@ -20,7 +20,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.1.3";
+        public const string Version = "2.1.4";
 
         public static Unbound Instance { get; private set; }
 
@@ -180,6 +180,11 @@ namespace UnboundLib
                     NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake);
                 }
 
+                var cardSelection = new List<CardInfo>();
+                cardSelection.AddRange(activeCards);
+                cardSelection.AddRange(inactiveCards);
+                NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_CardHandshake), (object)cardSelection.Select(c => c.cardName).ToArray());
+
                 CardChoice.instance.cards = defaultCards;
             });
 
@@ -288,16 +293,9 @@ namespace UnboundLib
 
         private void OnJoinedRoomAction()
         {
-            CardChoice.instance.cards = defaultCards;
+            if (!PhotonNetwork.OfflineMode)
+                CardChoice.instance.cards = defaultCards;
             NetworkingManager.RaiseEventOthers(NetworkEventType.StartHandshake);
-
-            if (!PhotonNetwork.IsMasterClient)
-            {
-                var cardSelection = new List<CardInfo>();
-                cardSelection.AddRange(activeCards);
-                cardSelection.AddRange(inactiveCards);
-                NetworkingManager.RPC(typeof(Unbound), nameof(RPC_CardHandshake), (object)cardSelection.Select(c => c.cardName).ToArray());
-            }
 
             OnJoinedRoom?.Invoke();
             foreach (var handshake in handShakeActions)
@@ -313,8 +311,6 @@ namespace UnboundLib
         [UnboundRPC]
         private static void RPC_CardHandshake(string[] cards)
         {
-            if (!PhotonNetwork.IsMasterClient) return;
-
             foreach (var c in CardToggleHandler.toggles)
             {
                 c.SetValue(cards.Contains(c.info.cardName) && c.Value);

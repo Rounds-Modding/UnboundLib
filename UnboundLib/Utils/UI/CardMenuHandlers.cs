@@ -167,8 +167,10 @@ namespace UnboundLib
             {
                 onButton.onClick?.Invoke();
             }
-        }
 
+            CardChoice.instance.cards = Unbound.activeCards.ToArray();
+        }
+        
         [UnboundRPC]
         private static void Toggle(string name, bool enabled)
         {
