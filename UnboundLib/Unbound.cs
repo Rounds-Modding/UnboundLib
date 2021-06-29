@@ -471,11 +471,6 @@ namespace UnboundLib
                 if (levelId != -1)
                 {
                     MapManager.instance.LoadLevelFromID(levelId, false, true);
-                    
-                    foreach (var player in PlayerManager.instance.players)
-                    {
-                        player.data.healthHandler.Revive();
-                    }
                 }
             }
             catch (Exception e)
