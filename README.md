@@ -34,12 +34,13 @@ void Start()
 ```
 
 ## CustomMap Framework
-First create a map in unity by using the package and export you're scene to a AssetBundle. Then in your mod initialization register your map like so:
+First create a map in unity by using the package and export you're scene to a AssetBundle. You can mark objects with `EDITOR` to have them disabled ingame and you can mark objects with `NOT COL` for them to NOT use the in-game art shader.  
+Then in your mod initialization register your map like so:
 
 ```c#
 void Start()
 {
-    Unbound.BuildLevel(TestAssetBundle);
+    Unbound.RegisterMaps(TestAssetBundle);
 }
 ```
 

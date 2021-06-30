@@ -1,43 +1,48 @@
-﻿using System.Collections;
+﻿using System;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
 
 namespace UnboundLib.Patches
 {
-    internal class cardBarPatch
+    [HarmonyPatch(typeof(MapManager), "OnLevelFinishedLoading")]
+    class MapManager_Patch_OnLevelFinishedLoading
     {
-
-        [HarmonyPatch(typeof (MapManager), "OnLevelFinishedLoading")]
-        private class Patch_OnLevelFinishedLoading
+        private static void Prefix(Scene scene, MapManager __instance)
         {
-            private static void Prefix(Scene scene, LoadSceneMode mode)
+            foreach (Transform obj in scene.GetRootGameObjects()[0].GetComponentsInChildren<Transform>())
             {
-                var sfPoly = Resources.FindObjectsOfTypeAll<SFPolygon>();
-                foreach (var sf in sfPoly)
+                if (obj.name.IndexOf("EDITOR", StringComparison.CurrentCultureIgnoreCase) >= 0)
                 {
-                    // remove editor helpers
-                    if (sf.name.Contains("EDITOR BORDER"))
+                    obj.gameObject.SetActive(false);
+                } 
+                else if ( obj.name.IndexOf("NOT COL", StringComparison.CurrentCultureIgnoreCase) >= 0)
+                {
+                    // check if color was set to white in unity and change it back to white after 0.1 seconds because it changes somehow
+                    if ( obj.GetComponent<SpriteRenderer>() && obj.GetComponent<SpriteRenderer>().color == Color.white)
                     {
-                        sf.gameObject.SetActive(false);
+                        __instance.ExecuteAfterSeconds(0.1f, () =>
+                        {
+                            obj.GetComponent<SpriteRenderer>().color = Color.white;
+                        });
                     }
-                }
-                if (sfPoly.Length == 0)
-                {
-                    UnityEngine.Debug.LogError("No ground found?");
-                }
-                foreach (var sf in sfPoly)
-                {
-                    if (sf.GetComponent<SpriteRenderer>() != null && !sf.name.Contains("Health"))
+                    __instance.ExecuteAfterSeconds(0.1f, () =>
                     {
-                        sf.GetComponent<SpriteRenderer>().material.shader = Shader.Find("Sprites/SFSoftShadowStencil");
-                    }
+                        // check if it has the shader or if it doesn't have a SpriteRenderer
+                        if ((obj.GetComponent<SpriteRenderer>() && obj.GetComponent<SpriteRenderer>().material.shader == Shader.Find("Sprites/SFSoftShadowStencil")) || !obj.GetComponent<SpriteRenderer>()) return;
+                        // remove objects that adds art to it
+                        Object.Destroy(obj.GetComponent<SpriteMask>());
+                    });
+                    continue;
+                }
+
+                if (obj.GetComponent<SpriteRenderer>() && obj.GetComponent<SpriteRenderer>().material.shader != Shader.Find("Sprites/SFSoftShadowStencil"))
+                {
+                    // add art shader
+                    obj.GetComponent<SpriteRenderer>().material.shader = Shader.Find("Sprites/SFSoftShadowStencil");
                 }
             }
         }
-        
-        
-
-        
     }
 }
