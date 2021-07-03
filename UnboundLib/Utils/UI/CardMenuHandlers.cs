@@ -11,7 +11,7 @@ using UnityEngine.Events;
 
 namespace UnboundLib
 {
-    public class CardToggleMenuHandler : MonoBehaviour
+    internal class CardToggleMenuHandler : MonoBehaviour
     {
         private GameObject _togglePrefab;
         private GameObject TogglePrefab

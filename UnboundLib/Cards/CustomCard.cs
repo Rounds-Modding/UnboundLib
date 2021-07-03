@@ -32,7 +32,7 @@ namespace UnboundLib.Cards
                 Destroy(transform.GetChild(1).gameObject);
             }
         }
-        
+
         protected abstract string GetTitle();
         protected abstract string GetDescription();
         protected abstract CardInfoStat[] GetStats();
@@ -42,8 +42,15 @@ namespace UnboundLib.Cards
         public abstract void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers);
         public abstract void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats);
         public abstract void OnRemoveCard();
-
+        public virtual bool GetEnabled()
+        {
+            return true;
+        }
         public static void BuildCard<T>() where T : CustomCard
+        {
+            BuildCard<T>(null);
+        }
+        public static void BuildCard<T>(Action<CardInfo> callback) where T : CustomCard
         {
             Unbound.Instance.ExecuteAfterFrames(2, () =>
             {
@@ -69,7 +76,7 @@ namespace UnboundLib.Cards
                 newCardInfo.colorTheme = customCard.GetTheme();
                 newCardInfo.allowMultiple = true;
                 newCardInfo.cardArt = customCard.GetCardArt() ?? new GameObject();
-                
+
                 // Fix sort order issue
                 newCardInfo.cardBase.transform.position -= Camera.main.transform.forward * 0.5f;
 
@@ -80,12 +87,17 @@ namespace UnboundLib.Cards
                 newCardInfo.SendMessage("Awake");
                 PhotonNetwork.PrefabPool.RegisterPrefab(newCard.gameObject.name, newCard);
 
-                // Add this card to the list of all custom cards
-                Unbound.activeCards.Add(newCardInfo);
-                Unbound.activeCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
+                // If the card is enabled
+                if (customCard.GetEnabled())
+                {
+                    // Add this card to the list of all custom cards
+                    Unbound.activeCards.Add(newCardInfo);
+                    Unbound.activeCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
+                    // Register card with the toggle menu
+                    CardToggleMenuHandler.Instance.AddCardToggle(newCardInfo);
+                }
 
-                // Register card with the toggle menu
-                CardToggleMenuHandler.Instance.AddCardToggle(newCardInfo);
+                
 
                 // Post-creation clean up
                 newCardInfo.ExecuteAfterFrames(5, () =>
@@ -100,10 +112,13 @@ namespace UnboundLib.Cards
 
                     // Disable "prefab"
                     newCard.SetActive(false);
+
+                    callback?.Invoke(newCardInfo);
+
                 });
             });
         }
-        
+
         private static void DestroyChildren(GameObject t)
         {
             while (t.transform.childCount > 0)
@@ -111,5 +126,6 @@ namespace UnboundLib.Cards
                 GameObject.DestroyImmediate(t.transform.GetChild(0).gameObject);
             }
         }
+
     }
 }
