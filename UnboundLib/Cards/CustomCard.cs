@@ -42,8 +42,11 @@ namespace UnboundLib.Cards
         public abstract void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers);
         public abstract void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats);
         public abstract void OnRemoveCard();
-
-        public static void BuildCard<T>(Action<CardInfo> callback = null) where T : CustomCard
+        public static void BuildCard<T>() where T : CustomCard
+        {
+            BuildCard<T>(null);
+        }
+        public static void BuildCard<T>(Action<CardInfo> callback) where T : CustomCard
         {
             Unbound.Instance.ExecuteAfterFrames(2, () =>
             {
