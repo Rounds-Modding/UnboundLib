@@ -42,6 +42,10 @@ namespace UnboundLib.Cards
         public abstract void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers);
         public abstract void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats);
         public abstract void OnRemoveCard();
+        public virtual bool GetEnabled()
+        {
+            return true;
+        }
         public static void BuildCard<T>() where T : CustomCard
         {
             BuildCard<T>(null);
@@ -84,7 +88,7 @@ namespace UnboundLib.Cards
                 PhotonNetwork.PrefabPool.RegisterPrefab(newCard.gameObject.name, newCard);
 
                 // If the card is enabled
-                if (newCardInfo.GetAdditionalData().CardEnabled)
+                if (customCard.GetEnabled())
                 {
                     // Add this card to the list of all custom cards
                     Unbound.activeCards.Add(newCardInfo);
