@@ -416,15 +416,16 @@ namespace UnboundLib
 
         public static void RegisterMaps(AssetBundle assetBundle)
         {
-            // extract scene paths
-            foreach (var path in assetBundle.GetAllScenePaths())
-            {
-                activeLevels.Add(path);
-            }
+            Unbound.RegisterMaps(assetBundle.GetAllScenePaths());
+        }
 
-            // update map list
+        public static void RegisterMaps(IEnumerable<string> paths)
+        {
+            activeLevels.AddRange(paths);
+            activeLevels = activeLevels.Distinct().ToList();
             MapManager.instance.levels = activeLevels.ToArray();
         }
+
         // loads a map in via its name prefixed with a forward-slash
         internal static void SpawnMap(string message)
         {
