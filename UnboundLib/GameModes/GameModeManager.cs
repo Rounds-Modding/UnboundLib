@@ -43,9 +43,15 @@ namespace UnboundLib.GameModes
                 {
                     // Make existing UI buttons use our GameModeHandler logic
                     var gameModeGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/GameMode");
+                    var onlineGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/Online/Group");
                     var versusGo = gameModeGo.transform.Find("Group").Find("Versus").gameObject;
                     var sandboxGo = gameModeGo.transform.Find("Group").Find("Test").gameObject;
                     var characterSelectGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/CharacterSelect");
+                    var qMatchRem = onlineGo.transform.Find("Quick").gameObject;
+                    var tMatchRem = onlineGo.transform.Find("Twitch").gameObject;
+
+                    GameObject.DestroyImmediate(qMatchRem);
+                    GameObject.DestroyImmediate(tMatchRem);
 
                     GameObject.DestroyImmediate(versusGo.GetComponent<Button>());
                     var versusButton = versusGo.AddComponent<Button>();
