@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 using Photon.Pun;
+using TMPro;
+using System.Linq;
 
 namespace UnboundLib.Cards
 {
@@ -46,6 +48,11 @@ namespace UnboundLib.Cards
         {
             return true;
         }
+        public virtual string GetModName()
+        {
+            return "Modded";
+        }
+
         public static void BuildCard<T>() where T : CustomCard
         {
             BuildCard<T>(null);
@@ -76,6 +83,24 @@ namespace UnboundLib.Cards
                 newCardInfo.colorTheme = customCard.GetTheme();
                 newCardInfo.allowMultiple = true;
                 newCardInfo.cardArt = customCard.GetCardArt() ?? new GameObject();
+
+                // add mod name text
+                // create blank object for text, and attach it to the canvas
+                GameObject modNameObj = new GameObject("ModNameText");
+                // find bottom left edge object
+                RectTransform[] allChildrenRecursive = newCard.gameObject.GetComponentsInChildren<RectTransform>();
+                GameObject BottomLeftCorner = allChildrenRecursive.Where(obj => obj.gameObject.name == "EdgePart (2)").FirstOrDefault().gameObject;
+                modNameObj.gameObject.transform.SetParent(BottomLeftCorner.transform);
+                TextMeshProUGUI modText = modNameObj.gameObject.AddComponent<TextMeshProUGUI>();
+                modText.text = customCard.GetModName();
+                modNameObj.transform.Rotate(new Vector3(0f, 0f, 1f), 45f);
+                modNameObj.transform.Rotate(new Vector3(0f, 1f, 0f), 180f);
+                modNameObj.transform.localScale = new Vector3(1f, 1f, 1f);
+                modNameObj.AddComponent<SetLocalPos>();
+                modText.alignment = TextAlignmentOptions.Bottom;
+                modText.alpha = 0.1f;
+                modText.fontSize = 54;
+
 
                 // Fix sort order issue
                 newCardInfo.cardBase.transform.position -= Camera.main.transform.forward * 0.5f;
@@ -124,6 +149,19 @@ namespace UnboundLib.Cards
             while (t.transform.childCount > 0)
             {
                 GameObject.DestroyImmediate(t.transform.GetChild(0).gameObject);
+            }
+        }
+
+        class SetLocalPos : MonoBehaviour
+        {
+            private readonly Vector3 localpos = new Vector3(-50f, -50f, 0f);
+            void Update()
+            {
+                if (this.gameObject.transform.localPosition != this.localpos)
+                {
+                    this.gameObject.transform.localPosition = this.localpos;
+                    Destroy(this,1f);
+                }
             }
         }
 
