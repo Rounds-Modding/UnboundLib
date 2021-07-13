@@ -34,7 +34,7 @@ void Start()
 ```
 
 ## CustomMap Framework
-First create a map in unity by using the package and export you're scene to a AssetBundle. Then in your mod initialization register your map like so:
+First create a map in unity by using the package and export your scene to a AssetBundle. Then in your mod initialization register your map like so:
 
 ```c#
 void Start()
