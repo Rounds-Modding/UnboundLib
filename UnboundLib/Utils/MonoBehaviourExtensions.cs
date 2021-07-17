@@ -13,7 +13,7 @@ namespace UnboundLib
 {
     // stolen from RWF
 
-    public static class ObjectExtensions
+    public static class MonoBehaviourExtensions
     {
         private static readonly ConditionalWeakTable<MonoBehaviour, HashSet<Tuple<int, string>>> pendingRequests = new ConditionalWeakTable<MonoBehaviour, HashSet<Tuple<int, string>>>();
 
