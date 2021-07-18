@@ -6,10 +6,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Jotunn.Utils;
 using TMPro;
 using UnboundLib.GameModes;
 using UnboundLib.Networking;
+using UnboundLib.Utils.UI;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace UnboundLib
@@ -63,10 +66,19 @@ namespace UnboundLib
         public static event OnJoinedDelegate OnJoinedRoom;
         public static event OnLeftDelegate OnLeftRoom;
 
+        internal static List<ModMenu> modMenus = new List<ModMenu>();
         internal static Dictionary<string, GUIListener> GUIListeners = new Dictionary<string, GUIListener>();
         internal static List<Action> handShakeActions = new List<Action>();
+        
+        private static GameObject menuBase;
+        private static GameObject buttonBase;
+        private static GameObject textBase;
+        private static GameObject toggleBase;
+        private static GameObject inputFieldBase;
+        private static GameObject modOptionsMenu;
 
         private static bool showModUi = false;
+        private static bool noDeprecatedMods = false;
 
         internal static AssetBundle UIAssets;
         private static GameObject modalPrefab;
@@ -77,6 +89,21 @@ namespace UnboundLib
             TextMeshProUGUI text = null;
             bool firstTime = true;
             bool canCreate = true;
+            
+            // load options ui base objects
+            var modOptionsUI = AssetUtils.LoadAssetBundleFromResources("modoptionsui", typeof(Unbound).Assembly);
+            if (modOptionsUI == null)
+            {
+                UnityEngine.Debug.LogError("Couldn't find ModOptionsUI AssetBundle?");
+            }
+            
+            // Get base UI objects
+            var baseObjects = modOptionsUI.LoadAsset<GameObject>("BaseObjects");
+            menuBase = modOptionsUI.LoadAsset<GameObject>("EmptyMenuBase");
+            buttonBase = baseObjects.transform.Find("Group/Grid/ButtonBaseObject").gameObject;
+            textBase = baseObjects.transform.Find("Group/Grid/TextBaseObject").gameObject;
+            toggleBase = baseObjects.transform.Find("Group/Grid/ToggleBaseObject").gameObject;
+            inputFieldBase = baseObjects.transform.Find("Group/Grid/InputFieldBaseObject").gameObject;
 
             On.MainMenuHandler.Awake += (orig, self) =>
             {
@@ -95,7 +122,7 @@ namespace UnboundLib
                 this.ExecuteAfterSeconds(firstTime ? 4f : 0.1f, () =>
                 {
                     if (!canCreate) return;
-                    var pos = new Vector2(Screen.width / 2, Screen.height * 0.75f + 25);
+                    var pos = new Vector2(Screen.width / 2, Screen.height * 0.75f - 40);
                     text = CreateTextAt("UNBOUND", Vector2.zero);
                     text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                     text.fontSize = 30;
@@ -106,6 +133,65 @@ namespace UnboundLib
                     text.rectTransform.localScale = Vector3.one;
                     text.rectTransform.localPosition = new Vector3(0, 325, text.rectTransform.localPosition.z);
                 });
+
+                // create mod options
+                var time = firstTime;
+                this.ExecuteAfterSeconds(firstTime ? 0.2f : 0, () =>
+                {
+                    // Create mod options menu
+                    modOptionsMenu = CreateMenu("MOD OPTIONS", null,MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, false, true,4);
+
+                    
+                    // Fix main menu layout
+                    void fixMainMenuLayout()
+                    {
+                        var mainMenu = MainMenuHandler.instance.transform.Find("Canvas/ListSelector");
+                        var logo = mainMenu.Find("Main/Group/Rounds_Logo2_White").gameObject.AddComponent<LayoutElement>();
+                        logo.GetComponent<RectTransform>().sizeDelta = new Vector2(logo.GetComponent<RectTransform>().sizeDelta.x, 80);
+                        mainMenu.Find("Main").transform.position = new Vector3(0,1.7f,mainMenu.Find("Main").transform.position.z);
+                        mainMenu.Find("Main/Group").GetComponent<VerticalLayoutGroup>().spacing = 10;
+                    }
+                    
+                    var visibleObj = new GameObject("visible");
+                    var visible = visibleObj.AddComponent<ActionOnBecameVisible>();
+                    visibleObj.AddComponent<SpriteRenderer>();
+                    visible.visibleAction += fixMainMenuLayout;
+                    visibleObj.transform.parent = MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main");
+                    
+                    // Create toggle cards button
+                    CreateButton("Toggle Cards", 70, modOptionsMenu, () => { CardToggleMenuHandler.Instance.Show();});
+                    
+                    // Create menu's for mods with new UI
+                    foreach (var menu in modMenus)
+                    {
+                        var mmenu = CreateMenu(menu.menuName, menu.buttonAction, modOptionsMenu, 75, true, true);
+                        menu.guiAction.Invoke(mmenu);
+                    }
+                    
+                    // Create menu's for mods that do not use the new UI
+                    if (GUIListeners.Count != 0) {CreateText("<color=red>Not updated mods</color>", 50, modOptionsMenu, out _);}
+                    foreach (var modMenu in GUIListeners.Keys)
+                    {
+                        var menu =CreateMenu(modMenu, () =>
+                                {
+                                    foreach (var list in GUIListeners.Values.Where(list => list.guiEnabled))
+                                    {
+                                        list.guiEnabled = false;
+                                    }
+                                    GUIListeners[modMenu].guiEnabled = true;
+                                    showModUi = true;
+                                }, modOptionsMenu,
+                                75,
+                                true, false);
+                        CreateText(
+                            "This mod has not yet been updated to the new UI system.\nUse the old UI system in the top right",
+                            60, menu, out _);
+                    }
+
+                    // check if there are no deprecated ui's and disable the f1 menu
+                    if (GUIListeners.Count == 0) noDeprecatedMods = true;
+                });
+                
                 firstTime = false;
 
                 orig(self);
@@ -222,7 +308,7 @@ namespace UnboundLib
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.F1))
+            if (Input.GetKeyDown(KeyCode.F1) && !noDeprecatedMods)
             {
                 showModUi = !showModUi;
             }
@@ -233,9 +319,6 @@ namespace UnboundLib
         private void OnGUI()
         {
             if (!showModUi) return;
-
-            Vector2 center = new Vector2(Screen.width / 2, Screen.height / 2);
-            Vector2 size = new Vector2(400, 100 * GUIListeners.Count);
 
             GUILayout.BeginVertical();
 
@@ -258,7 +341,7 @@ namespace UnboundLib
 
             if (showingSpecificMod) return;
 
-            GUILayout.Label("UnboundLib Options");
+            GUILayout.Label("UnboundLib Options\nThis menu is deprecated");
             if (GUILayout.Button("Toggle Cards"))
             {
                 CardToggleMenuHandler.Instance.Show();
@@ -278,7 +361,7 @@ namespace UnboundLib
 
         private void LoadAssets()
         {
-            UIAssets = Jotunn.Utils.AssetUtils.LoadAssetBundleFromResources("unboundui", typeof(Unbound).Assembly);
+            UIAssets = AssetUtils.LoadAssetBundleFromResources("unboundui", typeof(Unbound).Assembly);
             if (UIAssets != null)
             {
                 modalPrefab = UIAssets.LoadAsset<GameObject>("Modal");
@@ -374,6 +457,142 @@ namespace UnboundLib
             return Instantiate(modalPrefab, Instance.canvas.transform).AddComponent<ModalHandler>();
         }
 
+        public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
+        {
+            if (parent == null)
+            {
+                parent = modOptionsMenu;
+            }
+            modMenus.Add(new ModMenu(name,buttonAction,guiAction, parent));
+        }
+
+        // Creates a menu and returns its gameObject
+        public static GameObject CreateMenu(string Name, UnityAction buttonAction, GameObject parent = null, int size = 50, bool setBarHeight = false, bool setFontSize = true, int siblingIndex = -1)
+        {
+            var obj = Instantiate(menuBase, MainMenuHandler.instance.transform.Find("Canvas/ListSelector"));
+            obj.name = Name;
+            void disableOldMenu()
+            {
+                if (GUIListeners.ContainsKey(Name))
+                {
+                    GUIListeners[Name].guiEnabled = false;
+                    showModUi = false;
+                }
+            }
+
+            // set default parent
+            if (parent == null)
+            {
+                parent = modOptionsMenu;
+            }
+            
+            // Assign back objects
+            var goBackObject = parent.GetComponentInParent<ListMenuPage>();
+            obj.GetComponentInChildren<GoBack>(true).target = goBackObject;
+            obj.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(ClickBack(goBackObject) + disableOldMenu);
+            obj.transform.Find("Group/Back").gameObject.GetComponent<Button>().onClick.AddListener(ClickBack(goBackObject) + disableOldMenu);
+
+            // Create button to menu
+            Transform buttonParent = null;
+            if (parent.transform.Find("Group/Grid/Scroll View/Viewport/Content")) buttonParent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content");
+            else if (parent.transform.Find("Group")) buttonParent = parent.transform.Find("Group");
+            
+            var button = Instantiate(buttonBase, buttonParent);
+            button.GetComponent<ListMenuButton>().setBarHeight = setBarHeight ? size : 0;
+            button.name = Name;
+            button.GetComponent<RectTransform>().sizeDelta += new Vector2(400, 0);
+            if (siblingIndex != -1) button.transform.SetSiblingIndex(siblingIndex);
+            button.GetComponent<RectTransform>().sizeDelta = new Vector2(button.GetComponent<RectTransform>().sizeDelta.x, size+12);
+            var uGUI = button.GetComponentInChildren<TextMeshProUGUI>();
+            uGUI.text = Name;
+            uGUI.fontSize = setFontSize ? size : 50;
+            if (buttonAction == null)
+            {
+                buttonAction = () => 
+                {
+                    obj.GetComponent<ListMenuPage>().Open();
+                };
+            }
+            else
+            {
+                buttonAction += () => 
+                {
+                    obj.GetComponent<ListMenuPage>().Open();
+                };
+            }
+            
+            button.GetComponent<Button>().onClick.AddListener(buttonAction);
+
+            return obj;
+        }
+
+        private static UnityAction ClickBack(ListMenuPage backObject)
+        {
+            showModUi = false;
+            return backObject.Open;
+        }
+
+        // Creates a UI text
+        public static GameObject CreateText(string text, int fontSize, GameObject parent, out TextMeshProUGUI uGUI)
+        {
+            parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            var textObject = Instantiate(textBase, parent.transform);
+            uGUI = textObject.GetComponent<TextMeshProUGUI>();
+            uGUI.text = text;
+            uGUI.fontSizeMax = fontSize;
+
+            return textObject;
+        }
+
+        // Creates a UI Toggle
+        public static GameObject CreateToggle(bool value, string text, int fontSize, GameObject parent, UnityAction<bool> onValueChangedAction)
+        {
+            parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            var toggleObject = Instantiate(toggleBase, parent.transform);
+            var toggle = toggleObject.GetComponent<Toggle>();
+            toggle.isOn = value;
+            toggle.onValueChanged.AddListener(onValueChangedAction); 
+            var uGUI = toggleObject.GetComponentInChildren<TextMeshProUGUI>();
+            uGUI.text = text;
+            uGUI.fontSizeMax = fontSize;
+
+            return toggleObject;
+        }
+
+        // Creates a UI Button
+        public static GameObject CreateButton(string text, int fontSize, GameObject parent,
+            UnityAction onClickAction)
+        {
+            parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            var buttonObject = Instantiate(buttonBase, parent.transform);
+            var button = buttonObject.GetComponent<Button>();
+            button.onClick.AddListener(onClickAction);
+            var uGUI = buttonObject.GetComponentInChildren<TextMeshProUGUI>();
+            uGUI.text = text;
+            uGUI.fontSizeMax = fontSize;
+
+            buttonObject.GetComponent<RectTransform>().sizeDelta += new Vector2(400, 0);
+            
+            return buttonObject;
+        }
+
+        // Creates a UI InputField
+        public static GameObject CreateInputField(string placeholderText, int fontSize, GameObject parent, UnityAction<string> onValueChangedAction)
+        {
+            parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            var inputObject = Instantiate(inputFieldBase, parent.transform);
+            var inputField = inputObject.GetComponentInChildren<TMP_InputField>();
+            inputField.pointSize = fontSize;
+            inputField.onValueChanged.AddListener(onValueChangedAction);
+            var inputFieldColors = inputField.colors;
+            inputFieldColors.colorMultiplier = 0.75f;
+            inputField.colors = inputFieldColors;
+            
+            var placeHolder = (TextMeshProUGUI) inputField.placeholder;
+            placeHolder.text = placeholderText;
+            
+            return inputObject;
+        }
 
         public static void RegisterGUI(string modName, Action guiAction)
         {
@@ -472,11 +691,6 @@ namespace UnboundLib
                 if (levelId != -1)
                 {
                     MapManager.instance.LoadLevelFromID(levelId, false, true);
-                    
-                    foreach (var player in PlayerManager.instance.players)
-                    {
-                        player.data.healthHandler.Revive();
-                    }
                 }
             }
             catch (Exception e)
@@ -515,6 +729,22 @@ namespace UnboundLib
             {
                 this.modName = modName;
                 this.guiAction = guiAction;
+            }
+        }
+
+        internal class ModMenu
+        {
+            public string menuName;
+            public UnityAction buttonAction;
+            public Action<GameObject> guiAction;
+            public GameObject parent;
+
+            public ModMenu(string menuName, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent)
+            {
+                this.menuName = menuName;
+                this.buttonAction = buttonAction;
+                this.guiAction = guiAction;
+                this.parent = parent;
             }
         }
     }

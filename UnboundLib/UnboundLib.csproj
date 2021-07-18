@@ -50,6 +50,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="..\AssetsEmbedded\unboundui" />
+    <EmbeddedResource Include="..\AssetsEmbedded\modoptionsui" />
   </ItemGroup>
 
   <ItemGroup>
