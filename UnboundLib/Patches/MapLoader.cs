@@ -5,9 +5,8 @@ using UnityEngine.SceneManagement;
 
 namespace UnboundLib.Patches
 {
-    internal class cardBarPatch
+    internal class MapLoaderPatch
     {
-
         [HarmonyPatch(typeof (MapManager), "OnLevelFinishedLoading")]
         private class Patch_OnLevelFinishedLoading
         {
