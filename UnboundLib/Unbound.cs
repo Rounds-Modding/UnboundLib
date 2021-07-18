@@ -184,7 +184,7 @@ namespace UnboundLib
                                 75,
                                 true, false);
                         CreateText(
-                            "This mod has not yet been updated to the new UI system.\nUse the old UI system in the top right",
+                            "This mod has not yet been updated to the new UI system.\nUse the old UI system in the top left",
                             60, menu, out _);
                     }
 
