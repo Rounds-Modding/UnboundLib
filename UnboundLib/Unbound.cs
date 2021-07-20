@@ -25,6 +25,8 @@ namespace UnboundLib
         private const string ModName = "Rounds Unbound";
         public const string Version = "2.2.1";
 
+        internal static readonly string[] credits = new string[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom card mod labels, credits menu)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus)"};
+
         public static Unbound Instance { get; private set; }
 
         private Canvas _canvas;
@@ -104,10 +106,12 @@ namespace UnboundLib
                     text.transform.SetParent(MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group"), true);
                     text.transform.SetAsFirstSibling();
                     text.rectTransform.localScale = Vector3.one;
-                    text.rectTransform.localPosition = new Vector3(0, 325, text.rectTransform.localPosition.z);
+                    text.rectTransform.localPosition = new Vector3(0, 350, text.rectTransform.localPosition.z);
                 });
 
-                UI.MenuHandler.Instance.CreateModOptions(firstTime);
+                UI.ModOptions.Instance.CreateModOptions(firstTime);
+
+                UI.Credits.Instance.CreateCreditsMenu(firstTime);
                 
                 firstTime = false;
 
@@ -225,24 +229,24 @@ namespace UnboundLib
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.F1) && !UI.MenuHandler.noDeprecatedMods)
+            if (Input.GetKeyDown(KeyCode.F1) && !UI.ModOptions.noDeprecatedMods)
             {
-                UI.MenuHandler.showModUi = !UI.MenuHandler.showModUi;
+                UI.ModOptions.showModUi = !UI.ModOptions.showModUi;
             }
 
-            GameManager.lockInput = UI.MenuHandler.showModUi || DevConsole.isTyping;
+            GameManager.lockInput = UI.ModOptions.showModUi || DevConsole.isTyping;
         }
 
         private void OnGUI()
         {
-            if (!UI.MenuHandler.showModUi) return;
+            if (!UI.ModOptions.showModUi) return;
 
             GUILayout.BeginVertical();
 
             bool showingSpecificMod = false;
-            foreach (var md in UI.MenuHandler.GUIListeners.Keys)
+            foreach (var md in UI.ModOptions.GUIListeners.Keys)
             {
-                var data = UI.MenuHandler.GUIListeners[md];
+                var data = UI.ModOptions.GUIListeners[md];
                 if (data.guiEnabled)
                 {
                     if (GUILayout.Button("<- Back"))
@@ -265,9 +269,9 @@ namespace UnboundLib
             }
 
             GUILayout.Label("Mod Options:");
-            foreach (var md in UI.MenuHandler.GUIListeners.Keys)
+            foreach (var md in UI.ModOptions.GUIListeners.Keys)
             {
-                var data = UI.MenuHandler.GUIListeners[md];
+                var data = UI.ModOptions.GUIListeners[md];
                 if (GUILayout.Button(data.modName))
                 {
                     data.guiEnabled = true;
@@ -373,15 +377,19 @@ namespace UnboundLib
         {
             return Instantiate(modalPrefab, Instance.canvas.transform).AddComponent<ModalHandler>();
         }
+        public static void RegisterCredits(string modName, string[] contributors = null)
+        {
+
+        }
 
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
         {
-            UI.MenuHandler.Instance.RegisterMenu(name, buttonAction, guiAction, parent);
+            UI.ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent);
         }
 
         public static void RegisterGUI(string modName, Action guiAction)
         {
-            UI.MenuHandler.RegisterGUI(modName, guiAction);
+            UI.ModOptions.RegisterGUI(modName, guiAction);
         }
         public static void RegisterHandshake(string modId, Action callback)
         {

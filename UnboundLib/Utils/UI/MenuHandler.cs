@@ -19,20 +19,11 @@ namespace UnboundLib.UI
 {
     public class MenuHandler
     {
-
-        internal static List<ModMenu> modMenus = new List<ModMenu>();
-        internal static Dictionary<string, GUIListener> GUIListeners = new Dictionary<string, GUIListener>();
-        internal static List<Action> handShakeActions = new List<Action>();
-
         private GameObject menuBase;
         private GameObject buttonBase;
         private GameObject textBase;
         private GameObject toggleBase;
         private GameObject inputFieldBase;
-        private GameObject modOptionsMenu;
-
-        internal static bool showModUi = false;
-        internal static bool noDeprecatedMods = false;
 
         public static MenuHandler Instance = new MenuHandler();
 
@@ -58,98 +49,17 @@ namespace UnboundLib.UI
             inputFieldBase = baseObjects.transform.Find("Group/Grid/InputFieldBaseObject").gameObject;
         }
 
-        public void CreateModOptions(bool firstTime)
-        {
-            // create mod options
-            Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.2f : 0, () =>
-            {
-                // Create mod options menu
-                modOptionsMenu = CreateMenu("MOD OPTIONS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, true, 4);
-
-
-                // Fix main menu layout
-                void fixMainMenuLayout()
-                {
-                    var mainMenu = MainMenuHandler.instance.transform.Find("Canvas/ListSelector");
-                    var logo = mainMenu.Find("Main/Group/Rounds_Logo2_White").gameObject.AddComponent<LayoutElement>();
-                    logo.GetComponent<RectTransform>().sizeDelta = new Vector2(logo.GetComponent<RectTransform>().sizeDelta.x, 80);
-                    mainMenu.Find("Main").transform.position = new Vector3(0, 1.7f, mainMenu.Find("Main").transform.position.z);
-                    mainMenu.Find("Main/Group").GetComponent<VerticalLayoutGroup>().spacing = 10;
-                }
-
-                var visibleObj = new GameObject("visible");
-                var visible = visibleObj.AddComponent<ActionOnBecameVisible>();
-                visibleObj.AddComponent<SpriteRenderer>();
-                visible.visibleAction += fixMainMenuLayout;
-                visibleObj.transform.parent = MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main");
-
-                // Create toggle cards button
-                CreateButton("Toggle Cards", modOptionsMenu, () => { CardToggleMenuHandler.Instance.Show(); });
-
-                // Create menu's for mods with new UI
-                foreach (var menu in modMenus)
-                {
-                    var mmenu = CreateMenu(menu.menuName, menu.buttonAction, modOptionsMenu, 60, true, true);
-                    menu.guiAction.Invoke(mmenu);
-                }
-
-                // Create menu's for mods that do not use the new UI
-                if (GUIListeners.Count != 0) { CreateText(" ", modOptionsMenu, out _); }
-                foreach (var modMenu in GUIListeners.Keys)
-                {
-                    var menu = CreateMenu(modMenu, () =>
-                    {
-                        foreach (var list in GUIListeners.Values.Where(list => list.guiEnabled))
-                        {
-                            list.guiEnabled = false;
-                        }
-                        GUIListeners[modMenu].guiEnabled = true;
-                        showModUi = true;
-                    }, modOptionsMenu,
-                            75,
-                            true, false);
-                    CreateText(
-                        "This mod has not yet been updated to the new UI system.\nPlease use the old UI system in the top left.", menu, out _, 60, false);
-                }
-
-                // check if there are no deprecated ui's and disable the f1 menu
-                if (GUIListeners.Count == 0) noDeprecatedMods = true;
-            });
-        }
-        public void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
-        {
-            if (parent == null)
-            {
-                parent = modOptionsMenu;
-            }
-            modMenus.Add(new ModMenu(name,buttonAction,guiAction, parent));
-        }
-
         // Creates a menu and returns its gameObject
-        public GameObject CreateMenu(string Name, UnityAction buttonAction, GameObject parent = null, int size = 50, bool forceUpper = true, bool setBarHeight = false, bool setFontSize = true, int siblingIndex = -1)
+        public GameObject CreateMenu(string Name, UnityAction buttonAction, GameObject parent, int size = 50, bool forceUpper = true, bool setBarHeight = false, bool setFontSize = true, int siblingIndex = -1)
         {
             var obj = UnityEngine.GameObject.Instantiate(menuBase, MainMenuHandler.instance.transform.Find("Canvas/ListSelector"));
             obj.name = Name;
-            void disableOldMenu()
-            {
-                if (GUIListeners.ContainsKey(Name))
-                {
-                    GUIListeners[Name].guiEnabled = false;
-                    showModUi = false;
-                }
-            }
-
-            // set default parent
-            if (parent == null)
-            {
-                parent = modOptionsMenu;
-            }
             
             // Assign back objects
             var goBackObject = parent.GetComponentInParent<ListMenuPage>();
             obj.GetComponentInChildren<GoBack>(true).target = goBackObject;
-            obj.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(ClickBack(goBackObject) + disableOldMenu);
-            obj.transform.Find("Group/Back").gameObject.GetComponent<Button>().onClick.AddListener(ClickBack(goBackObject) + disableOldMenu);
+            obj.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(ClickBack(goBackObject));
+            obj.transform.Find("Group/Back").gameObject.GetComponent<Button>().onClick.AddListener(ClickBack(goBackObject));
 
             // Create button to menu
             Transform buttonParent = null;
@@ -188,7 +98,6 @@ namespace UnboundLib.UI
 
         private static UnityAction ClickBack(ListMenuPage backObject)
         {
-            showModUi = false;
             return backObject.Open;
         }
 
@@ -285,10 +194,7 @@ namespace UnboundLib.UI
             return inputObject;
         }
 
-        public static void RegisterGUI(string modName, Action guiAction)
-        {
-            GUIListeners.Add(modName, new GUIListener(modName, guiAction));
-        }
+
 
         public static TextMeshProUGUI CreateTextAt(string text, Vector2 position)
         {
@@ -323,32 +229,5 @@ namespace UnboundLib.UI
             target.alpha = 1;
         }
 
-        internal class ModMenu
-        {
-            public string menuName;
-            public UnityAction buttonAction;
-            public Action<GameObject> guiAction;
-            public GameObject parent;
-
-            public ModMenu(string menuName, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent)
-            {
-                this.menuName = menuName;
-                this.buttonAction = buttonAction;
-                this.guiAction = guiAction;
-                this.parent = parent;
-            }
-        }
-
-        internal class GUIListener
-        {
-            public bool guiEnabled = false;
-            public string modName;
-            public Action guiAction;
-            public GUIListener(string modName, Action guiAction)
-            {
-                this.modName = modName;
-                this.guiAction = guiAction;
-            }
-        }
     }
 }
