@@ -64,7 +64,7 @@ namespace UnboundLib.UI
             Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.2f : 0, () =>
             {
                 // Create mod options menu
-                modOptionsMenu = CreateMenu("MOD OPTIONS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, false, true, 4);
+                modOptionsMenu = CreateMenu("MOD OPTIONS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, true, 4);
 
 
                 // Fix main menu layout
@@ -84,17 +84,17 @@ namespace UnboundLib.UI
                 visibleObj.transform.parent = MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main");
 
                 // Create toggle cards button
-                CreateButton("Toggle Cards", 70, modOptionsMenu, () => { CardToggleMenuHandler.Instance.Show(); });
+                CreateButton("Toggle Cards", modOptionsMenu, () => { CardToggleMenuHandler.Instance.Show(); });
 
                 // Create menu's for mods with new UI
                 foreach (var menu in modMenus)
                 {
-                    var mmenu = CreateMenu(menu.menuName, menu.buttonAction, modOptionsMenu, 75, true, true);
+                    var mmenu = CreateMenu(menu.menuName, menu.buttonAction, modOptionsMenu, 60, true, true);
                     menu.guiAction.Invoke(mmenu);
                 }
 
                 // Create menu's for mods that do not use the new UI
-                if (GUIListeners.Count != 0) { CreateText("<color=red>Not updated mods</color>", 50, modOptionsMenu, out _); }
+                if (GUIListeners.Count != 0) { CreateText(" ", modOptionsMenu, out _); }
                 foreach (var modMenu in GUIListeners.Keys)
                 {
                     var menu = CreateMenu(modMenu, () =>
@@ -109,8 +109,7 @@ namespace UnboundLib.UI
                             75,
                             true, false);
                     CreateText(
-                        "This mod has not yet been updated to the new UI system.\nUse the old UI system in the top left",
-                        60, menu, out _);
+                        "This mod has not yet been updated to the new UI system.\nPlease use the old UI system in the top left.", menu, out _, 60, false);
                 }
 
                 // check if there are no deprecated ui's and disable the f1 menu
@@ -127,7 +126,7 @@ namespace UnboundLib.UI
         }
 
         // Creates a menu and returns its gameObject
-        public GameObject CreateMenu(string Name, UnityAction buttonAction, GameObject parent = null, int size = 50, bool setBarHeight = false, bool setFontSize = true, int siblingIndex = -1)
+        public GameObject CreateMenu(string Name, UnityAction buttonAction, GameObject parent = null, int size = 50, bool forceUpper = true, bool setBarHeight = false, bool setFontSize = true, int siblingIndex = -1)
         {
             var obj = UnityEngine.GameObject.Instantiate(menuBase, MainMenuHandler.instance.transform.Find("Canvas/ListSelector"));
             obj.name = Name;
@@ -164,7 +163,8 @@ namespace UnboundLib.UI
             if (siblingIndex != -1) button.transform.SetSiblingIndex(siblingIndex);
             button.GetComponent<RectTransform>().sizeDelta = new Vector2(button.GetComponent<RectTransform>().sizeDelta.x, size+12);
             var uGUI = button.GetComponentInChildren<TextMeshProUGUI>();
-            uGUI.text = Name;
+            if (forceUpper) uGUI.text = Name.ToUpper();
+            else uGUI.text = Name;
             uGUI.fontSize = setFontSize ? size : 50;
             if (buttonAction == null)
             {
@@ -193,44 +193,74 @@ namespace UnboundLib.UI
         }
 
         // Creates a UI text
-        public GameObject CreateText(string text, int fontSize, GameObject parent, out TextMeshProUGUI uGUI)
+        public GameObject CreateText(string text, GameObject parent, out TextMeshProUGUI uGUI, int fontSize = 60, bool forceUpper = true, Color? color = null, TMPro.TMP_FontAsset font = null, Material fontMaterial = null, TMPro.TextAlignmentOptions? alignmentOptions = null)
         {
             parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
             var textObject = UnityEngine.GameObject.Instantiate(textBase, parent.transform);
             uGUI = textObject.GetComponent<TextMeshProUGUI>();
-            uGUI.text = text;
+            if (forceUpper)
+            {
+                uGUI.text = text.ToUpper();
+            }
+            else
+            {
+                uGUI.text = text;
+            }
             uGUI.fontSizeMax = fontSize;
-            uGUI.color = new Color(0.902f, 0.902f, 0.902f, 1f);
+            uGUI.color = color ?? new Color(0.902f, 0.902f, 0.902f, 1f);
+            if (font != null) { uGUI.font = font; }
+            if (fontMaterial != null) { uGUI.fontMaterial = fontMaterial; }
+            if (alignmentOptions != null) { uGUI.alignment = (TMPro.TextAlignmentOptions)alignmentOptions; }
 
             return textObject;
         }
-
         // Creates a UI Toggle
-        public GameObject CreateToggle(bool value, string text, int fontSize, GameObject parent, UnityAction<bool> onValueChangedAction)
+        public GameObject CreateToggle(bool value, string text, GameObject parent, UnityAction<bool> onValueChangedAction = null, int fontSize = 60, bool forceUpper = true, Color? color = null, TMPro.TMP_FontAsset font = null, Material fontMaterial = null, TMPro.TextAlignmentOptions? alignmentOptions = null)
         {
             parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
             var toggleObject = UnityEngine.GameObject.Instantiate(toggleBase, parent.transform);
             var toggle = toggleObject.GetComponent<Toggle>();
             toggle.isOn = value;
-            toggle.onValueChanged.AddListener(onValueChangedAction); 
+            if (onValueChangedAction != null) toggle.onValueChanged.AddListener(onValueChangedAction); 
             var uGUI = toggleObject.GetComponentInChildren<TextMeshProUGUI>();
-            uGUI.text = text;
+            if (forceUpper)
+            {
+                uGUI.text = text.ToUpper();
+            }
+            else
+            {
+                uGUI.text = text;
+            }
             uGUI.fontSizeMax = fontSize;
+            uGUI.color = color ?? new Color(0.902f, 0.902f, 0.902f, 1f);
+            if (font != null) { uGUI.font = font; }
+            if (fontMaterial != null) { uGUI.fontMaterial = fontMaterial; }
+            if (alignmentOptions != null) { uGUI.alignment = (TMPro.TextAlignmentOptions)alignmentOptions; }
 
             return toggleObject;
         }
 
         // Creates a UI Button
-        public GameObject CreateButton(string text, int fontSize, GameObject parent,
-            UnityAction onClickAction)
+        public GameObject CreateButton(string text, GameObject parent, UnityAction onClickAction = null, int fontSize = 60, bool forceUpper = true, Color? color = null, TMPro.TMP_FontAsset font = null, Material fontMaterial = null, TMPro.TextAlignmentOptions? alignmentOptions = null)
         {
             parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
             var buttonObject = UnityEngine.GameObject.Instantiate(buttonBase, parent.transform);
             var button = buttonObject.GetComponent<Button>();
-            button.onClick.AddListener(onClickAction);
+            if (onClickAction != null) { button.onClick.AddListener(onClickAction); }
             var uGUI = buttonObject.GetComponentInChildren<TextMeshProUGUI>();
-            uGUI.text = text;
+            if (forceUpper)
+            {
+                uGUI.text = text.ToUpper();
+            }
+            else
+            {
+                uGUI.text = text;
+            }
             uGUI.fontSizeMax = fontSize;
+            uGUI.color = color ?? new Color(0.902f, 0.902f, 0.902f, 1f);
+            if (font != null) { uGUI.font = font; }
+            if (fontMaterial != null) { uGUI.fontMaterial = fontMaterial; }
+            if (alignmentOptions != null) { uGUI.alignment = (TMPro.TextAlignmentOptions)alignmentOptions; }
 
             buttonObject.GetComponent<RectTransform>().sizeDelta += new Vector2(400, 0);
             
@@ -258,19 +288,6 @@ namespace UnboundLib.UI
         public static void RegisterGUI(string modName, Action guiAction)
         {
             GUIListeners.Add(modName, new GUIListener(modName, guiAction));
-        }
-        public static void RegisterHandshake(string modId, Action callback)
-        {
-            // register mod handshake network events
-            NetworkingManager.RegisterEvent($"ModLoader_{modId}_StartHandshake", (e) =>
-            {
-                NetworkingManager.RaiseEvent($"ModLoader_{modId}_FinishHandshake");
-            });
-            NetworkingManager.RegisterEvent($"ModLoader_{modId}_FinishHandshake", (e) =>
-            {
-                callback?.Invoke();
-            });
-            Unbound.handShakeActions.Add(() => NetworkingManager.RaiseEventOthers($"ModLoader_{modId}_StartHandshake"));
         }
 
         public static TextMeshProUGUI CreateTextAt(string text, Vector2 position)
