@@ -6,10 +6,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Jotunn.Utils;
 using TMPro;
 using UnboundLib.GameModes;
 using UnboundLib.Networking;
+using UnboundLib.UI;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace UnboundLib
@@ -63,10 +66,7 @@ namespace UnboundLib
         public static event OnJoinedDelegate OnJoinedRoom;
         public static event OnLeftDelegate OnLeftRoom;
 
-        internal static Dictionary<string, GUIListener> GUIListeners = new Dictionary<string, GUIListener>();
         internal static List<Action> handShakeActions = new List<Action>();
-
-        private static bool showModUi = false;
 
         internal static AssetBundle UIAssets;
         private static GameObject modalPrefab;
@@ -76,7 +76,7 @@ namespace UnboundLib
             // Add UNBOUND text to the main menu screen
             TextMeshProUGUI text = null;
             bool firstTime = true;
-            bool canCreate = true;
+            bool canCreate;
 
             On.MainMenuHandler.Awake += (orig, self) =>
             {
@@ -95,8 +95,7 @@ namespace UnboundLib
                 this.ExecuteAfterSeconds(firstTime ? 4f : 0.1f, () =>
                 {
                     if (!canCreate) return;
-                    var pos = new Vector2(Screen.width / 2, Screen.height * 0.75f + 25);
-                    text = CreateTextAt("UNBOUND", Vector2.zero);
+                    text = MenuHandler.CreateTextAt("UNBOUND", Vector2.zero);
                     text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                     text.fontSize = 30;
                     text.color = (Color.yellow + Color.red) / 2;
@@ -106,6 +105,9 @@ namespace UnboundLib
                     text.rectTransform.localScale = Vector3.one;
                     text.rectTransform.localPosition = new Vector3(0, 325, text.rectTransform.localPosition.z);
                 });
+
+                ModOptions.Instance.CreateModOptions(firstTime);
+                
                 firstTime = false;
 
                 orig(self);
@@ -222,27 +224,24 @@ namespace UnboundLib
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.F1))
+            if (Input.GetKeyDown(KeyCode.F1) && !ModOptions.noDeprecatedMods)
             {
-                showModUi = !showModUi;
+                ModOptions.showModUi = !ModOptions.showModUi;
             }
 
-            GameManager.lockInput = showModUi || DevConsole.isTyping;
+            GameManager.lockInput = ModOptions.showModUi || DevConsole.isTyping;
         }
 
         private void OnGUI()
         {
-            if (!showModUi) return;
-
-            Vector2 center = new Vector2(Screen.width / 2, Screen.height / 2);
-            Vector2 size = new Vector2(400, 100 * GUIListeners.Count);
+            if (!ModOptions.showModUi) return;
 
             GUILayout.BeginVertical();
 
             bool showingSpecificMod = false;
-            foreach (var md in GUIListeners.Keys)
+            foreach (var md in ModOptions.GUIListeners.Keys)
             {
-                var data = GUIListeners[md];
+                var data = ModOptions.GUIListeners[md];
                 if (data.guiEnabled)
                 {
                     if (GUILayout.Button("<- Back"))
@@ -258,16 +257,16 @@ namespace UnboundLib
 
             if (showingSpecificMod) return;
 
-            GUILayout.Label("UnboundLib Options");
+            GUILayout.Label("UnboundLib Options\nThis menu is deprecated");
             if (GUILayout.Button("Toggle Cards"))
             {
                 CardToggleMenuHandler.Instance.Show();
             }
 
             GUILayout.Label("Mod Options:");
-            foreach (var md in GUIListeners.Keys)
+            foreach (var md in ModOptions.GUIListeners.Keys)
             {
-                var data = GUIListeners[md];
+                var data = ModOptions.GUIListeners[md];
                 if (GUILayout.Button(data.modName))
                 {
                     data.guiEnabled = true;
@@ -278,7 +277,7 @@ namespace UnboundLib
 
         private void LoadAssets()
         {
-            UIAssets = Jotunn.Utils.AssetUtils.LoadAssetBundleFromResources("unboundui", typeof(Unbound).Assembly);
+            UIAssets = AssetUtils.LoadAssetBundleFromResources("unboundui", typeof(Unbound).Assembly);
             if (UIAssets != null)
             {
                 modalPrefab = UIAssets.LoadAsset<GameObject>("Modal");
@@ -374,10 +373,14 @@ namespace UnboundLib
             return Instantiate(modalPrefab, Instance.canvas.transform).AddComponent<ModalHandler>();
         }
 
+        public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
+        {
+            ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent);
+        }
 
         public static void RegisterGUI(string modName, Action guiAction)
         {
-            GUIListeners.Add(modName, new GUIListener(modName, guiAction));
+            ModOptions.RegisterGUI(modName, guiAction);
         }
         public static void RegisterHandshake(string modId, Action callback)
         {
@@ -393,30 +396,9 @@ namespace UnboundLib
             handShakeActions.Add(() => NetworkingManager.RaiseEventOthers($"ModLoader_{modId}_StartHandshake"));
         }
 
-        public static TextMeshProUGUI CreateTextAt(string text, Vector2 position)
-        {
-            var newText = new GameObject("Unbound Text Object").AddComponent<TextMeshProUGUI>();
-            newText.text = text;
-            newText.fontSize = 100;
-            newText.transform.SetParent(Instance.canvas.transform);
-
-            var anchorPoint = new Vector2(0.5f, 0.5f);
-            newText.rectTransform.anchorMax = anchorPoint;
-            newText.rectTransform.anchorMin = anchorPoint;
-            newText.rectTransform.pivot = anchorPoint;
-            newText.overflowMode = TextOverflowModes.Overflow;
-            newText.alignment = TextAlignmentOptions.Center;
-            newText.rectTransform.position = position;
-            newText.enableWordWrapping = false;
-
-            Instance.StartCoroutine(FadeIn(newText.gameObject.AddComponent<CanvasGroup>(), 4));
-
-            return newText;
-        }
-
         public static void RegisterMaps(AssetBundle assetBundle)
         {
-            Unbound.RegisterMaps(assetBundle.GetAllScenePaths());
+            RegisterMaps(assetBundle.GetAllScenePaths());
         }
 
         public static void RegisterMaps(IEnumerable<string> paths)
@@ -472,11 +454,6 @@ namespace UnboundLib
                 if (levelId != -1)
                 {
                     MapManager.instance.LoadLevelFromID(levelId, false, true);
-                    
-                    foreach (var player in PlayerManager.instance.players)
-                    {
-                        player.data.healthHandler.Revive();
-                    }
                 }
             }
             catch (Exception e)
@@ -491,30 +468,6 @@ namespace UnboundLib
                     })
                     .CancelButton("Cancel", () => { })
                     .Show();
-            }
-        }
-
-        private static IEnumerator FadeIn(CanvasGroup target, float seconds)
-        {
-            float startTime = Time.time;
-            target.alpha = 0;
-            while (Time.time - startTime < seconds)
-            {
-                target.alpha = (Time.time - startTime) / seconds;
-                yield return null;
-            }
-            target.alpha = 1;
-        }
-
-        internal class GUIListener
-        {
-            public bool guiEnabled = false;
-            public string modName;
-            public Action guiAction;
-            public GUIListener(string modName, Action guiAction)
-            {
-                this.modName = modName;
-                this.guiAction = guiAction;
             }
         }
     }
