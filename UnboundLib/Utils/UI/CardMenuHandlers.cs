@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using BepInEx;
+using BepInEx.Configuration;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -41,6 +41,10 @@ namespace UnboundLib
             get { return transform.Find("Default Cards/Content"); }
         }
 
+        private ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
+        private bool toggleAll;
+        public List<CardToggleHandler> cardToggleHandlers = new List<CardToggleHandler>();
+
         void Awake()
         {
             if (Instance == null)
@@ -51,6 +55,32 @@ namespace UnboundLib
             {
                 Destroy(gameObject);
             }
+
+            var toggleAllButton = Instantiate(transform.Find("Title/Modded Button").gameObject, transform.Find("Title"));
+            toggleAllButton.name = "Toggle all Button";
+            toggleAllButton.transform.position += new Vector3(100, 0, 0);
+            toggleAllButton.GetComponent<TextMeshProUGUI>().text = "Toggle all";
+            var button = toggleAllButton.GetComponent<Button>();
+            button.onClick = new Button.ButtonClickedEvent();
+            button.onClick.AddListener(() =>
+            {
+                var _toggleAll = true;
+                foreach (var toggle in cardToggleHandlers)
+                {
+                    if (toggleAll)
+                    {
+                        toggle.SetValue(true);
+                        _toggleAll = false;
+                    }
+                    else
+                    {
+                        toggle.SetValue(false);
+                        _toggleAll = true;
+                    }
+                }
+                
+                toggleAll = _toggleAll;
+            });
         }
 
         public void Show()
@@ -63,34 +93,36 @@ namespace UnboundLib
         }
         public void AddCardToggle(CardInfo info, bool isModded = true)
         {
-            Instantiate(TogglePrefab, isModded ? modCardsContent : defaultCardsContent).AddComponent<CardToggleHandler>()
+            var toggle = Instantiate(TogglePrefab, isModded ? modCardsContent : defaultCardsContent).AddComponent<CardToggleHandler>()
                 .Register(info)
-                .SetName(info.cardName)
+                .SetName(info.cardName.ToUpper())
                 .SetActions(
-                () =>
-                {
-                    if (Unbound.activeCards.Contains(info))
+                    () =>
                     {
-                        Unbound.activeCards.Remove(info);
-                    }
-                    if (!Unbound.inactiveCards.Contains(info))
+                        if (Unbound.activeCards.Contains(info))
+                        {
+                            Unbound.activeCards.Remove(info);
+                        }
+                        if (!Unbound.inactiveCards.Contains(info))
+                        {
+                            Unbound.inactiveCards.Add(info);
+                            Unbound.inactiveCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
+                        }
+                    }, 
+                    () =>
                     {
-                        Unbound.inactiveCards.Add(info);
-                        Unbound.inactiveCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
-                    }
-                }, 
-                () =>
-                {
-                    if (!Unbound.activeCards.Contains(info))
-                    {
-                        Unbound.activeCards.Add(info);
-                        Unbound.activeCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
-                    }
-                    if (Unbound.inactiveCards.Contains(info))
-                    {
-                        Unbound.inactiveCards.Remove(info);
-                    }
-                });
+                        if (!Unbound.activeCards.Contains(info))
+                        {
+                            Unbound.activeCards.Add(info);
+                            Unbound.activeCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
+                        }
+                        if (Unbound.inactiveCards.Contains(info))
+                        {
+                            Unbound.inactiveCards.Remove(info);
+                        }
+                    });
+            toggle.isEnabled = isModded ? config.Bind("Toggle Modded cards", info.cardName, true) : config.Bind("Toggle default cards", info.cardName, true);
+            cardToggleHandlers.Add(toggle);
         }
     }
 
@@ -116,21 +148,41 @@ namespace UnboundLib
         }
 
         public CardInfo info;
-        public bool Value { get; private set; } = true;
+        private ConfigEntry<bool> _isEnabled;
+        public ConfigEntry<bool> isEnabled
+        {
+            set
+            {
+                if (value.Value)
+                {
+                    animator.Play("Switch On");
+                    cardName.alpha = 1f;
+                } else
+                {
+                    animator.Play("Switch Off");
+                    cardName.alpha = 0.25f;
+                }
+
+                _isEnabled = value;
+            }
+            get => _isEnabled;
+        }
 
         void Awake()
         {
             onButton.onClick.AddListener(() =>
             {
-                animator.Play("Switch Off");
-                cardName.alpha = 0.25f;
-                Value = false;
+                // animator.Play("Switch Off");
+                // cardName.alpha = 0.25f;
+                _isEnabled.Value = false;
+                isEnabled = _isEnabled;
             });
             offButton.onClick.AddListener(() =>
             {
-                animator.Play("Switch On");
-                cardName.alpha = 1f;
-                Value = true;
+                // animator.Play("Switch On");
+                // cardName.alpha = 1f;
+                _isEnabled.Value = true;
+                isEnabled = _isEnabled;
             });
 
             toggles.Add(this);

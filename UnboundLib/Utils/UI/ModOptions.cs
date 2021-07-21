@@ -1,15 +1,6 @@
-﻿using BepInEx;
-using HarmonyLib;
-using Photon.Pun;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
-using Jotunn.Utils;
-using TMPro;
-using UnboundLib.GameModes;
-using UnboundLib.Networking;
 using UnboundLib.Utils.UI;
 using UnityEngine;
 using UnityEngine.Events;
@@ -25,8 +16,8 @@ namespace UnboundLib.Utils.UI
 
         internal GameObject modOptionsMenu;
 
-        internal static bool showModUi = false;
-        internal static bool noDeprecatedMods = false;
+        internal static bool showModUi;
+        internal static bool noDeprecatedMods;
 
         public static ModOptions Instance = new ModOptions();
 
@@ -34,7 +25,7 @@ namespace UnboundLib.Utils.UI
         {
             // singleton first time setup
 
-            ModOptions.Instance = this;
+            Instance = this;
         }
         public static void RegisterGUI(string modName, Action guiAction)
         {
@@ -44,9 +35,9 @@ namespace UnboundLib.Utils.UI
         {
             if (parent == null)
             {
-                parent = ModOptions.Instance.modOptionsMenu;
+                parent = Instance.modOptionsMenu;
             }
-            ModOptions.modMenus.Add(new ModMenu(name, buttonAction, guiAction, parent));
+            modMenus.Add(new ModMenu(name, buttonAction, guiAction, parent));
         }
         public void CreateModOptions(bool firstTime)
         {
@@ -54,7 +45,7 @@ namespace UnboundLib.Utils.UI
             Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.2f : 0, () =>
             {
                 // Create mod options menu
-                modOptionsMenu = MenuHandler.Instance.CreateMenu("MOD OPTIONS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, true, 4);
+                modOptionsMenu = MenuHandler.CreateMenu("MOD OPTIONS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, true, 4);
 
 
                 // Fix main menu layout
@@ -74,12 +65,12 @@ namespace UnboundLib.Utils.UI
                 visibleObj.transform.parent = MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main");
 
                 // Create toggle cards button
-                MenuHandler.Instance.CreateButton("Toggle Cards", modOptionsMenu, () => { CardToggleMenuHandler.Instance.Show(); });
+                MenuHandler.CreateButton("Toggle Cards", modOptionsMenu, () => { CardToggleMenuHandler.Instance.Show(); });
 
                 // Create menu's for mods with new UI
                 foreach (var menu in modMenus)
                 {
-                    var mmenu = MenuHandler.Instance.CreateMenu(menu.menuName, menu.buttonAction, modOptionsMenu, 60, true, true);
+                    var mmenu = MenuHandler.CreateMenu(menu.menuName, menu.buttonAction, modOptionsMenu, 60);
                     void disableOldMenu()
                     {
                         if (GUIListeners.ContainsKey(menu.menuName))
@@ -95,10 +86,10 @@ namespace UnboundLib.Utils.UI
                 }
 
                 // Create menu's for mods that do not use the new UI
-                if (GUIListeners.Count != 0) { MenuHandler.Instance.CreateText(" ", modOptionsMenu, out _); }
+                if (GUIListeners.Count != 0) { MenuHandler.CreateText(" ", modOptionsMenu, out _); }
                 foreach (var modMenu in GUIListeners.Keys)
                 {
-                    var menu = MenuHandler.Instance.CreateMenu(modMenu, () =>
+                    var menu = MenuHandler.CreateMenu(modMenu, () =>
                     {
                         foreach (var list in GUIListeners.Values.Where(list => list.guiEnabled))
                         {
@@ -107,8 +98,7 @@ namespace UnboundLib.Utils.UI
                         GUIListeners[modMenu].guiEnabled = true;
                         showModUi = true;
                     }, modOptionsMenu,
-                            75,
-                            true, false);
+                            75);
                     void disableOldMenu()
                     {
                         if (GUIListeners.ContainsKey(menu.name))
@@ -119,7 +109,7 @@ namespace UnboundLib.Utils.UI
                     }
                     menu.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(disableOldMenu);
                     menu.transform.Find("Group/Back").gameObject.GetComponent<Button>().onClick.AddListener(disableOldMenu);
-                    MenuHandler.Instance.CreateText(
+                    MenuHandler.CreateText(
                         "This mod has not yet been updated to the new UI system.\nPlease use the old UI system in the top left.", menu, out _, 60, false);
                 }
 
@@ -145,7 +135,7 @@ namespace UnboundLib.Utils.UI
 
         internal class GUIListener
         {
-            public bool guiEnabled = false;
+            public bool guiEnabled;
             public string modName;
             public Action guiAction;
             public GUIListener(string modName, Action guiAction)

@@ -78,7 +78,7 @@ namespace UnboundLib
             // Add UNBOUND text to the main menu screen
             TextMeshProUGUI text = null;
             bool firstTime = true;
-            bool canCreate = true;
+            bool canCreate;
 
             On.MainMenuHandler.Awake += (orig, self) =>
             {
@@ -97,8 +97,7 @@ namespace UnboundLib
                 this.ExecuteAfterSeconds(firstTime ? 4f : 0.1f, () =>
                 {
                     if (!canCreate) return;
-                    var pos = new Vector2(Screen.width / 2, Screen.height * 0.75f - 40);
-                    text = Utils.UI.MenuHandler.CreateTextAt("UNBOUND", Vector2.zero);
+                    text = MenuHandler.CreateTextAt("UNBOUND", Vector2.zero);
                     text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                     text.fontSize = 30;
                     text.color = (Color.yellow + Color.red) / 2;
@@ -109,10 +108,9 @@ namespace UnboundLib
                     text.rectTransform.localPosition = new Vector3(0, 350, text.rectTransform.localPosition.z);
                 });
 
-                Utils.UI.ModOptions.Instance.CreateModOptions(firstTime);
-
+                ModOptions.Instance.CreateModOptions(firstTime);
                 Utils.UI.Credits.Instance.CreateCreditsMenu(firstTime);
-                
+
                 firstTime = false;
 
                 orig(self);
@@ -229,24 +227,24 @@ namespace UnboundLib
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.F1) && !Utils.UI.ModOptions.noDeprecatedMods)
+            if (Input.GetKeyDown(KeyCode.F1) && !ModOptions.noDeprecatedMods)
             {
-                Utils.UI.ModOptions.showModUi = !Utils.UI.ModOptions.showModUi;
+                ModOptions.showModUi = !ModOptions.showModUi;
             }
 
-            GameManager.lockInput = Utils.UI.ModOptions.showModUi || DevConsole.isTyping;
+            GameManager.lockInput = ModOptions.showModUi || DevConsole.isTyping;
         }
 
         private void OnGUI()
         {
-            if (!Utils.UI.ModOptions.showModUi) return;
+            if (!ModOptions.showModUi) return;
 
             GUILayout.BeginVertical();
 
             bool showingSpecificMod = false;
-            foreach (var md in Utils.UI.ModOptions.GUIListeners.Keys)
+            foreach (var md in ModOptions.GUIListeners.Keys)
             {
-                var data = Utils.UI.ModOptions.GUIListeners[md];
+                var data = ModOptions.GUIListeners[md];
                 if (data.guiEnabled)
                 {
                     if (GUILayout.Button("<- Back"))
@@ -269,9 +267,9 @@ namespace UnboundLib
             }
 
             GUILayout.Label("Mod Options:");
-            foreach (var md in Utils.UI.ModOptions.GUIListeners.Keys)
+            foreach (var md in ModOptions.GUIListeners.Keys)
             {
-                var data = Utils.UI.ModOptions.GUIListeners[md];
+                var data = ModOptions.GUIListeners[md];
                 if (GUILayout.Button(data.modName))
                 {
                     data.guiEnabled = true;
@@ -325,7 +323,7 @@ namespace UnboundLib
             // disable any cards which aren't shared by other players
             foreach (var c in CardToggleHandler.toggles)
             {
-                c.SetValue(cards.Contains(c.info.cardName) && c.Value);
+                c.SetValue(cards.Contains(c.info.cardName) && c.isEnabled.Value);
             }
 
             // reply to all users with new list of valid cards
@@ -384,12 +382,12 @@ namespace UnboundLib
 
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
         {
-            Utils.UI.ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent);
+            ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent);
         }
 
         public static void RegisterGUI(string modName, Action guiAction)
         {
-            Utils.UI.ModOptions.RegisterGUI(modName, guiAction);
+            ModOptions.RegisterGUI(modName, guiAction);
         }
 
         public static void RegisterCredits(string modName, string[] credits = null, string linkText = "", string linkURL = "")
@@ -413,7 +411,7 @@ namespace UnboundLib
 
         public static void RegisterMaps(AssetBundle assetBundle)
         {
-            Unbound.RegisterMaps(assetBundle.GetAllScenePaths());
+            RegisterMaps(assetBundle.GetAllScenePaths());
         }
 
         public static void RegisterMaps(IEnumerable<string> paths)

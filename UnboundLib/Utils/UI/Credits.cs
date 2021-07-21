@@ -49,7 +49,7 @@ namespace UnboundLib.Utils.UI
             Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.2f : 0f, () =>
             {
                 // Create mod options menu
-                CreditsMenu = MenuHandler.Instance.CreateMenu("CREDITS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, true, 5);
+                CreditsMenu = MenuHandler.CreateMenu("CREDITS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, true, 5);
 
                 // Fix main menu layout
                 void fixMainMenuLayout()
@@ -68,25 +68,25 @@ namespace UnboundLib.Utils.UI
                 visibleObj.transform.parent = MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main");
 
                 // Create Rounds Credits
-                RoundsCredits = MenuHandler.Instance.CreateMenu("ROUNDS", null, CreditsMenu, 30);
+                RoundsCredits = MenuHandler.CreateMenu("ROUNDS", null, CreditsMenu, 30);
                 creditsMenus["ROUNDS"] = RoundsCredits;
-                MenuHandler.Instance.CreateText(" ", CreditsMenu, out TextMeshProUGUI _, 30);
+                MenuHandler.CreateText(" ", CreditsMenu, out TextMeshProUGUI _, 30);
                 // Create Unbound Credits
-                UnboundCredits = MenuHandler.Instance.CreateMenu("UNBOUND", null, CreditsMenu, 30);
+                UnboundCredits = MenuHandler.CreateMenu("UNBOUND", null, CreditsMenu, 30);
                 creditsMenus["UNBOUND"] = UnboundCredits;
-                MenuHandler.Instance.CreateText(" ", CreditsMenu, out TextMeshProUGUI _, 30);
+                MenuHandler.CreateText(" ", CreditsMenu, out TextMeshProUGUI _, 30);
 
                 // Create credits for mods that have registered them
                 foreach (string modName in modCredits.Keys)
                 {
-                    creditsMenus[modName] = MenuHandler.Instance.CreateMenu(modName, null, CreditsMenu, 30);
+                    creditsMenus[modName] = MenuHandler.CreateMenu(modName, null, CreditsMenu, 30);
                 }
 
                 // add link to modding discord
-                MenuHandler.Instance.CreateText(" ", CreditsMenu, out TextMeshProUGUI _, 60);
-                MenuHandler.Instance.CreateText("<link=\"https://discord.gg/Fyr3YnWduJ\">" + "ROUNDS MODDING COMMUNITY" + "</link>", CreditsMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
+                MenuHandler.CreateText(" ", CreditsMenu, out TextMeshProUGUI _, 60);
+                MenuHandler.CreateText("<link=\"https://discord.gg/Fyr3YnWduJ\">" + "ROUNDS MODDING COMMUNITY" + "</link>", CreditsMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
                 // add link to Thunderstore
-                MenuHandler.Instance.CreateText("<link=\"https://rounds.thunderstore.io/?ordering=most-downloaded\"> " + "THUNDERSTORE.IO" + "</link>", CreditsMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
+                MenuHandler.CreateText("<link=\"https://rounds.thunderstore.io/?ordering=most-downloaded\"> " + "THUNDERSTORE.IO" + "</link>", CreditsMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
 
                 // add credits for each mod
 
@@ -104,19 +104,19 @@ namespace UnboundLib.Utils.UI
         }
         internal void AddModCredits(ModCredits credits, GameObject parentMenu)
         {
-            MenuHandler.Instance.CreateText(credits.modName, parentMenu, out TextMeshProUGUI _, 60);
-            MenuHandler.Instance.CreateText(" \nby\n ", parentMenu, out TextMeshProUGUI _, 30);
+            MenuHandler.CreateText(credits.modName, parentMenu, out TextMeshProUGUI _, 60);
+            MenuHandler.CreateText(" \nby\n ", parentMenu, out TextMeshProUGUI _, 30);
             if (credits.credits != null)
             {
                 foreach (string line in credits.credits)
                 {
-                    MenuHandler.Instance.CreateText(line, parentMenu, out TextMeshProUGUI _, 30);
+                    MenuHandler.CreateText(line, parentMenu, out TextMeshProUGUI _, 30);
                 }
             }
             if (credits.linkText != "") 
             {
-                MenuHandler.Instance.CreateText(" \n ", parentMenu, out TextMeshProUGUI _, 60);
-                MenuHandler.Instance.CreateText("<link=\"" + credits.linkURL + "\">" + credits.linkText.ToUpper() + "</link>", parentMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
+                MenuHandler.CreateText(" \n ", parentMenu, out TextMeshProUGUI _, 60);
+                MenuHandler.CreateText("<link=\"" + credits.linkURL + "\">" + credits.linkText.ToUpper() + "</link>", parentMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
             }
         }
     }
