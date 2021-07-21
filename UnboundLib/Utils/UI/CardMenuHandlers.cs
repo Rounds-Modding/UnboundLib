@@ -95,7 +95,7 @@ namespace UnboundLib
         {
             var toggle = Instantiate(TogglePrefab, isModded ? modCardsContent : defaultCardsContent).AddComponent<CardToggleHandler>()
                 .Register(info)
-                .SetName(info.cardName)
+                .SetName(info.cardName.ToUpper())
                 .SetActions(
                     () =>
                     {
