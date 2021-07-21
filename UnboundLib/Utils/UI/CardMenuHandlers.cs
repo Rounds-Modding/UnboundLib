@@ -121,7 +121,7 @@ namespace UnboundLib
                             Unbound.inactiveCards.Remove(info);
                         }
                     });
-            toggle.isEnabled = isModded ? config.Bind("Toggle Modded cards:", info.cardName, true) : config.Bind("Toggle default cards", info.cardName, true);
+            toggle.isEnabled = isModded ? config.Bind("Toggle Modded cards", info.cardName, true) : config.Bind("Toggle default cards", info.cardName, true);
             cardToggleHandlers.Add(toggle);
         }
     }
