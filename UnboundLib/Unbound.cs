@@ -10,7 +10,7 @@ using Jotunn.Utils;
 using TMPro;
 using UnboundLib.GameModes;
 using UnboundLib.Networking;
-using UnboundLib.Utils.UI;
+using UnboundLib.UI;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -76,7 +76,7 @@ namespace UnboundLib
             // Add UNBOUND text to the main menu screen
             TextMeshProUGUI text = null;
             bool firstTime = true;
-            bool canCreate = true;
+            bool canCreate;
 
             On.MainMenuHandler.Awake += (orig, self) =>
             {
@@ -95,8 +95,7 @@ namespace UnboundLib
                 this.ExecuteAfterSeconds(firstTime ? 4f : 0.1f, () =>
                 {
                     if (!canCreate) return;
-                    var pos = new Vector2(Screen.width / 2, Screen.height * 0.75f - 40);
-                    text = UI.MenuHandler.CreateTextAt("UNBOUND", Vector2.zero);
+                    text = MenuHandler.CreateTextAt("UNBOUND", Vector2.zero);
                     text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                     text.fontSize = 30;
                     text.color = (Color.yellow + Color.red) / 2;
@@ -107,7 +106,7 @@ namespace UnboundLib
                     text.rectTransform.localPosition = new Vector3(0, 325, text.rectTransform.localPosition.z);
                 });
 
-                UI.ModOptions.Instance.CreateModOptions(firstTime);
+                ModOptions.Instance.CreateModOptions(firstTime);
                 
                 firstTime = false;
 
@@ -225,24 +224,24 @@ namespace UnboundLib
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.F1) && !UI.ModOptions.noDeprecatedMods)
+            if (Input.GetKeyDown(KeyCode.F1) && !ModOptions.noDeprecatedMods)
             {
-                UI.ModOptions.showModUi = !UI.ModOptions.showModUi;
+                ModOptions.showModUi = !ModOptions.showModUi;
             }
 
-            GameManager.lockInput = UI.ModOptions.showModUi || DevConsole.isTyping;
+            GameManager.lockInput = ModOptions.showModUi || DevConsole.isTyping;
         }
 
         private void OnGUI()
         {
-            if (!UI.ModOptions.showModUi) return;
+            if (!ModOptions.showModUi) return;
 
             GUILayout.BeginVertical();
 
             bool showingSpecificMod = false;
-            foreach (var md in UI.ModOptions.GUIListeners.Keys)
+            foreach (var md in ModOptions.GUIListeners.Keys)
             {
-                var data = UI.ModOptions.GUIListeners[md];
+                var data = ModOptions.GUIListeners[md];
                 if (data.guiEnabled)
                 {
                     if (GUILayout.Button("<- Back"))
@@ -265,9 +264,9 @@ namespace UnboundLib
             }
 
             GUILayout.Label("Mod Options:");
-            foreach (var md in UI.ModOptions.GUIListeners.Keys)
+            foreach (var md in ModOptions.GUIListeners.Keys)
             {
-                var data = UI.ModOptions.GUIListeners[md];
+                var data = ModOptions.GUIListeners[md];
                 if (GUILayout.Button(data.modName))
                 {
                     data.guiEnabled = true;
@@ -376,12 +375,12 @@ namespace UnboundLib
 
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
         {
-            UI.ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent);
+            ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent);
         }
 
         public static void RegisterGUI(string modName, Action guiAction)
         {
-            UI.ModOptions.RegisterGUI(modName, guiAction);
+            ModOptions.RegisterGUI(modName, guiAction);
         }
         public static void RegisterHandshake(string modId, Action callback)
         {
@@ -399,7 +398,7 @@ namespace UnboundLib
 
         public static void RegisterMaps(AssetBundle assetBundle)
         {
-            Unbound.RegisterMaps(assetBundle.GetAllScenePaths());
+            RegisterMaps(assetBundle.GetAllScenePaths());
         }
 
         public static void RegisterMaps(IEnumerable<string> paths)
