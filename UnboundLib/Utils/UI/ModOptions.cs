@@ -15,7 +15,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace UnboundLib.UI
+namespace UnboundLib.Utils.UI
 {
     public class ModOptions
     {

@@ -25,7 +25,7 @@ namespace UnboundLib
         private const string ModName = "Rounds Unbound";
         public const string Version = "2.2.1";
 
-        internal static readonly string[] credits = new string[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom card mod labels, credits menu)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus)"};
+        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new string[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
         public static Unbound Instance { get; private set; }
 
@@ -98,7 +98,7 @@ namespace UnboundLib
                 {
                     if (!canCreate) return;
                     var pos = new Vector2(Screen.width / 2, Screen.height * 0.75f - 40);
-                    text = UI.MenuHandler.CreateTextAt("UNBOUND", Vector2.zero);
+                    text = Utils.UI.MenuHandler.CreateTextAt("UNBOUND", Vector2.zero);
                     text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
                     text.fontSize = 30;
                     text.color = (Color.yellow + Color.red) / 2;
@@ -109,9 +109,9 @@ namespace UnboundLib
                     text.rectTransform.localPosition = new Vector3(0, 350, text.rectTransform.localPosition.z);
                 });
 
-                UI.ModOptions.Instance.CreateModOptions(firstTime);
+                Utils.UI.ModOptions.Instance.CreateModOptions(firstTime);
 
-                UI.Credits.Instance.CreateCreditsMenu(firstTime);
+                Utils.UI.Credits.Instance.CreateCreditsMenu(firstTime);
                 
                 firstTime = false;
 
@@ -229,24 +229,24 @@ namespace UnboundLib
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.F1) && !UI.ModOptions.noDeprecatedMods)
+            if (Input.GetKeyDown(KeyCode.F1) && !Utils.UI.ModOptions.noDeprecatedMods)
             {
-                UI.ModOptions.showModUi = !UI.ModOptions.showModUi;
+                Utils.UI.ModOptions.showModUi = !Utils.UI.ModOptions.showModUi;
             }
 
-            GameManager.lockInput = UI.ModOptions.showModUi || DevConsole.isTyping;
+            GameManager.lockInput = Utils.UI.ModOptions.showModUi || DevConsole.isTyping;
         }
 
         private void OnGUI()
         {
-            if (!UI.ModOptions.showModUi) return;
+            if (!Utils.UI.ModOptions.showModUi) return;
 
             GUILayout.BeginVertical();
 
             bool showingSpecificMod = false;
-            foreach (var md in UI.ModOptions.GUIListeners.Keys)
+            foreach (var md in Utils.UI.ModOptions.GUIListeners.Keys)
             {
-                var data = UI.ModOptions.GUIListeners[md];
+                var data = Utils.UI.ModOptions.GUIListeners[md];
                 if (data.guiEnabled)
                 {
                     if (GUILayout.Button("<- Back"))
@@ -269,9 +269,9 @@ namespace UnboundLib
             }
 
             GUILayout.Label("Mod Options:");
-            foreach (var md in UI.ModOptions.GUIListeners.Keys)
+            foreach (var md in Utils.UI.ModOptions.GUIListeners.Keys)
             {
-                var data = UI.ModOptions.GUIListeners[md];
+                var data = Utils.UI.ModOptions.GUIListeners[md];
                 if (GUILayout.Button(data.modName))
                 {
                     data.guiEnabled = true;
@@ -384,13 +384,19 @@ namespace UnboundLib
 
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
         {
-            UI.ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent);
+            Utils.UI.ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent);
         }
 
         public static void RegisterGUI(string modName, Action guiAction)
         {
-            UI.ModOptions.RegisterGUI(modName, guiAction);
+            Utils.UI.ModOptions.RegisterGUI(modName, guiAction);
         }
+
+        public static void RegisterCredits(string modName, string[] credits = null, string linkText = "", string linkURL = "")
+        {
+            Utils.UI.Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkText, linkURL));
+        }
+
         public static void RegisterHandshake(string modId, Action callback)
         {
             // register mod handshake network events
