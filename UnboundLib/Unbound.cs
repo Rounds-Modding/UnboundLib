@@ -321,7 +321,7 @@ namespace UnboundLib
             // disable any cards which aren't shared by other players
             foreach (var c in CardToggleHandler.toggles)
             {
-                c.SetValue(cards.Contains(c.info.cardName) && c.Value);
+                c.SetValue(cards.Contains(c.info.cardName) && c.isEnabled.Value);
             }
 
             // reply to all users with new list of valid cards
