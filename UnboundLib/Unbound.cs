@@ -10,7 +10,7 @@ using Jotunn.Utils;
 using TMPro;
 using UnboundLib.GameModes;
 using UnboundLib.Networking;
-using UnboundLib.UI;
+using UnboundLib.Utils.UI;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -23,7 +23,9 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.2.1";
+        public const string Version = "2.3.0";
+
+        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new string[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
         public static Unbound Instance { get; private set; }
 
@@ -103,11 +105,12 @@ namespace UnboundLib
                     text.transform.SetParent(MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group"), true);
                     text.transform.SetAsFirstSibling();
                     text.rectTransform.localScale = Vector3.one;
-                    text.rectTransform.localPosition = new Vector3(0, 325, text.rectTransform.localPosition.z);
+                    text.rectTransform.localPosition = new Vector3(0, 350, text.rectTransform.localPosition.z);
                 });
 
                 ModOptions.Instance.CreateModOptions(firstTime);
-                
+                Utils.UI.Credits.Instance.CreateCreditsMenu(firstTime);
+
                 firstTime = false;
 
                 orig(self);
@@ -372,6 +375,10 @@ namespace UnboundLib
         {
             return Instantiate(modalPrefab, Instance.canvas.transform).AddComponent<ModalHandler>();
         }
+        public static void RegisterCredits(string modName, string[] contributors = null)
+        {
+
+        }
 
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
         {
@@ -382,6 +389,12 @@ namespace UnboundLib
         {
             ModOptions.RegisterGUI(modName, guiAction);
         }
+
+        public static void RegisterCredits(string modName, string[] credits = null, string linkText = "", string linkURL = "")
+        {
+            Utils.UI.Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkText, linkURL));
+        }
+
         public static void RegisterHandshake(string modId, Action callback)
         {
             // register mod handshake network events

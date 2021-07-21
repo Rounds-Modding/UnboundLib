@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnboundLib.Utils.UI;
@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace UnboundLib.UI
+namespace UnboundLib.Utils.UI
 {
     public class ModOptions
     {
