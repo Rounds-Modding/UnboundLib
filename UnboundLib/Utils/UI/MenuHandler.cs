@@ -174,7 +174,7 @@ namespace UnboundLib.Utils.UI
         }
 
         // Creates a UI Slider
-        public static GameObject CreateSlider(string text, GameObject parent, int fontSize, int minValue, int maxValue,
+        public static GameObject CreateSlider(string text, GameObject parent, int fontSize, float minValue, float maxValue, float defaultValue,
             UnityAction<float> onValueChangedAction, out Slider slider, bool wholeNumbers = false,Color? sliderColor = null, Slider.Direction direction = Slider.Direction.LeftToRight, bool forceUpper = true, Color? color = null, TMP_FontAsset font = null, Material fontMaterial = null, TextAlignmentOptions? alignmentOptions = null)
         {
             parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
@@ -203,6 +203,7 @@ namespace UnboundLib.Utils.UI
             slider.minValue = minValue;
             slider.maxValue = maxValue;
             slider.onValueChanged.AddListener(onValueChangedAction);
+            slider.value = defaultValue;
             slider.transform.Find("Fill Area/Fill").GetComponent<Image>().color = sliderColor ?? new Color(0.902f, 0.902f, 0.902f, 1f);
             
             
