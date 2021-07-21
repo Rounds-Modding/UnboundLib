@@ -23,7 +23,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.2.1";
+        public const string Version = "2.3.0";
 
         internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new string[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
