@@ -175,7 +175,7 @@ namespace UnboundLib.Utils.UI
 
         // Creates a UI Slider
         public static GameObject CreateSlider(string text, GameObject parent, int fontSize, float minValue, float maxValue, float defaultValue,
-            UnityAction<float> onValueChangedAction, out Slider slider, bool wholeNumbers = false,Color? sliderColor = null, Slider.Direction direction = Slider.Direction.LeftToRight, bool forceUpper = true, Color? color = null, TMP_FontAsset font = null, Material fontMaterial = null, TextAlignmentOptions? alignmentOptions = null)
+            UnityAction<float> onValueChangedAction, out Slider slider, bool wholeNumbers = false, Color? sliderColor = null, Slider.Direction direction = Slider.Direction.LeftToRight, bool forceUpper = true, Color? color = null, TMP_FontAsset font = null, Material fontMaterial = null, TextAlignmentOptions? alignmentOptions = null)
         {
             parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
             var sliderObject = GameObject.Instantiate(sliderBase, parent.transform);
@@ -188,7 +188,7 @@ namespace UnboundLib.Utils.UI
             var vector2 = inputField.gameObject.GetComponent<RectTransform>().sizeDelta;
             vector2.x = 65;
             inputField.gameObject.GetComponent<RectTransform>().sizeDelta = vector2;
-            onValueChangedAction += arg0 => inputField.text = arg0.ToString("N");
+            onValueChangedAction += arg0 => inputField.text = arg0.ToString((wholeNumbers)? "N0":"N");
             inputField.contentType = wholeNumbers
                 ? TMP_InputField.ContentType.IntegerNumber
                 : TMP_InputField.ContentType.DecimalNumber;
