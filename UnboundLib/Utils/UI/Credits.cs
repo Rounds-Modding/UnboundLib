@@ -113,11 +113,18 @@ namespace UnboundLib.Utils.UI
                     MenuHandler.CreateText(line, parentMenu, out TextMeshProUGUI _, 30);
                 }
             }
-            if (credits.linkText != "") 
+            for (int i = 0; i < credits.linkTexts.Length; i++)
             {
-                MenuHandler.CreateText(" \n ", parentMenu, out TextMeshProUGUI _, 60);
-                MenuHandler.CreateText("<link=\"" + credits.linkURL + "\">" + credits.linkText.ToUpper() + "</link>", parentMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
+                string linkText = credits.linkTexts[i];
+                string linkURL = "";
+                if (i < credits.linkURLs.Length) { linkURL = credits.linkURLs[i]; }
+                if (linkText != "") 
+                {
+                    MenuHandler.CreateText(" \n ", parentMenu, out TextMeshProUGUI _, (i>0) ? 60 : 30);
+                    MenuHandler.CreateText("<link=\"" + linkURL + "\">" + linkText.ToUpper() + "</link>", parentMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
+                }
             }
+
         }
     }
 
@@ -125,15 +132,22 @@ namespace UnboundLib.Utils.UI
     {
         public string modName = "";
         public string[] credits = null;
-        public string linkText = "";
-        public string linkURL = "";
+        public string[] linkTexts = new string[] { "" };
+        public string[] linkURLs = new string[] { "" };
 
-        public ModCredits(string modName = "", string[] credits = null,  string linkText = "", string linkURL = "")
+        public ModCredits(string modName = "", string[] credits = null,  string[] linkTexts = null, string[] linkURLs = null)
         {
             this.modName = modName;
             this.credits = credits;
-            this.linkText = linkText;
-            this.linkURL = linkURL;
+            this.linkTexts = linkTexts ?? new string[] { "" };
+            this.linkURLs = linkURLs ?? new string[] { "" };
+        }
+        public ModCredits(string modName = "", string[] credits = null, string linkText = "", string linkURL = "")
+        {
+            this.modName = modName;
+            this.credits = credits;
+            this.linkTexts = new string[] { linkText };
+            this.linkURLs = new string[] { linkURL };
         }
     }
 
