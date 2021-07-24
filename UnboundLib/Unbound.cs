@@ -68,6 +68,10 @@ namespace UnboundLib
         public static event OnJoinedDelegate OnJoinedRoom;
         public static event OnLeftDelegate OnLeftRoom;
 
+        internal static List<string> loadedGUIDs = new List<string>();
+        internal static List<string> loadedMods = new List<string>();
+        internal static List<string> loadedVersions = new List<string>();
+
         internal static List<Action> handShakeActions = new List<Action>();
 
         internal static AssetBundle UIAssets;
@@ -223,6 +227,9 @@ namespace UnboundLib
             var networkEvents = gameObject.AddComponent<NetworkEventCallbacks>();
             networkEvents.OnJoinedRoomEvent += OnJoinedRoomAction;
             networkEvents.OnLeftRoomEvent += OnLeftRoomAction;
+
+            // sync modded clients
+            networkEvents.OnJoinedRoomEvent += SyncModClients.RequestSync;
         }
 
         private void Update()
@@ -393,6 +400,11 @@ namespace UnboundLib
         public static void RegisterCredits(string modName, string[] credits = null, string linkText = "", string linkURL = "")
         {
             Utils.UI.Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkText, linkURL));
+        }
+
+        public static void RegisterClientSideMod(string GUID)
+        {
+            SyncModClients.RegisterClientSideMod(GUID);
         }
 
         public static void RegisterHandshake(string modId, Action callback)
