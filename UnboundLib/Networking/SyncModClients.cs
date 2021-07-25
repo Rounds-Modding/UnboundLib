@@ -1,16 +1,15 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using BepInEx;
-using UnboundLib.Networking;
 using Photon.Pun;
-using UnityEngine;
 using TMPro;
+using UnboundLib.GameModes;
+using UnboundLib.Utils.UI;
+using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
-using Jotunn.Utils;
-using UnboundLib.Utils.UI;
 
 namespace UnboundLib.Networking
 {
@@ -29,17 +28,18 @@ namespace UnboundLib.Networking
         private static Dictionary<int, string[]> clientsServerSideGUIDs = new Dictionary<int, string[]>();
         private static Dictionary<int, string[]> clientsModVersions = new Dictionary<int, string[]>();
 
-        private static List<string> hostsServerSideMods = new List<string>() { };
-        private static List<string> hostsServerSideGUIDs = new List<string>() { };
-        private static List<string> hostsModVersions = new List<string>() { };
+        private static List<string> hostsServerSideMods = new List<string>();
+        private static List<string> hostsServerSideGUIDs = new List<string>();
+        private static List<string> hostsModVersions = new List<string>();
 
-        private static Dictionary<string, PluginInfo> loadedMods = new Dictionary<string, PluginInfo>() { };
-        private static List<string> loadedGUIDs = new List<string>() { };
-        private static List<string> loadedModNames = new List<string>() { };
-        private static List<string> loadedVersions = new List<string>() { };
+        private static Dictionary<string, PluginInfo> loadedMods = new Dictionary<string, PluginInfo>();
+        private static List<string> loadedGUIDs = new List<string>();
+        private static List<string> loadedModNames = new List<string>();
+        private static List<string> loadedVersions = new List<string>();
 
         internal static void RequestSync()
         {
+            if (PhotonNetwork.OfflineMode) return;
             UnityEngine.Debug.Log("REQUESTING SYNC...");
 
             NetworkingManager.RPC(typeof(SyncModClients), "SyncLobby", new object[] { });
@@ -115,12 +115,12 @@ namespace UnboundLib.Networking
             missing = new Dictionary<int, string[]>();
             mismatch = new Dictionary<int, string[]>();
 
-            hostsServerSideMods = new List<string>() { };
-            hostsServerSideGUIDs = new List<string>() { };
-            hostsModVersions = new List<string>() { };
-            loadedGUIDs = new List<string>() { };
-            loadedModNames = new List<string>() { };
-            loadedVersions = new List<string>() { };
+            hostsServerSideMods = new List<string>();
+            hostsServerSideGUIDs = new List<string>();
+            hostsModVersions = new List<string>();
+            loadedGUIDs = new List<string>();
+            loadedModNames = new List<string>();
+            loadedVersions = new List<string>();
         }
 
         internal static void FindDifferences()
@@ -174,7 +174,7 @@ namespace UnboundLib.Networking
 
             foreach (int actorID in clientsServerSideGUIDs.Keys)
             {
-                List<string> flags = new List<string>() { };
+                List<string> flags = new List<string>();
 
                 if (missing[actorID].Length == 0 && extra[actorID].Length == 0 && mismatch[actorID].Length == 0)
                 {
@@ -221,7 +221,103 @@ namespace UnboundLib.Networking
             // if (error=true) then the text should ideally be red
 
             // when a player hovers over (with mouse) the green/red check/X it should display a textbox or something with the full error/warning messages - each entry on a new line
+
+            
+            var nickName = PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName;
+
+            // Check if player is using RWF
+            if (UIHandler.instance.transform.Find("Canvas/PrivateRoom"))
+            {
+                // Make UI in RWF
+                GameObject parent;
+                var _uiHolder = MenuHandler.modOptionsUI.LoadAsset<GameObject>("uiHolder");
+                var _checkmark =  MenuHandler.modOptionsUI.LoadAsset<GameObject>("checkmark");
+                var _redx = MenuHandler.modOptionsUI.LoadAsset<GameObject>("redx");
+                // Check if uiHolder has already been made
+                if (!UIHandler.instance.transform.Find("Canvas/PrivateRoom/uiHolder(Clone)"))
+                {
+                    parent = GameObject.Instantiate(_uiHolder,UIHandler.instance.transform.Find("Canvas/PrivateRoom"));
+                    parent.GetComponent<RectTransform>().position = new Vector3(-35, 18, 0);
+                }
+                else
+                {
+                    parent = UIHandler.instance.transform.Find("Canvas/PrivateRoom/uiHolder(Clone)").gameObject;
+                }
+
+                GameObject playerObj;
+                if (!parent.transform.Find(nickName))
+                {
+                    playerObj = GameObject.Instantiate(_uiHolder, parent.transform);
+                    playerObj.name = nickName;
+                }
+                else
+                {
+                    playerObj = parent.transform.Find(nickName).gameObject;
+                }
+
+                if (!playerObj.transform.Find(nickName))
+                {
+                    var flag = flags[0];
+                    if (flag.Contains("✓ "))
+                    {
+                        var check = GameObject.Instantiate(_checkmark, playerObj.transform);
+                        check.GetComponent<RectTransform>().position = new Vector3(-34.5f, 18, 0);
+                        var _hover = check.AddComponent<CheckHover>();
+                        _hover.texts = flags;
+                    } else if (flag.Contains("✗ "))
+                    {
+                        var redcheck = GameObject.Instantiate(_redx, playerObj.transform);
+                        redcheck.GetComponent<RectTransform>().position = new Vector3(-34.5f, 18, 0);
+                        var _hover = redcheck.AddComponent<CheckHover>();
+                        _hover.texts = flags;
+                    }
+                    var text = MenuHandler.CreateText(nickName, playerObj, out var uGUI, 20, false, error ? Color.red : new Color(0.902f, 0.902f, 0.902f, 1f), null, null, TextAlignmentOptions.MidlineLeft );
+                    text.name = nickName;
+                    var hover = text.AddComponent<CheckHover>();
+                    hover.texts = flags;
+                    var uGUIMargin = uGUI.margin;
+                    uGUIMargin.z = 1600;
+                    uGUI.margin = uGUIMargin;
+                    uGUI.fontSizeMin = 25;
+                    var layout = text.AddComponent<LayoutElement>();
+                    layout.preferredWidth = 300;
+                    layout.preferredHeight = 100;
+                    
+                    var rectTrans = text.GetComponent<RectTransform>();
+                    rectTrans.pivot = Vector2.zero;
+                }
+                Unbound.Instance.ExecuteAfterSeconds(0.1f, () =>
+                {
+                    parent.GetComponent<VerticalLayoutGroup>().SetLayoutVertical();
+                });
+                GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => disableSyncModUI(parent));
+            }
+            else
+            {
+                // Remove old ui if it exists
+                if (UIHandler.instance.transform.Find("Canvas/LoadingScreen/Match found/uiHolder"))
+                {
+                    GameObject.Destroy(UIHandler.instance.transform.Find("Canvas/LoadingScreen/Match found/uiHolder").gameObject);
+                }
+                // Make UI without RWF
+                var parent = new GameObject("uiHolder");
+                parent.transform.parent = UIHandler.instance.transform.Find("Canvas/LoadingScreen/Match found");
+                parent.transform.localScale = new Vector3(1, 1, 1);
+                var localposition = parent.transform.localPosition;
+                localposition = new Vector3(-950, 400, 0);
+                parent.transform.localPosition = localposition;
+                var text = MenuHandler.CreateText(nickName, parent, out _);
+                text.GetComponent<RectTransform>().sizeDelta = new Vector2(100, 200);
+                text.GetComponent<RectTransform>().pivot = Vector2.zero;
+            }
+            //var UIHolder = new GameObject();
         }
+
+        private static IEnumerator disableSyncModUI(GameObject parent)
+        {
+            GameObject.Destroy(parent);
+            yield break;
+        } 
 
         [UnboundRPC]
         private static void SendModList()
@@ -251,6 +347,60 @@ namespace UnboundLib.Networking
                 }
 
             }
+        }
+    }
+
+    internal class CheckHover : MonoBehaviour
+    {
+        public string[] texts;
+
+        private GUIStyle guiStyleFore;
+
+        private void Start()
+        {
+            guiStyleFore = new GUIStyle();
+            guiStyleFore.normal.textColor = Color.white;  
+            guiStyleFore.alignment = TextAnchor.UpperLeft ;
+            guiStyleFore.wordWrap = true;
+            var background = new Texture2D(1, 1);
+            background.SetPixel(0,0, Color.gray);
+            background.Apply();
+            guiStyleFore.normal.background = background;
+            guiStyleFore.fontSize = 20;
+        }
+        private void OnGUI()
+        {
+            if (IsOverThisObject() && texts != Array.Empty<string>() && Input.mousePosition.x < Screen.width/4)
+            {
+                GUILayout.BeginArea(new Rect(Input.mousePosition.x + 25, Screen.height - Input.mousePosition.y + 25, 300, 50*texts.Length));
+                GUILayout.BeginVertical();
+                foreach (var t in texts)
+                {
+                    GUILayout.Label (t, guiStyleFore);
+                }
+                GUILayout.EndVertical();
+                GUILayout.EndArea();
+            }
+        }
+
+        private bool IsOverThisObject()
+        {
+            var pointerEventData = new PointerEventData(EventSystem.current)
+            {
+                position = Input.mousePosition
+            };
+
+            var raycastResults = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(pointerEventData, raycastResults);
+            foreach (var raycast in raycastResults)
+            {
+                if (raycast.gameObject.name == gameObject.name)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
