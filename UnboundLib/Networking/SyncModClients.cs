@@ -217,14 +217,15 @@ namespace UnboundLib.Networking
             
             var nickName = PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName;
 
+            GameObject parent;
+            var _uiHolder = MenuHandler.modOptionsUI.LoadAsset<GameObject>("uiHolder");
+            var _checkmark =  MenuHandler.modOptionsUI.LoadAsset<GameObject>("checkmark");
+            var _redx = MenuHandler.modOptionsUI.LoadAsset<GameObject>("redx");
+            
             // Check if player is using RWF
             if (UIHandler.instance.transform.Find("Canvas/PrivateRoom"))
             {
-                // Make UI in RWF
-                GameObject parent;
-                var _uiHolder = MenuHandler.modOptionsUI.LoadAsset<GameObject>("uiHolder");
-                var _checkmark =  MenuHandler.modOptionsUI.LoadAsset<GameObject>("checkmark");
-                var _redx = MenuHandler.modOptionsUI.LoadAsset<GameObject>("redx");
+                // Set parents RWF
                 // Check if uiHolder has already been made
                 if (!UIHandler.instance.transform.Find("Canvas/PrivateRoom/uiHolder(Clone)"))
                 {
@@ -236,73 +237,69 @@ namespace UnboundLib.Networking
                 {
                     parent = UIHandler.instance.transform.Find("Canvas/PrivateRoom/uiHolder(Clone)").gameObject;
                 }
-
-                GameObject playerObj;
-                if (!parent.transform.Find(nickName))
-                {
-                    playerObj = GameObject.Instantiate(_uiHolder, parent.transform);
-                    playerObj.name = nickName;
-                }
-                else
-                {
-                    playerObj = parent.transform.Find(nickName).gameObject;
-                }
-
-                if (!playerObj.transform.Find(nickName))
-                {
-                    var flag = flags[0];
-                    if (flag.Contains("✓ "))
-                    {
-                        var check = GameObject.Instantiate(_checkmark, playerObj.transform);
-                        check.GetComponent<RectTransform>().position = new Vector3(-34.5f, 18, 0);
-                        var _hover = check.AddComponent<CheckHover>();
-                        _hover.texts = flags;
-                    } else if (flag.Contains("✗ "))
-                    {
-                        var redcheck = GameObject.Instantiate(_redx, playerObj.transform);
-                        redcheck.GetComponent<RectTransform>().position = new Vector3(-34.5f, 18, 0);
-                        var _hover = redcheck.AddComponent<CheckHover>();
-                        _hover.texts = flags;
-                    }
-                    var text = MenuHandler.CreateText(nickName, playerObj, out var uGUI, 20, false, error ? Color.red : new Color(0.902f, 0.902f, 0.902f, 1f), null, null, TextAlignmentOptions.MidlineLeft );
-                    text.name = nickName;
-                    var hover = text.AddComponent<CheckHover>();
-                    hover.texts = flags;
-                    var uGUIMargin = uGUI.margin;
-                    uGUIMargin.z = 1600;
-                    uGUI.margin = uGUIMargin;
-                    uGUI.fontSizeMin = 25;
-                    var layout = text.AddComponent<LayoutElement>();
-                    layout.preferredWidth = 300;
-                    layout.preferredHeight = 100;
-                    
-                    var rectTrans = text.GetComponent<RectTransform>();
-                    rectTrans.pivot = Vector2.zero;
-                }
-                Unbound.Instance.ExecuteAfterSeconds(0.1f, () =>
-                {
-                    parent.GetComponent<VerticalLayoutGroup>().SetLayoutVertical();
-                });
-                GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => disableSyncModUI(parent));
             }
             else
             {
-                // Remove old ui if it exists
-                if (UIHandler.instance.transform.Find("Canvas/LoadingScreen/Match found/uiHolder"))
+                // Set parents vanilla
+                // Check if uiHolder has already been made
+                if (!UIHandler.instance.transform.Find("Canvas/LoadingScreen/uiHolder(Clone)"))
                 {
-                    GameObject.Destroy(UIHandler.instance.transform.Find("Canvas/LoadingScreen/Match found/uiHolder").gameObject);
+                    parent = GameObject.Instantiate(_uiHolder,UIHandler.instance.transform.Find("Canvas/LoadingScreen"));
+                    parent.GetComponent<RectTransform>().position = new Vector3(-35, 18, 0);
+                    parent.GetOrAddComponent<DetectUnmodded>();
                 }
-                // Make UI without RWF
-                var parent = new GameObject("uiHolder");
-                parent.transform.parent = UIHandler.instance.transform.Find("Canvas/LoadingScreen/Match found");
-                parent.transform.localScale = new Vector3(1, 1, 1);
-                var localposition = parent.transform.localPosition;
-                localposition = new Vector3(-950, 400, 0);
-                parent.transform.localPosition = localposition;
-                var text = MenuHandler.CreateText(nickName, parent, out _);
-                text.GetComponent<RectTransform>().sizeDelta = new Vector2(100, 200);
-                text.GetComponent<RectTransform>().pivot = Vector2.zero;
+                else
+                {
+                    parent = UIHandler.instance.transform.Find("Canvas/LoadingScreen/uiHolder(Clone)").gameObject;
+                }
             }
+            GameObject playerObj;
+            if (!parent.transform.Find(nickName))
+            {
+                playerObj = GameObject.Instantiate(_uiHolder, parent.transform);
+                playerObj.name = nickName;
+            }
+            else
+            {
+                playerObj = parent.transform.Find(nickName).gameObject;
+            }
+
+            if (!playerObj.transform.Find(nickName))
+            {
+                var flag = flags[0];
+                if (flag.Contains("✓ "))
+                {
+                    var check = GameObject.Instantiate(_checkmark, playerObj.transform);
+                    check.GetComponent<RectTransform>().position = new Vector3(-34.5f, 18, 0);
+                    var _hover = check.AddComponent<CheckHover>();
+                    _hover.texts = flags;
+                } else if (flag.Contains("✗ "))
+                {
+                    var redcheck = GameObject.Instantiate(_redx, playerObj.transform);
+                    redcheck.GetComponent<RectTransform>().position = new Vector3(-34.5f, 18, 0);
+                    var _hover = redcheck.AddComponent<CheckHover>();
+                    _hover.texts = flags;
+                }
+                var text = MenuHandler.CreateText(nickName, playerObj, out var uGUI, 20, false, error ? Color.red : new Color(0.902f, 0.902f, 0.902f, 1f), null, null, TextAlignmentOptions.MidlineLeft );
+                text.name = nickName;
+                var hover = text.AddComponent<CheckHover>();
+                hover.texts = flags;
+                var uGUIMargin = uGUI.margin;
+                uGUIMargin.z = 1600;
+                uGUI.margin = uGUIMargin;
+                uGUI.fontSizeMin = 25;
+                var layout = text.AddComponent<LayoutElement>();
+                layout.preferredWidth = 300;
+                layout.preferredHeight = 100;
+                
+                var rectTrans = text.GetComponent<RectTransform>();
+                rectTrans.pivot = Vector2.zero;
+            }
+            Unbound.Instance.ExecuteAfterSeconds(0.1f, () =>
+            {
+                parent.GetComponent<VerticalLayoutGroup>().SetLayoutVertical();
+            });
+            GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => disableSyncModUI(parent));
             //var UIHolder = new GameObject();
         }
 
