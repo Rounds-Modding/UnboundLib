@@ -113,6 +113,7 @@ namespace UnboundLib.Utils.UI
                     MenuHandler.CreateText(line, parentMenu, out TextMeshProUGUI _, 30);
                 }
             }
+            if (credits.linkTexts.Length > 0) { MenuHandler.CreateText(" \n ", parentMenu, out TextMeshProUGUI _, 60); }
             for (int i = 0; i < credits.linkTexts.Length; i++)
             {
                 string linkText = credits.linkTexts[i];
@@ -120,7 +121,6 @@ namespace UnboundLib.Utils.UI
                 if (i < credits.linkURLs.Length) { linkURL = credits.linkURLs[i]; }
                 if (linkText != "") 
                 {
-                    MenuHandler.CreateText(" \n ", parentMenu, out TextMeshProUGUI _, (i>0) ? 60 : 30);
                     MenuHandler.CreateText("<link=\"" + linkURL + "\">" + linkText.ToUpper() + "</link>", parentMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
                 }
             }

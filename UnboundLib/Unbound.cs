@@ -382,9 +382,9 @@ namespace UnboundLib
         {
             return Instantiate(modalPrefab, Instance.canvas.transform).AddComponent<ModalHandler>();
         }
-        public static void RegisterCredits(string modName, string[] contributors = null)
+        public static void RegisterCredits(string modName, string[] credits = null, string[] linkTexts = null, string[] linkURLs = null)
         {
-
+            Utils.UI.Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkTexts, linkURLs));
         }
 
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
