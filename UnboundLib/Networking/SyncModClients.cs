@@ -15,8 +15,7 @@ namespace UnboundLib.Networking
 {
     internal static class SyncModClients
     {
-        private static readonly float timeoutTime = 5f;
-        private static readonly Vector3 offset = new Vector3(0f, 60f, 0f);
+        internal static readonly float timeoutTime = 5f;
 
         private static List<string> clientSideGUIDs = new List<string>();
 
@@ -40,7 +39,7 @@ namespace UnboundLib.Networking
         internal static void RequestSync()
         {
             if (PhotonNetwork.OfflineMode) return;
-            UnityEngine.Debug.Log("REQUESTING SYNC...");
+            //UnityEngine.Debug.Log("REQUESTING SYNC...");
 
             NetworkingManager.RPC(typeof(SyncModClients), "SyncLobby", new object[] { });
         }
@@ -52,7 +51,7 @@ namespace UnboundLib.Networking
             LocalSetup();
             if (PhotonNetwork.IsMasterClient)
             {
-                UnityEngine.Debug.Log("SYNCING...");
+                //UnityEngine.Debug.Log("SYNCING...");
                 CheckLobby();
                 Unbound.Instance.StartCoroutine(Check());
 
@@ -61,22 +60,20 @@ namespace UnboundLib.Networking
 
         internal static System.Collections.IEnumerator Check()
         {
-            bool timeout = false;
             float startTime = Time.time;
             while (clientsServerSideGUIDs.Keys.Count < PhotonNetwork.PlayerList.Except(new List<Photon.Realtime.Player> { PhotonNetwork.LocalPlayer }).ToList().Count)
             {
-                UnityEngine.Debug.Log("WAITING");
+                //UnityEngine.Debug.Log("WAITING");
 
                 if (Time.time > startTime + timeoutTime)
                 {
-                    timeout = true;
                     break;
                 }
 
                 yield return null;
             }
             yield return new WaitForSecondsRealtime(1f);
-            UnityEngine.Debug.Log("FINISHED WAITING.");
+            //UnityEngine.Debug.Log("FINISHED WAITING.");
             FindDifferences();
             MakeFlags();
             yield break;
@@ -154,19 +151,15 @@ namespace UnboundLib.Networking
 
         internal static void MakeFlags()
         {
-            UnityEngine.Debug.Log("MAKING FLAGS...");
+            //UnityEngine.Debug.Log("MAKING FLAGS...");
 
             // add a host flag for the host
             NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { PhotonNetwork.LocalPlayer.ActorNumber, new string[] { "✓ " + PhotonNetwork.CurrentRoom.GetPlayer(PhotonNetwork.LocalPlayer.ActorNumber).NickName, "HOST" }, false });
 
-            // if a player timed out, figure out which one(s) it was
-
-            int[] timeoutIDs = PhotonNetwork.CurrentRoom.Players.Values.Select(p => p.ActorNumber).Except(clientsServerSideGUIDs.Keys).Except(new int[] { PhotonNetwork.LocalPlayer.ActorNumber }).ToArray();
-
-            foreach (int timeoutID in timeoutIDs)
+            // detect unmodded clients
+            foreach (int actorID in PhotonNetwork.CurrentRoom.Players.Values.Select(p => p.ActorNumber).Except(clientsServerSideGUIDs.Keys).Except(new int[] { PhotonNetwork.LocalPlayer.ActorNumber }).ToArray())
             {
-                NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { timeoutID, new string[] { "✗ " + PhotonNetwork.CurrentRoom.GetPlayer(timeoutID).NickName, "UNMODDED"}, false });
-
+                NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { actorID, new string[] { "✗ " + PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName, "UNMODDED" }, true });
             }
 
             foreach (int actorID in clientsServerSideGUIDs.Keys)
@@ -177,7 +170,7 @@ namespace UnboundLib.Networking
                 {
                     flags.Add("✓ " + PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName);
                     flags.Add("ALL MODS SYNCED");
-                    UnityEngine.Debug.Log(PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName + " is synced!");
+                    //UnityEngine.Debug.Log(PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName + " is synced!");
 
                     NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] {actorID, flags.ToArray(), false});
                     continue;
@@ -188,11 +181,11 @@ namespace UnboundLib.Networking
                 }
                 foreach (string missingGUID in missing[actorID])
                 {
-                    flags.Add("MISSING: " + ModIDFromGUID(actorID, missingGUID) + " (" + missingGUID + ") Version: "+VersionFromGUID(actorID, missingGUID));
+                    flags.Add("MISSING: " + ModIDFromGUID(actorID, missingGUID) + " (" + missingGUID + ")");
                 }
                 foreach (string versionGUID in mismatch[actorID])
                 {
-                    flags.Add("VERSION: " + ModIDFromGUID(actorID, versionGUID) + " (" + versionGUID + ") Version: " + VersionFromGUID(actorID, versionGUID) + "\nHost has: " + HostVersionFromGUID(versionGUID));
+                    flags.Add("VERSION: " + ModIDFromGUID(actorID, versionGUID) + " (" + versionGUID + ") Version: " + VersionFromGUID(actorID, versionGUID) + " <b>Host has: " + HostVersionFromGUID(versionGUID)+"</b>");
                 }
                 foreach (string extraGUID in extra[actorID])
                 {
@@ -201,16 +194,13 @@ namespace UnboundLib.Networking
                 NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { actorID, flags.ToArray(), true });
             }
 
-            foreach (int actorID in PhotonNetwork.CurrentRoom.Players.Values.Select(p => p.ActorNumber).Except(clientsServerSideGUIDs.Keys).Except(new int[] { PhotonNetwork.LocalPlayer.ActorNumber }).ToArray())
-            {
-                NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { actorID, new string[] { "✗ " + PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName, "UNMODDED" }, true });
-            }
+
         }
 
         [UnboundRPC]
         private static void AddFlags(int actorID, string[] flags, bool error)
         {
-            UnityEngine.Debug.Log("ADDING FLAGS");
+            //UnityEngine.Debug.Log("ADDING FLAGS");
 
             // display the sync status of each player here
 
@@ -240,7 +230,7 @@ namespace UnboundLib.Networking
                 {
                     parent = GameObject.Instantiate(_uiHolder,UIHandler.instance.transform.Find("Canvas/PrivateRoom"));
                     parent.GetComponent<RectTransform>().position = new Vector3(-35, 18, 0);
-                    parent.GetOrAddComponent<AutoUpdate>();
+                    parent.GetOrAddComponent<DetectUnmodded>();
                 }
                 else
                 {
@@ -325,7 +315,7 @@ namespace UnboundLib.Networking
         [UnboundRPC]
         private static void SendModList()
         {
-            UnityEngine.Debug.Log("SENDING MODS...");
+            //UnityEngine.Debug.Log("SENDING MODS...");
             NetworkingManager.RPC(typeof(SyncModClients), "ReceiveModList", new object[] { loadedGUIDs.ToArray(), loadedModNames.ToArray(), loadedVersions.ToArray(), PhotonNetwork.LocalPlayer.ActorNumber });
         }
 
@@ -334,7 +324,7 @@ namespace UnboundLib.Networking
         {
             if (PhotonNetwork.IsMasterClient)
             {
-                UnityEngine.Debug.Log("RECEIVING MODS...");
+                //UnityEngine.Debug.Log("RECEIVING MODS...");
 
                 if (PhotonNetwork.LocalPlayer.ActorNumber == actorID)
                 {
@@ -353,21 +343,40 @@ namespace UnboundLib.Networking
         }
     }
 
-    internal class AutoUpdate : MonoBehaviour
+    internal class DetectUnmodded : MonoBehaviour
     {
-        private readonly float delay = 1f;
+        private readonly float baseDelay = 1f;
+        private float delay = 1f;
         private float startTime;
+        private int prevPlayers;
+        private bool update = false;
 
         void Start()
         {
             startTime = Time.time;
+            prevPlayers = PhotonNetwork.CurrentRoom.PlayerCount;
+            delay = baseDelay;
         }
         void Update()
         {
             if (Time.time > startTime + delay)
             {
-                startTime = Time.time;
-                SyncModClients.MakeFlags();
+                if (update)
+                {
+                    SyncModClients.MakeFlags();
+                    update = false;
+                    delay = baseDelay;
+                }
+                else
+                {
+                    startTime = Time.time;
+                    if (prevPlayers != PhotonNetwork.CurrentRoom.PlayerCount)
+                    {
+                        prevPlayers = PhotonNetwork.CurrentRoom.PlayerCount;
+                        delay = SyncModClients.timeoutTime + 2f;
+                        update = true;
+                    }
+                }
             }
         }
     }
@@ -381,9 +390,11 @@ namespace UnboundLib.Networking
         private void Start()
         {
             guiStyleFore = new GUIStyle();
+            guiStyleFore.richText = true;
             guiStyleFore.normal.textColor = Color.white;  
             guiStyleFore.alignment = TextAnchor.UpperLeft ;
-            guiStyleFore.wordWrap = true;
+            guiStyleFore.wordWrap = false;
+            guiStyleFore.stretchWidth = true;
             var background = new Texture2D(1, 1);
             background.SetPixel(0,0, Color.gray);
             background.Apply();
@@ -394,7 +405,8 @@ namespace UnboundLib.Networking
         {
             if (IsOverThisObject() && texts != Array.Empty<string>() && Input.mousePosition.x < Screen.width/4)
             {
-                GUILayout.BeginArea(new Rect(Input.mousePosition.x + 25, Screen.height - Input.mousePosition.y + 25, 300, 50*texts.Length));
+                Vector2 size = guiStyleFore.CalcSize(new GUIContent(String.Join("\n",texts)));
+                GUILayout.BeginArea(new Rect(Input.mousePosition.x + 25, Screen.height - Input.mousePosition.y + 25, size.x + 10, size.y+10));
                 GUILayout.BeginVertical();
                 foreach (var t in texts)
                 {
