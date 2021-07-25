@@ -78,7 +78,7 @@ namespace UnboundLib.Networking
             yield return new WaitForSecondsRealtime(1f);
             UnityEngine.Debug.Log("FINISHED WAITING.");
             FindDifferences();
-            MakeFlags(timeout);
+            MakeFlags();
             yield break;
         }
 
@@ -152,7 +152,7 @@ namespace UnboundLib.Networking
             if (!clientSideGUIDs.Contains(GUID)) { clientSideGUIDs.Add(GUID); }
         }
 
-        internal static void MakeFlags(bool timeout)
+        internal static void MakeFlags()
         {
             UnityEngine.Debug.Log("MAKING FLAGS...");
 
@@ -160,17 +160,14 @@ namespace UnboundLib.Networking
             NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { PhotonNetwork.LocalPlayer.ActorNumber, new string[] { "✓ " + PhotonNetwork.CurrentRoom.GetPlayer(PhotonNetwork.LocalPlayer.ActorNumber).NickName, "HOST" }, false });
 
             // if a player timed out, figure out which one(s) it was
-            if (timeout)
+
+            int[] timeoutIDs = PhotonNetwork.CurrentRoom.Players.Values.Select(p => p.ActorNumber).Except(clientsServerSideGUIDs.Keys).Except(new int[] { PhotonNetwork.LocalPlayer.ActorNumber }).ToArray();
+
+            foreach (int timeoutID in timeoutIDs)
             {
-                int[] timeoutIDs = PhotonNetwork.CurrentRoom.Players.Values.Select(p => p.ActorNumber).Except(clientsServerSideGUIDs.Keys).Except(new int[] { PhotonNetwork.LocalPlayer.ActorNumber }).ToArray();
+                NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { timeoutID, new string[] { "✗ " + PhotonNetwork.CurrentRoom.GetPlayer(timeoutID).NickName, "UNMODDED"}, false });
 
-                foreach (int timeoutID in timeoutIDs)
-                {
-                    NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { timeoutID, new string[] { "✗ " + PhotonNetwork.CurrentRoom.GetPlayer(timeoutID).NickName, "UNMODDED"}, false });
-
-                }
             }
-
 
             foreach (int actorID in clientsServerSideGUIDs.Keys)
             {
@@ -202,6 +199,11 @@ namespace UnboundLib.Networking
                     flags.Add("EXTRA: " + ModIDFromGUID(actorID, extraGUID) + " (" + extraGUID + ") Version: " + VersionFromGUID(actorID, extraGUID));
                 }
                 NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { actorID, flags.ToArray(), true });
+            }
+
+            foreach (int actorID in PhotonNetwork.CurrentRoom.Players.Values.Select(p => p.ActorNumber).Except(clientsServerSideGUIDs.Keys).Except(new int[] { PhotonNetwork.LocalPlayer.ActorNumber }).ToArray())
+            {
+                NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { actorID, new string[] { "✗ " + PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName, "UNMODDED" }, true });
             }
         }
 
@@ -238,6 +240,7 @@ namespace UnboundLib.Networking
                 {
                     parent = GameObject.Instantiate(_uiHolder,UIHandler.instance.transform.Find("Canvas/PrivateRoom"));
                     parent.GetComponent<RectTransform>().position = new Vector3(-35, 18, 0);
+                    parent.GetOrAddComponent<AutoUpdate>();
                 }
                 else
                 {
@@ -346,6 +349,25 @@ namespace UnboundLib.Networking
                     clientsModVersions[actorID] = versions;
                 }
 
+            }
+        }
+    }
+
+    internal class AutoUpdate : MonoBehaviour
+    {
+        private readonly float delay = 1f;
+        private float startTime;
+
+        void Start()
+        {
+            startTime = Time.time;
+        }
+        void Update()
+        {
+            if (Time.time > startTime + delay)
+            {
+                startTime = Time.time;
+                SyncModClients.MakeFlags();
             }
         }
     }
