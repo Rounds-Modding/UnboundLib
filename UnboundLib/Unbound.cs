@@ -6,8 +6,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using BepInEx.Configuration;
 using Jotunn.Utils;
 using TMPro;
 using UnboundLib.GameModes;
@@ -31,6 +33,8 @@ namespace UnboundLib
         internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new string[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
         public static Unbound Instance { get; private set; }
+        
+        public static ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
 
         private Canvas _canvas;
         public Canvas canvas
@@ -62,10 +66,6 @@ namespace UnboundLib
         internal static ObservableCollection<CardInfo> activeCards;
         internal static List<CardInfo> inactiveCards = new List<CardInfo>();
 
-        internal static string[] defaultLevels;
-        internal static List<string> activeLevels = new List<string>();
-        internal static List<string> inactiveLevels = new List<string>();
-
         public delegate void OnJoinedDelegate();
         public delegate void OnLeftDelegate();
         public static event OnJoinedDelegate OnJoinedRoom;
@@ -88,9 +88,8 @@ namespace UnboundLib
                 // reapply cards and levels
                 this.ExecuteAfterSeconds(0.1f, () =>
                 {
-                    activeLevels.AddRange(inactiveLevels);
-                    inactiveLevels.Clear();
-                    MapManager.instance.levels = activeLevels.ToArray();
+                    LevelManager.inactiveLevels.Clear();
+                    MapManager.instance.levels = LevelManager.activeLevels.ToArray();
                     CardChoice.instance.cards = activeCards.ToArray();
                 });
 
@@ -140,10 +139,11 @@ namespace UnboundLib
             };
 
 
-            // apply cards on game start
+            // apply cards and levels on game start
             IEnumerator ResetCardsOnStart(IGameModeHandler gm)
             {
                 CardChoice.instance.cards = activeCards.ToArray();
+                MapManager.instance.levels = LevelManager.activeLevels.ToArray();
                 yield break;
             }
             GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsOnStart);
@@ -201,7 +201,7 @@ namespace UnboundLib
             {
                 // attempt to syncronize levels and cards with other players
                 CardChoice.instance.cards = activeCards.ToArray();
-                NetworkingManager.RPC(typeof(Unbound), nameof(RPC_MapHandshake), (object)activeLevels.ToArray());
+                MapManager.instance.levels = LevelManager.activeLevels.ToArray();
 
                 if (data.Length > 0)
                 {
@@ -222,13 +222,10 @@ namespace UnboundLib
                 CardToggleMenuHandler.Instance.AddCardToggle(card, false);
             }
 
-            // add default activeLevels to level list
-            defaultLevels = MapManager.instance.levels;
-            activeLevels.AddRange(MapManager.instance.levels);
-
             // hook up Photon callbacks
             var networkEvents = gameObject.AddComponent<NetworkEventCallbacks>();
             networkEvents.OnJoinedRoomEvent += OnJoinedRoomAction;
+            networkEvents.OnJoinedRoomEvent += LevelManager.OnJoinedRoomAction;
             networkEvents.OnLeftRoomEvent += OnLeftRoomAction;
         }
 
@@ -356,21 +353,6 @@ namespace UnboundLib
         }
 
         [UnboundRPC]
-        private static void RPC_MapHandshake(string[] maps)
-        {
-            var difference = maps.Except(activeLevels).ToArray();
-
-            inactiveLevels.AddRange(difference);
-
-            foreach (var c in difference)
-            {
-                activeLevels.Remove(c);
-            }
-
-            MapManager.instance.levels = activeLevels.ToArray();
-        }
-
-        [UnboundRPC]
         public static void BuildInfoPopup(string message)
         {
             var popup = new GameObject("Info Popup").AddComponent<InfoPopup>();
@@ -424,80 +406,17 @@ namespace UnboundLib
             handShakeActions.Add(() => NetworkingManager.RaiseEventOthers($"ModLoader_{modId}_StartHandshake"));
         }
 
+        #region Remove these at a later date when mod's have updated to LevelManager
         public static void RegisterMaps(AssetBundle assetBundle)
         {
-            RegisterMaps(assetBundle.GetAllScenePaths());
+            LevelManager.RegisterMaps(assetBundle);
         }
 
-        public static void RegisterMaps(IEnumerable<string> paths)
+        public static void RegisterMaps(IEnumerable<string> paths, string categoryName = "Modded")
         {
-            activeLevels.AddRange(paths);
-            activeLevels = activeLevels.Distinct().ToList();
-            MapManager.instance.levels = activeLevels.ToArray();
+            LevelManager.RegisterMaps(paths);
         }
-
-        // loads a map in via its name prefixed with a forward-slash
-        internal static void SpawnMap(string message)
-        {
-            if (!message.StartsWith("/"))
-            {
-                return;
-            }
-            // search code copied from card search 
-            try
-            {
-                var currentLevels = MapManager.instance.levels;
-                var levelId = -1;
-                var bestMatches = 0f;
-
-                // parse message
-                var formattedMessage = message.ToUpper()
-                    .Replace(" ", "_")
-                    .Replace("/", "");
-
-                for (var i = 0; i < currentLevels.Length; i++)
-                {
-                    var text = currentLevels[i].ToUpper()
-                        .Replace(" ", "")
-                        .Replace("ASSETS", "")
-                        .Replace(".UNITY", "");
-                    text = Regex.Replace(text, "/.*/", string.Empty);
-                    text = text.Replace("/", "");
-
-                    var currentMatches = 0f;
-                    for (int j = 0; j < formattedMessage.Length; j++)
-                    {
-                        if (text.Length > j && formattedMessage[j] == text[j])
-                        {
-                            currentMatches += 1f / formattedMessage.Length;
-                        }
-                    }
-                    currentMatches -= (float)Mathf.Abs(formattedMessage.Length - text.Length) * 0.001f;
-                    if (currentMatches > 0.1f && currentMatches > bestMatches)
-                    {
-                        bestMatches = currentMatches;
-                        levelId = i;
-                    }
-                }
-                if (levelId != -1)
-                {
-                    MapManager.instance.LoadLevelFromID(levelId, false, true);
-                }
-            }
-            catch (Exception e)
-            {
-                BuildModal()
-                    .Title("Error Loading Level")
-                    .Message($"No map found named:\n{message}\n\nError:\n{e.ToString()}")
-                    .CancelButton("Copy", () =>
-                    {
-                        BuildInfoPopup("Copied Message!");
-                        GUIUtility.systemCopyBuffer = e.ToString();
-                    })
-                    .CancelButton("Cancel", () => { })
-                    .Show();
-            }
-        }
+        #endregion
 
         public static bool IsNotPlayingOrConnected()
         {

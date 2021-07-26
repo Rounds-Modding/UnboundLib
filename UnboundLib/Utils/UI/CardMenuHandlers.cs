@@ -41,8 +41,7 @@ namespace UnboundLib.Utils
         {
             get { return transform.Find("Default Cards/Content"); }
         }
-
-        private ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
+        
         private bool toggleAll;
         public List<CardToggleHandler> cardToggleHandlers = new List<CardToggleHandler>();
 
@@ -124,7 +123,7 @@ namespace UnboundLib.Utils
                             Unbound.inactiveCards.Remove(info);
                         }
                     });
-            toggle.isEnabled = isModded ? config.Bind("Toggle Modded cards", info.cardName, true) : config.Bind("Toggle default cards", info.cardName, true);
+            toggle.isEnabled = isModded ? Unbound.config.Bind("Toggle Modded cards", info.cardName, true) : Unbound.config.Bind("Toggle default cards", info.cardName, true);
             cardToggleHandlers.Add(toggle);
         }
     }

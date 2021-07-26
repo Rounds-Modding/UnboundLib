@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using UnboundLib.Utils;
 using UnityEngine;
 
 namespace UnboundLib.Patches
@@ -12,7 +13,7 @@ namespace UnboundLib.Patches
         {
             if (Application.isEditor || (GM_Test.instance && GM_Test.instance.gameObject.activeSelf))
             {
-                Unbound.SpawnMap(message);
+                LevelManager.SpawnMap(message);
             }
         }
 
