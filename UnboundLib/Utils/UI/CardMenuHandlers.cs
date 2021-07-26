@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using BepInEx;
@@ -9,7 +10,7 @@ using TMPro;
 using UnboundLib.Networking;
 using UnityEngine.Events;
 
-namespace UnboundLib
+namespace UnboundLib.Utils
 {
     internal class CardToggleMenuHandler : MonoBehaviour
     {
@@ -65,6 +66,7 @@ namespace UnboundLib
             button.onClick.AddListener(() =>
             {
                 var _toggleAll = true;
+                if (cardToggleHandlers == new List<CardToggleHandler>()) return;
                 foreach (var toggle in cardToggleHandlers)
                 {
                     if (toggleAll)
@@ -114,7 +116,8 @@ namespace UnboundLib
                         if (!Unbound.activeCards.Contains(info))
                         {
                             Unbound.activeCards.Add(info);
-                            Unbound.activeCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
+                            Unbound.activeCards = new ObservableCollection<CardInfo>(Unbound.activeCards.OrderBy(i => i.cardName));
+                            Unbound.activeCards.CollectionChanged += Unbound.CardsChanged;
                         }
                         if (Unbound.inactiveCards.Contains(info))
                         {
@@ -153,14 +156,12 @@ namespace UnboundLib
         {
             set
             {
-                if (value.Value)
+                if (value.Value && offButton != null && Unbound.IsNotPlayingOrConnected())
                 {
-                    animator.Play("Switch On");
-                    cardName.alpha = 1f;
-                } else
+                    Unbound.Instance.ExecuteAfterSeconds(0.5f, () => offButton.onClick.Invoke());
+                } else if (onButton != null && Unbound.IsNotPlayingOrConnected())
                 {
-                    animator.Play("Switch Off");
-                    cardName.alpha = 0.25f;
+                    Unbound.Instance.ExecuteAfterSeconds(0.5f, () => onButton.onClick.Invoke());
                 }
 
                 _isEnabled = value;
@@ -172,17 +173,17 @@ namespace UnboundLib
         {
             onButton.onClick.AddListener(() =>
             {
-                // animator.Play("Switch Off");
-                // cardName.alpha = 0.25f;
+                
+                animator.Play("Switch Off");
+                cardName.alpha = 0.25f;
                 _isEnabled.Value = false;
-                isEnabled = _isEnabled;
             });
             offButton.onClick.AddListener(() =>
             {
-                // animator.Play("Switch On");
-                // cardName.alpha = 1f;
+                
+                animator.Play("Switch On");
+                cardName.alpha = 1f;
                 _isEnabled.Value = true;
-                isEnabled = _isEnabled;
             });
 
             toggles.Add(this);

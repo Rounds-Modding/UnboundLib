@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Text;
 using UnityEngine;
 using Photon.Pun;
 using TMPro;
 using System.Linq;
+using UnboundLib.Utils;
 
 namespace UnboundLib.Cards
 {
@@ -117,7 +119,8 @@ namespace UnboundLib.Cards
                 {
                     // Add this card to the list of all custom cards
                     Unbound.activeCards.Add(newCardInfo);
-                    Unbound.activeCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
+                    Unbound.activeCards = new ObservableCollection<CardInfo>(Unbound.activeCards.OrderBy(i => i.cardName));
+                    Unbound.activeCards.CollectionChanged += Unbound.CardsChanged;
                     // Register card with the toggle menu
                     CardToggleMenuHandler.Instance.AddCardToggle(newCardInfo);
                 }

@@ -4,12 +4,15 @@ using Photon.Pun;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Jotunn.Utils;
 using TMPro;
 using UnboundLib.GameModes;
 using UnboundLib.Networking;
+using UnboundLib.Utils;
 using UnboundLib.Utils.UI;
 using UnityEngine;
 using UnityEngine.Events;
@@ -56,7 +59,7 @@ namespace UnboundLib
         internal static CardInfo templateCard;
 
         internal static CardInfo[] defaultCards;
-        internal static List<CardInfo> activeCards = new List<CardInfo>();
+        internal static ObservableCollection<CardInfo> activeCards;
         internal static List<CardInfo> inactiveCards = new List<CardInfo>();
 
         internal static string[] defaultLevels;
@@ -109,7 +112,7 @@ namespace UnboundLib
                 });
 
                 ModOptions.Instance.CreateModOptions(firstTime);
-                Utils.UI.Credits.Instance.CreateCreditsMenu(firstTime);
+                Credits.Instance.CreateCreditsMenu(firstTime);
 
                 firstTime = false;
 
@@ -170,6 +173,12 @@ namespace UnboundLib
         {
             // store default cards
             defaultCards = (CardInfo[]) CardChoice.instance.cards.Clone();
+            
+            // Make activeCardsCollection and add defaultCards to it
+            activeCards = new ObservableCollection<CardInfo>(defaultCards);
+            
+            // Set activeCards CollectionChanged event
+            activeCards.CollectionChanged += CardsChanged;
 
             // request mod handshake
             NetworkingManager.RegisterEvent(NetworkEventType.StartHandshake, (data) =>
@@ -184,7 +193,6 @@ namespace UnboundLib
                 {
                     NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake);
                 }
-
                 CardChoice.instance.cards = defaultCards;
             });
 
@@ -207,7 +215,6 @@ namespace UnboundLib
                             where c.cardName.ToLower() == "huge"
                             select c).FirstOrDefault();
             defaultCards = CardChoice.instance.cards;
-            activeCards.AddRange(defaultCards);
 
             // register default cards with toggle menu
             foreach (var card in defaultCards)
@@ -223,6 +230,14 @@ namespace UnboundLib
             var networkEvents = gameObject.AddComponent<NetworkEventCallbacks>();
             networkEvents.OnJoinedRoomEvent += OnJoinedRoomAction;
             networkEvents.OnLeftRoomEvent += OnLeftRoomAction;
+        }
+
+        internal static void CardsChanged(object sender, NotifyCollectionChangedEventArgs args)
+        {
+            if (CardChoice.instance && IsNotPlayingOrConnected())
+            {
+                CardChoice.instance.cards = activeCards.ToArray();
+            }
         }
 
         private void Update()
@@ -392,7 +407,7 @@ namespace UnboundLib
 
         public static void RegisterCredits(string modName, string[] credits = null, string linkText = "", string linkURL = "")
         {
-            Utils.UI.Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkText, linkURL));
+            Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkText, linkURL));
         }
 
         public static void RegisterHandshake(string modId, Action callback)
@@ -482,6 +497,12 @@ namespace UnboundLib
                     .CancelButton("Cancel", () => { })
                     .Show();
             }
+        }
+
+        public static bool IsNotPlayingOrConnected()
+        {
+            return (GameManager.instance && !GameManager.instance.battleOngoing) &&
+                   (PhotonNetwork.OfflineMode || !PhotonNetwork.IsConnected);
         }
     }
 }
