@@ -222,41 +222,31 @@ namespace UnboundLib.Networking
             var _checkmark =  MenuHandler.modOptionsUI.LoadAsset<GameObject>("checkmark");
             var _redx = MenuHandler.modOptionsUI.LoadAsset<GameObject>("redx");
             
-            // Check if player is using RWF
-            if (UIHandler.instance.transform.Find("Canvas/PrivateRoom"))
+            // Check if uiHolder has already been made
+            if (!UIHandler.instance.transform.Find("Canvas/UIHolder"))
             {
-                // Set parents RWF
-                // Check if uiHolder has already been made
-                if (!UIHandler.instance.transform.Find("Canvas/PrivateRoom/uiHolder(Clone)"))
-                {
-                    parent = GameObject.Instantiate(_uiHolder,UIHandler.instance.transform.Find("Canvas/PrivateRoom"));
-                    parent.GetComponent<RectTransform>().position = new Vector3(-35, 18, 0);
-                    parent.GetOrAddComponent<DetectUnmodded>();
-                }
-                else
-                {
-                    parent = UIHandler.instance.transform.Find("Canvas/PrivateRoom/uiHolder(Clone)").gameObject;
-                }
+                // var t = new GameObject();
+                // t.transform.parent = UIHandler.instance.transform.Find("Canvas");
+                // t.transform.localScale = Vector3.one;
+                // t.AddComponent<RectTransform>();
+                parent = GameObject.Instantiate(_uiHolder,UIHandler.instance.transform.Find("Canvas"));
+                parent.name = "UIHolder";
+                parent.GetComponent<RectTransform>().localPosition = new Vector3(-975, 486, 2565);
+                parent.GetOrAddComponent<DetectUnmodded>();
+                parent.GetComponent<VerticalLayoutGroup>().spacing = -60;
             }
             else
             {
-                // Set parents vanilla
-                // Check if uiHolder has already been made
-                if (!UIHandler.instance.transform.Find("Canvas/LoadingScreen/uiHolder(Clone)"))
-                {
-                    parent = GameObject.Instantiate(_uiHolder,UIHandler.instance.transform.Find("Canvas/LoadingScreen"));
-                    parent.GetComponent<RectTransform>().position = new Vector3(-35, 18, 0);
-                    parent.GetOrAddComponent<DetectUnmodded>();
-                }
-                else
-                {
-                    parent = UIHandler.instance.transform.Find("Canvas/LoadingScreen/uiHolder(Clone)").gameObject;
-                }
+                parent = UIHandler.instance.transform.Find("Canvas/UIHolder").gameObject;
             }
+            
             GameObject playerObj;
             if (!parent.transform.Find(nickName))
             {
-                playerObj = GameObject.Instantiate(_uiHolder, parent.transform);
+                playerObj = new GameObject();
+                playerObj.AddComponent<RectTransform>();
+                playerObj.transform.SetParent(parent.transform, true);
+                playerObj.transform.localScale = Vector3.one;
                 playerObj.name = nickName;
             }
             else
@@ -270,30 +260,33 @@ namespace UnboundLib.Networking
                 if (flag.Contains("✓ "))
                 {
                     var check = GameObject.Instantiate(_checkmark, playerObj.transform);
-                    check.GetComponent<RectTransform>().position = new Vector3(-34.5f, 18, 0);
                     var _hover = check.AddComponent<CheckHover>();
                     _hover.texts = flags;
+                    check.transform.localPosition = new Vector3(-15, 25, 0);
                 } else if (flag.Contains("✗ "))
                 {
                     var redcheck = GameObject.Instantiate(_redx, playerObj.transform);
-                    redcheck.GetComponent<RectTransform>().position = new Vector3(-34.5f, 18, 0);
                     var _hover = redcheck.AddComponent<CheckHover>();
                     _hover.texts = flags;
+                    redcheck.transform.localPosition = new Vector3(-15, 25, 0);
                 }
                 var text = MenuHandler.CreateText(nickName, playerObj, out var uGUI, 20, false, error ? Color.red : new Color(0.902f, 0.902f, 0.902f, 1f), null, null, TextAlignmentOptions.MidlineLeft );
                 text.name = nickName;
                 var hover = text.AddComponent<CheckHover>();
                 hover.texts = flags;
-                var uGUIMargin = uGUI.margin;
-                uGUIMargin.z = 1600;
-                uGUI.margin = uGUIMargin;
+                //var uGUIMargin = uGUI.margin;
+                //uGUIMargin.z = 1600;
+                //uGUI.margin = uGUIMargin;
                 uGUI.fontSizeMin = 25;
                 var layout = text.AddComponent<LayoutElement>();
                 layout.preferredWidth = 300;
                 layout.preferredHeight = 100;
+                layout.minWidth = 300;
+                layout.minHeight = 100;
                 
                 var rectTrans = text.GetComponent<RectTransform>();
                 rectTrans.pivot = Vector2.zero;
+                text.transform.localPosition = Vector3.zero;
             }
             Unbound.Instance.ExecuteAfterSeconds(0.1f, () =>
             {
