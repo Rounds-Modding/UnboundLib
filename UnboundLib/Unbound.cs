@@ -28,9 +28,9 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.3.0";
+        public const string Version = "2.4.0";
 
-        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new string[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
+        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new string[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
         public static Unbound Instance { get; private set; }
         
@@ -70,6 +70,10 @@ namespace UnboundLib
         public delegate void OnLeftDelegate();
         public static event OnJoinedDelegate OnJoinedRoom;
         public static event OnLeftDelegate OnLeftRoom;
+
+        internal static List<string> loadedGUIDs = new List<string>();
+        internal static List<string> loadedMods = new List<string>();
+        internal static List<string> loadedVersions = new List<string>();
 
         internal static List<Action> handShakeActions = new List<Action>();
 
@@ -227,6 +231,9 @@ namespace UnboundLib
             networkEvents.OnJoinedRoomEvent += OnJoinedRoomAction;
             networkEvents.OnJoinedRoomEvent += LevelManager.OnJoinedRoomAction;
             networkEvents.OnLeftRoomEvent += OnLeftRoomAction;
+
+            // sync modded clients
+            networkEvents.OnJoinedRoomEvent += SyncModClients.RequestSync;
         }
 
         internal static void CardsChanged(object sender, NotifyCollectionChangedEventArgs args)
@@ -372,9 +379,9 @@ namespace UnboundLib
         {
             return Instantiate(modalPrefab, Instance.canvas.transform).AddComponent<ModalHandler>();
         }
-        public static void RegisterCredits(string modName, string[] contributors = null)
+        public static void RegisterCredits(string modName, string[] credits = null, string[] linkTexts = null, string[] linkURLs = null)
         {
-
+            Utils.UI.Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkTexts, linkURLs));
         }
 
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
@@ -390,6 +397,11 @@ namespace UnboundLib
         public static void RegisterCredits(string modName, string[] credits = null, string linkText = "", string linkURL = "")
         {
             Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkText, linkURL));
+        }
+
+        public static void RegisterClientSideMod(string GUID)
+        {
+            SyncModClients.RegisterClientSideMod(GUID);
         }
 
         public static void RegisterHandshake(string modId, Action callback)

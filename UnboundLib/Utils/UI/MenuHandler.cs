@@ -19,6 +19,8 @@ namespace UnboundLib.Utils.UI
 
         public static MenuHandler Instance = new MenuHandler();
 
+        public static AssetBundle modOptionsUI;
+
         private MenuHandler()
         {
             // singleton first time setup
@@ -26,7 +28,7 @@ namespace UnboundLib.Utils.UI
             Instance = this;
 
             // load options ui base objects
-            var modOptionsUI = AssetUtils.LoadAssetBundleFromResources("modoptionsui", typeof(Unbound).Assembly);
+            modOptionsUI = AssetUtils.LoadAssetBundleFromResources("modoptionsui", typeof(Unbound).Assembly);
             if (modOptionsUI == null)
             {
                 UnityEngine.Debug.LogError("Couldn't find ModOptionsUI AssetBundle?");
@@ -97,7 +99,10 @@ namespace UnboundLib.Utils.UI
         // Creates a UI text
         public static GameObject CreateText(string text, GameObject parent, out TextMeshProUGUI uGUI, int fontSize = 60, bool forceUpper = true, Color? color = null, TMP_FontAsset font = null, Material fontMaterial = null, TextAlignmentOptions? alignmentOptions = null)
         {
-            parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            if (parent.transform.Find("Group/Grid/Scroll View/Viewport/Content"))
+            {
+                parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            }
             var textObject = GameObject.Instantiate(textBase, parent.transform);
             uGUI = textObject.GetComponent<TextMeshProUGUI>();
             if (forceUpper)
@@ -119,7 +124,10 @@ namespace UnboundLib.Utils.UI
         // Creates a UI Toggle
         public static GameObject CreateToggle(bool value, string text, GameObject parent, UnityAction<bool> onValueChangedAction = null, int fontSize = 60, bool forceUpper = true, Color? color = null, TMP_FontAsset font = null, Material fontMaterial = null, TextAlignmentOptions? alignmentOptions = null)
         {
-            parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            if (parent.transform.Find("Group/Grid/Scroll View/Viewport/Content"))
+            {
+                parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            }
             var toggleObject = GameObject.Instantiate(toggleBase, parent.transform);
             var toggle = toggleObject.GetComponent<Toggle>();
             toggle.isOn = value;
@@ -138,7 +146,10 @@ namespace UnboundLib.Utils.UI
         // Creates a UI Button
         public static GameObject CreateButton(string text, GameObject parent, UnityAction onClickAction = null, int fontSize = 60, bool forceUpper = true, Color? color = null, TMP_FontAsset font = null, Material fontMaterial = null, TextAlignmentOptions? alignmentOptions = null)
         {
-            parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            if (parent.transform.Find("Group/Grid/Scroll View/Viewport/Content"))
+            {
+                parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            }
             var buttonObject = GameObject.Instantiate(buttonBase, parent.transform);
             var button = buttonObject.GetComponent<Button>();
             if (onClickAction != null) { button.onClick.AddListener(onClickAction); }
@@ -158,7 +169,10 @@ namespace UnboundLib.Utils.UI
         // Creates a UI InputField
         public static GameObject CreateInputField(string placeholderText, int fontSize, GameObject parent, UnityAction<string> onValueChangedAction)
         {
-            parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            if (parent.transform.Find("Group/Grid/Scroll View/Viewport/Content"))
+            {
+                parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            }
             var inputObject = GameObject.Instantiate(inputFieldBase, parent.transform);
             var inputField = inputObject.GetComponentInChildren<TMP_InputField>();
             inputField.pointSize = fontSize;
@@ -174,10 +188,13 @@ namespace UnboundLib.Utils.UI
         }
 
         // Creates a UI Slider
-        public static GameObject CreateSlider(string text, GameObject parent, int fontSize, int minValue, int maxValue,
-            UnityAction<float> onValueChangedAction, out Slider slider, bool wholeNumbers = false,Color? sliderColor = null, Slider.Direction direction = Slider.Direction.LeftToRight, bool forceUpper = true, Color? color = null, TMP_FontAsset font = null, Material fontMaterial = null, TextAlignmentOptions? alignmentOptions = null)
+        public static GameObject CreateSlider(string text, GameObject parent, int fontSize, float minValue, float maxValue, float defaultValue,
+            UnityAction<float> onValueChangedAction, out Slider slider, bool wholeNumbers = false, Color? sliderColor = null, Slider.Direction direction = Slider.Direction.LeftToRight, bool forceUpper = true, Color? color = null, TMP_FontAsset font = null, Material fontMaterial = null, TextAlignmentOptions? alignmentOptions = null)
         {
-            parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            if (parent.transform.Find("Group/Grid/Scroll View/Viewport/Content"))
+            {
+                parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
+            }
             var sliderObject = GameObject.Instantiate(sliderBase, parent.transform);
             var pos = sliderObject.transform.Find("GameObject").position;
             pos.x = 0;
@@ -188,7 +205,7 @@ namespace UnboundLib.Utils.UI
             var vector2 = inputField.gameObject.GetComponent<RectTransform>().sizeDelta;
             vector2.x = 65;
             inputField.gameObject.GetComponent<RectTransform>().sizeDelta = vector2;
-            onValueChangedAction += arg0 => inputField.text = arg0.ToString("N");
+            onValueChangedAction += arg0 => inputField.text = arg0.ToString((wholeNumbers)? "N0":"N");
             inputField.contentType = wholeNumbers
                 ? TMP_InputField.ContentType.IntegerNumber
                 : TMP_InputField.ContentType.DecimalNumber;
@@ -203,6 +220,7 @@ namespace UnboundLib.Utils.UI
             slider.minValue = minValue;
             slider.maxValue = maxValue;
             slider.onValueChanged.AddListener(onValueChangedAction);
+            slider.value = defaultValue;
             slider.transform.Find("Fill Area/Fill").GetComponent<Image>().color = sliderColor ?? new Color(0.902f, 0.902f, 0.902f, 1f);
             
             
