@@ -115,6 +115,40 @@ namespace UnboundLib
                 ModOptions.Instance.CreateModOptions(firstTime);
                 Credits.Instance.CreateCreditsMenu(firstTime);
 
+                this.ExecuteAfterSeconds(firstTime ? 0.5f : 0, () =>
+                {
+                    var resumeButton = UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group/Resume").gameObject;
+                    // Create options button in escapeMenu
+                    var optionsMenu = Instantiate(MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Options").gameObject,UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main"));
+                    var menuBut = optionsMenu.transform.Find("Group/Back").GetComponent<Button>();
+                    menuBut.onClick = new Button.ButtonClickedEvent();
+                    menuBut.onClick.AddListener(() =>
+                    {
+                        optionsMenu.transform.Find("Group").gameObject.SetActive(false);
+                        UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject.SetActive(true);
+                    });
+
+                    var optionsButton =  Instantiate(resumeButton, UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group"));
+                    optionsButton.transform.SetSiblingIndex(2);
+                    optionsButton.GetComponentInChildren<TextMeshProUGUI>().text = "OPTIONS";
+                    optionsButton.GetComponent<Button>().onClick = new Button.ButtonClickedEvent();
+                    optionsButton.GetComponent<Button>().onClick.AddListener((() =>
+                    {
+                        optionsMenu.transform.Find("Group").gameObject.SetActive(true);
+                        UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject.SetActive(false);
+                    }));
+                    
+                    // Create toggleLevelButton in escapeMenu
+                    var toggleLevelsButton =  Instantiate(resumeButton, UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group"));
+                    toggleLevelsButton.transform.SetSiblingIndex(3);
+                    toggleLevelsButton.GetComponentInChildren<TextMeshProUGUI>().text = "TOGGLE LEVELS";
+                    toggleLevelsButton.GetComponent<Button>().onClick = new Button.ButtonClickedEvent();
+                    toggleLevelsButton.GetComponent<Button>().onClick.AddListener((() =>
+                    {
+                        LevelMenuHandler.instance.OpenMenu();
+                    }));
+                });
+
                 firstTime = false;
 
                 orig(self);
@@ -250,9 +284,15 @@ namespace UnboundLib
             if (Input.GetKeyDown(KeyCode.F1) && !ModOptions.noDeprecatedMods)
             {
                 ModOptions.showModUi = !ModOptions.showModUi;
-            }
-
-            GameManager.lockInput = ModOptions.showModUi || DevConsole.isTyping;
+            } 
+            
+            
+            GameManager.lockInput = ModOptions.showModUi || DevConsole.isTyping ||
+                                    LevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy || 
+                                    (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group") &&
+                                    UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group").gameObject.activeInHierarchy) ||
+                                    (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group") && 
+                                    UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject.activeInHierarchy);
         }
 
         private void OnGUI()
