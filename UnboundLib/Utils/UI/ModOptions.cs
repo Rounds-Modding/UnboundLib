@@ -67,7 +67,7 @@ namespace UnboundLib.Utils.UI
                 MenuHandler.CreateButton("Toggle Cards", modOptionsMenu, () => { CardToggleMenuHandler.Instance.Show(); });
                 
                 // Create toggle levels button
-                MenuHandler.CreateButton("Toggle Levels", modOptionsMenu, () => { LevelMenuHandler.instance.OpenMenu(); });
+                MenuHandler.CreateButton("Toggle Levels", modOptionsMenu, () => { ToggleLevelMenuHandler.instance.SetActive(true); });
 
                 // Create menu's for mods with new UI
                 foreach (var menu in modMenus)

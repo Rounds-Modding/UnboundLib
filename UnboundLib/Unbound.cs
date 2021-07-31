@@ -29,7 +29,7 @@ namespace UnboundLib
         private const string ModName = "Rounds Unbound";
         public const string Version = "2.4.0";
 
-        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new string[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
+        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
         public static Unbound Instance { get; private set; }
         
@@ -145,7 +145,7 @@ namespace UnboundLib
                     toggleLevelsButton.GetComponent<Button>().onClick = new Button.ButtonClickedEvent();
                     toggleLevelsButton.GetComponent<Button>().onClick.AddListener((() =>
                     {
-                        LevelMenuHandler.instance.OpenMenu();
+                        ToggleLevelMenuHandler.instance.SetActive(true);
                     }));
                 });
 
@@ -185,7 +185,7 @@ namespace UnboundLib
             GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsOnStart);
 
             gameObject.AddComponent<LevelManager>();
-            gameObject.AddComponent<LevelMenuHandler>();
+            gameObject.AddComponent<ToggleLevelMenuHandler>();
         }
 
         private void Awake()
@@ -288,7 +288,7 @@ namespace UnboundLib
             
             
             GameManager.lockInput = ModOptions.showModUi || DevConsole.isTyping ||
-                                    LevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy || 
+                                    ToggleLevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy || 
                                     (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group") &&
                                     UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group").gameObject.activeInHierarchy) ||
                                     (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group") && 
@@ -422,7 +422,7 @@ namespace UnboundLib
         }
         public static void RegisterCredits(string modName, string[] credits = null, string[] linkTexts = null, string[] linkURLs = null)
         {
-            Utils.UI.Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkTexts, linkURLs));
+            Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkTexts, linkURLs));
         }
 
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)

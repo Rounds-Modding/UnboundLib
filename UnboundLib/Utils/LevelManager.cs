@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using BepInEx.Configuration;
 using Photon.Pun;
 using UnboundLib.Networking;
+using UnboundLib.Utils.UI;
 using UnityEngine;
 
 namespace UnboundLib.Utils
@@ -35,7 +36,7 @@ namespace UnboundLib.Utils
         // All default, active and inactive levels
         private static string[] defaultLevels;
         internal static ObservableCollection<string> activeLevels;
-        private static readonly List<string> inactiveLevels = new List<string>();
+        internal static readonly List<string> inactiveLevels = new List<string>();
 
         // List of all categories
         internal static readonly List<string> categories = new List<string>();
@@ -111,6 +112,11 @@ namespace UnboundLib.Utils
             }
             activeLevels = new ObservableCollection<string>(activeLevels.OrderBy(i => i));
             activeLevels.CollectionChanged += LevelsChanged;
+            // Sync levels over clients
+            if (PhotonNetwork.IsMasterClient)
+            {
+                NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_HostMapHandshakeResponse), (object)activeLevels.Select(c => c).ToArray());
+            }
         }
 
         // Do the map handshake on joined room
@@ -136,6 +142,11 @@ namespace UnboundLib.Utils
                 }
                 //c.SetValue(levels.Contains(c.info.cardName) && c.isEnabled.Value);
             }
+            
+            foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs)
+            {
+                ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj, IsLevelActive(obj.name));
+            }
 
             // reply to all users with new list of valid levels
             NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_HostMapHandshakeResponse), (object)activeLevels.Select(c => c).ToArray());
@@ -157,6 +168,11 @@ namespace UnboundLib.Utils
                 {
                     DisableLevel(c);
                 }
+            }
+            
+            foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs)
+            {
+                ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj, IsLevelActive(obj.name));
             }
         }
 

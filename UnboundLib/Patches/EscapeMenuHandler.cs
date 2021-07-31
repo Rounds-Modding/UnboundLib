@@ -18,9 +18,9 @@ namespace UnboundLib.Patches
                 return false;
             }
             
-            if (Input.GetKeyDown(KeyCode.Escape) && LevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy)
+            if (Input.GetKeyDown(KeyCode.Escape) && ToggleLevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy)
             {
-                LevelMenuHandler.instance.levelMenuCanvas.SetActive (false);
+                ToggleLevelMenuHandler.instance.levelMenuCanvas.SetActive (false);
                 return false;
             }
 

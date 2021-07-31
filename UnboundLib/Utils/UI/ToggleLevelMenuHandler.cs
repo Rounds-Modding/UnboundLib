@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using BepInEx;
 using Jotunn.Utils;
+using Photon.Pun;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -12,9 +13,9 @@ using UnityEngine.UI;
 
 namespace UnboundLib.Utils.UI
 {
-    public class LevelMenuHandler : MonoBehaviour
+    public class ToggleLevelMenuHandler : MonoBehaviour
     {
-        public static LevelMenuHandler instance;
+        public static ToggleLevelMenuHandler instance;
         
         // Draw level
         public bool IsDrawingLevels;
@@ -46,12 +47,15 @@ namespace UnboundLib.Utils.UI
         private readonly List<string> levelsThatNeedToRedrawn = new List<string>();
 
         // List of every lvlObj
-        private readonly List<GameObject> lvlObjs = new List<GameObject>();
+        public readonly List<GameObject> lvlObjs = new List<GameObject>();
 
         // Right click menu variables
         private Vector2 mousePosOnRightClickMenu = Vector2.zero;
         private bool justRightClicked;
         private Vector2 staticMousePos;
+
+        private bool justStartedPlaying;
+        private bool justStoppedPlaying;
 
         private string currentCategory
         {
@@ -77,7 +81,7 @@ namespace UnboundLib.Utils.UI
             instance = this;
             
             // Load assetBundle
-            levelMenuUI = AssetUtils.LoadAssetBundleFromResources("levelmenu ui", typeof(LevelMenuHandler).Assembly);
+            levelMenuUI = AssetUtils.LoadAssetBundleFromResources("levelmenu ui", typeof(ToggleLevelMenuHandler).Assembly);
             // Load assets
             var _levelMenuCanvas = levelMenuUI.LoadAsset<GameObject>("LevelMenuCanvas");
             levelObj = levelMenuUI.LoadAsset<GameObject>("LevelObj");
@@ -99,7 +103,7 @@ namespace UnboundLib.Utils.UI
             levelMenuCanvas = Instantiate(_levelMenuCanvas);
             Object.DontDestroyOnLoad(levelMenuCanvas);
             levelMenuCanvas.GetComponent<Canvas>().worldCamera = Camera.current;
-            levelMenuCanvas.SetActive(false);
+            SetActive(false);
 
             // Set important root objects
             categoryContent = levelMenuCanvas.transform.Find("LevelMenu/Top/Categories/ButtonsScroll/Viewport/Content");
@@ -304,7 +308,7 @@ namespace UnboundLib.Utils.UI
         }
 
         // Update the visuals of a lvlObj
-        private static void UpdateVisualsLevelObj(GameObject lvlObj, bool levelEnabled)
+        public static void UpdateVisualsLevelObj(GameObject lvlObj, bool levelEnabled)
         {
             if (levelEnabled)
             {   
@@ -315,6 +319,14 @@ namespace UnboundLib.Utils.UI
             {
                 lvlObj.transform.Find("ImageHolder").GetComponentInChildren<Image>().color = new Color(0.5f,0.5f,0.5f);
                 lvlObj.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0.5f,0.5f,0.5f);
+            }
+
+            foreach (var category in LevelManager.categories)
+            {
+                if (LevelManager.GetLevelsInCategory(category).All(level => !LevelManager.IsLevelActive(level)))
+                {
+                    LevelManager.DisableCategory(category);
+                }
             }
         }
 
@@ -330,7 +342,7 @@ namespace UnboundLib.Utils.UI
             image.GetComponent<Image>().sprite = Sprite.Create(img, new Rect(0,0, img.width, img.height), new Vector2(0.5f,0.5f));
         }
 
-        public IEnumerator LoadScenesForRedrawing(string[] sceneNames)
+        private IEnumerator LoadScenesForRedrawing(string[] sceneNames)
         {
             IsDrawingLevels = true;
 
@@ -446,6 +458,7 @@ namespace UnboundLib.Utils.UI
         // This is executed when rightClicking on a lvlObj
         public void RightClickedAt(Vector2 position, GameObject obj)
         {
+            if (GameManager.instance.isPlaying) return;
             RemoveAllRightClickMenus();
             mousePosOnRightClickMenu = position;
             justRightClicked = true;
@@ -491,8 +504,9 @@ namespace UnboundLib.Utils.UI
             }
         }
 
-        public void OpenMenu()
+        public void SetActive(bool active)
         {
+            if (PhotonNetwork.IsConnected && !PhotonNetwork.IsMasterClient) return;
             levelMenuCanvas.SetActive(true);
         }
 
@@ -501,12 +515,25 @@ namespace UnboundLib.Utils.UI
             // Activate and deactivate the menu
             if (Input.GetKeyDown(KeyCode.F2))
             {
-                levelMenuCanvas.SetActive(!levelMenuCanvas.activeInHierarchy);
+                SetActive(!levelMenuCanvas.activeInHierarchy);
             }
 
             if (IsDrawingLevels)
             {
                 levelMenuCanvas.SetActive(false);
+            }
+
+            if (PhotonNetwork.IsConnected || (levelMenuCanvas.activeInHierarchy && GameManager.instance.isPlaying) && justStartedPlaying == false)
+            {
+                justStoppedPlaying = false;
+                levelMenuCanvas.transform.Find("LevelMenu/Top/Redraw all").gameObject.SetActive(false);
+                justStartedPlaying = true;
+            }
+            if (levelMenuCanvas.activeInHierarchy && !GameManager.instance.isPlaying && justStoppedPlaying == false)
+            {
+                justStartedPlaying = false;
+                levelMenuCanvas.transform.Find("LevelMenu/Top/Redraw all").gameObject.SetActive(true);
+                justStoppedPlaying = true;
             }
 
             // Remove right click menu when mouse gets too far away
@@ -548,7 +575,7 @@ namespace UnboundLib.Utils.UI
         {
             if (eventData.button == PointerEventData.InputButton.Right)
             {
-                LevelMenuHandler.instance.RightClickedAt(eventData.position, gameObject);
+                ToggleLevelMenuHandler.instance.RightClickedAt(eventData.position, gameObject);
             }
         }
     }
