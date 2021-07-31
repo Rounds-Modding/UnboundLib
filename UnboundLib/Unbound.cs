@@ -8,7 +8,6 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using BepInEx.Configuration;
 using Jotunn.Utils;
 using TMPro;
@@ -92,7 +91,6 @@ namespace UnboundLib
                 // reapply cards and levels
                 this.ExecuteAfterSeconds(0.1f, () =>
                 {
-                    LevelManager.inactiveLevels.Clear();
                     MapManager.instance.levels = LevelManager.activeLevels.ToArray();
                     CardChoice.instance.cards = activeCards.ToArray();
                 });
@@ -151,6 +149,9 @@ namespace UnboundLib
                 yield break;
             }
             GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsOnStart);
+
+            gameObject.AddComponent<LevelManager>();
+            gameObject.AddComponent<LevelMenuHandler>();
         }
 
         private void Awake()
@@ -419,11 +420,13 @@ namespace UnboundLib
         }
 
         #region Remove these at a later date when mod's have updated to LevelManager
+        [ObsoleteAttribute("This method is obsolete. Use LevelManager.RegisterMaps() instead.", false)]
         public static void RegisterMaps(AssetBundle assetBundle)
         {
             LevelManager.RegisterMaps(assetBundle);
         }
 
+        [ObsoleteAttribute("This method is obsolete. Use LevelManager.RegisterMaps() instead.", false)]
         public static void RegisterMaps(IEnumerable<string> paths, string categoryName = "Modded")
         {
             LevelManager.RegisterMaps(paths);

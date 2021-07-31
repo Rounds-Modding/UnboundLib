@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
-using BepInEx;
 using BepInEx.Configuration;
 using UnityEngine;
 using UnityEngine.UI;

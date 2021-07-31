@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnboundLib.Utils.UI;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -45,7 +44,7 @@ namespace UnboundLib.Utils.UI
             Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.2f : 0, () =>
             {
                 // Create mod options menu
-                modOptionsMenu = MenuHandler.CreateMenu("MOD OPTIONS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, true, 4);
+                modOptionsMenu = MenuHandler.CreateMenu("MOD OPTIONS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, null,true, 4);
 
 
                 // Fix main menu layout
@@ -66,6 +65,9 @@ namespace UnboundLib.Utils.UI
 
                 // Create toggle cards button
                 MenuHandler.CreateButton("Toggle Cards", modOptionsMenu, () => { CardToggleMenuHandler.Instance.Show(); });
+                
+                // Create toggle levels button
+                MenuHandler.CreateButton("Toggle Levels", modOptionsMenu, () => { LevelMenuHandler.instance.OpenMenu(); });
 
                 // Create menu's for mods with new UI
                 foreach (var menu in modMenus)
