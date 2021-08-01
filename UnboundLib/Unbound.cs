@@ -262,14 +262,6 @@ namespace UnboundLib
                             select c).FirstOrDefault();
             CardManager.defaultCards = CardChoice.instance.cards;
 
-            
-            // register default cards with toggle menu
-            foreach (var card in CardManager.defaultCards)
-            {
-                CardManager.cards.Add(card.cardName,
-                    new Card("Default", Unbound.config.Bind("Toggle default cards", card.cardName, true).Value, card));
-            }
-
             // hook up Photon callbacks
             var networkEvents = gameObject.AddComponent<NetworkEventCallbacks>();
             networkEvents.OnJoinedRoomEvent += OnJoinedRoomAction;

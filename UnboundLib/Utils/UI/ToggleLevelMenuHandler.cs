@@ -359,6 +359,14 @@ namespace UnboundLib.Utils.UI
                 UpdateImage(lvlObj, Path.Combine(Path.Combine(Paths.ConfigPath, "LevelImages"), LevelManager.GetVisualName(lvlObj.name) + ".png"));
             }
 
+            foreach (var obj in levelMenuCanvas.scene.GetRootGameObjects())
+            {
+                if (obj.name == "UnboundLib Canvas")
+                {
+                    Destroy(obj.transform.Find("Unbound Text Object").gameObject);
+                }
+            }
+
             levelsThatNeedToRedrawn.Clear();
             RemoveAllRightClickMenus();
         }

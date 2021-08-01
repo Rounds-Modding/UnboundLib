@@ -305,13 +305,11 @@ namespace UnboundLib.Utils.UI
 
             if (GameManager.instance.isPlaying && !disabled)
             {
-                UnityEngine.Debug.LogWarning("Started playing");
                 toggleCardsCanvas.SetActive(false);
                 disabled = true;
             }
             if (!GameManager.instance.isPlaying && disabled)
             {
-                UnityEngine.Debug.LogWarning("Stopped playing");
                 toggleCardsCanvas.SetActive(true);
                 disabled = false;
             }
