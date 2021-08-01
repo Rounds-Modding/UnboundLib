@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Text;
 using UnityEngine;
 using Photon.Pun;
 using TMPro;
 using System.Linq;
 using UnboundLib.Utils;
-using UnboundLib.Utils.UI;
 
 namespace UnboundLib.Cards
 {

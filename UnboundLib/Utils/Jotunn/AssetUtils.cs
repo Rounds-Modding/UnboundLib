@@ -25,7 +25,6 @@ SOFTWARE.
 using System;
 using System.IO;
 using UnityEngine;
-using BepInEx;
 using System.Reflection;
 using System.Linq;
 
