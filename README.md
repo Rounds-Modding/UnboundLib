@@ -39,7 +39,7 @@ First create a map in unity by using the package and export your scene to a Asse
 ```c#
 void Start()
 {
-    Unbound.RegisterLevels(TestAssetBundle);
+    LevelManager.RegisterLevels(TestAssetBundle);
 }
 ```
 
