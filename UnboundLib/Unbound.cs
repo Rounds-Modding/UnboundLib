@@ -33,7 +33,7 @@ namespace UnboundLib
 
         public static Unbound Instance { get; private set; }
         
-        public static ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
+        public static readonly ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
 
         private Canvas _canvas;
         public Canvas canvas
@@ -61,9 +61,12 @@ namespace UnboundLib
 
         internal static CardInfo templateCard;
 
-        internal static CardInfo[] defaultCards;
-        internal static ObservableCollection<CardInfo> activeCards;
-        internal static List<CardInfo> inactiveCards = new List<CardInfo>();
+        [Obsolete("This should not be used anymore instead use CardManager.defaultCards")]
+        internal static CardInfo[] defaultCards => CardManager.defaultCards;
+        [Obsolete("This should not be used anymore instead use CardManager.activeCards")]
+        internal static List<CardInfo> activeCards => CardManager.activeCards.ToList();
+        [Obsolete("This should not be used anymore instead use CardManager.inactiveCards")]
+        internal static List<CardInfo> inactiveCards => CardManager.inactiveCards;
 
         public delegate void OnJoinedDelegate();
         public delegate void OnLeftDelegate();
@@ -77,6 +80,7 @@ namespace UnboundLib
         internal static List<Action> handShakeActions = new List<Action>();
 
         internal static AssetBundle UIAssets;
+        public static AssetBundle toggleUI;
         private static GameObject modalPrefab;
 
         public Unbound()
@@ -92,7 +96,7 @@ namespace UnboundLib
                 this.ExecuteAfterSeconds(0.1f, () =>
                 {
                     MapManager.instance.levels = LevelManager.activeLevels.ToArray();
-                    CardChoice.instance.cards = activeCards.ToArray();
+                    CardChoice.instance.cards = CardManager.activeCards.ToArray();
                 });
 
 
@@ -115,6 +119,7 @@ namespace UnboundLib
                 ModOptions.Instance.CreateModOptions(firstTime);
                 Credits.Instance.CreateCreditsMenu(firstTime);
 
+                var time = firstTime;
                 this.ExecuteAfterSeconds(firstTime ? 0.5f : 0, () =>
                 {
                     var resumeButton = UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group/Resume").gameObject;
@@ -147,6 +152,11 @@ namespace UnboundLib
                     {
                         ToggleLevelMenuHandler.instance.SetActive(true);
                     }));
+
+                    if (time)
+                    {
+                        CardManager.FirstTimeStart();
+                    }
                 });
 
                 firstTime = false;
@@ -176,16 +186,24 @@ namespace UnboundLib
 
 
             // apply cards and levels on game start
-            IEnumerator ResetCardsOnStart(IGameModeHandler gm)
+            IEnumerator ResetCardsAndLevelsOnStart(IGameModeHandler gm)
             {
-                CardChoice.instance.cards = activeCards.ToArray();
+                CardChoice.instance.cards = CardManager.activeCards.ToArray();
                 MapManager.instance.levels = LevelManager.activeLevels.ToArray();
                 yield break;
             }
-            GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsOnStart);
+            GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsAndLevelsOnStart);
+            
+            // Load toggleUI asset bundle
+            toggleUI = AssetUtils.LoadAssetBundleFromResources("toggle ui", typeof(ToggleLevelMenuHandler).Assembly);
 
+            // Add managers
             gameObject.AddComponent<LevelManager>();
+            gameObject.AddComponent<CardManager>();
+            
+            // Add menu handlers
             gameObject.AddComponent<ToggleLevelMenuHandler>();
+            gameObject.AddComponent<ToggleCardsMenuHandler>();
         }
 
         private void Awake()
@@ -210,15 +228,6 @@ namespace UnboundLib
 
         private void Start()
         {
-            // store default cards
-            defaultCards = (CardInfo[]) CardChoice.instance.cards.Clone();
-            
-            // Make activeCardsCollection and add defaultCards to it
-            activeCards = new ObservableCollection<CardInfo>(defaultCards);
-            
-            // Set activeCards CollectionChanged event
-            activeCards.CollectionChanged += CardsChanged;
-
             // request mod handshake
             NetworkingManager.RegisterEvent(NetworkEventType.StartHandshake, (data) =>
             {
@@ -232,14 +241,14 @@ namespace UnboundLib
                 {
                     NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake);
                 }
-                CardChoice.instance.cards = defaultCards;
+                CardChoice.instance.cards = CardManager.defaultCards;
             });
 
             // receive mod handshake
             NetworkingManager.RegisterEvent(NetworkEventType.FinishHandshake, (data) =>
             {
                 // attempt to syncronize levels and cards with other players
-                CardChoice.instance.cards = activeCards.ToArray();
+                CardChoice.instance.cards = CardManager.activeCards.ToArray();
                 MapManager.instance.levels = LevelManager.activeLevels.ToArray();
 
                 if (data.Length > 0)
@@ -253,12 +262,14 @@ namespace UnboundLib
             templateCard = (from c in CardChoice.instance.cards
                             where c.cardName.ToLower() == "huge"
                             select c).FirstOrDefault();
-            defaultCards = CardChoice.instance.cards;
+            CardManager.defaultCards = CardChoice.instance.cards;
 
+            
             // register default cards with toggle menu
-            foreach (var card in defaultCards)
+            foreach (var card in CardManager.defaultCards)
             {
-                CardToggleMenuHandler.Instance.AddCardToggle(card, false);
+                CardManager.cards.Add(card.cardName,
+                    new Card("Default", Unbound.config.Bind("Toggle default cards", card.cardName, true).Value, card));
             }
 
             // hook up Photon callbacks
@@ -269,14 +280,6 @@ namespace UnboundLib
 
             // sync modded clients
             networkEvents.OnJoinedRoomEvent += SyncModClients.RequestSync;
-        }
-
-        internal static void CardsChanged(object sender, NotifyCollectionChangedEventArgs args)
-        {
-            if (CardChoice.instance && IsNotPlayingOrConnected())
-            {
-                CardChoice.instance.cards = activeCards.ToArray();
-            }
         }
 
         private void Update()
@@ -321,10 +324,10 @@ namespace UnboundLib
             if (showingSpecificMod) return;
 
             GUILayout.Label("UnboundLib Options\nThis menu is deprecated");
-            if (GUILayout.Button("Toggle Cards"))
-            {
-                CardToggleMenuHandler.Instance.Show();
-            }
+            // if (GUILayout.Button("Toggle Cards"))
+            // {
+            //     CardToggleMenuHandler.Instance.Show();
+            // }
 
             GUILayout.Label("Mod Options:");
             foreach (var md in ModOptions.GUIListeners.Keys)
@@ -344,22 +347,22 @@ namespace UnboundLib
             if (UIAssets != null)
             {
                 modalPrefab = UIAssets.LoadAsset<GameObject>("Modal");
-                Instantiate(UIAssets.LoadAsset<GameObject>("Card Toggle Menu"), canvas.transform).AddComponent<CardToggleMenuHandler>();
+                //Instantiate(UIAssets.LoadAsset<GameObject>("Card Toggle Menu"), canvas.transform).AddComponent<CardToggleMenuHandler>();
             }
         }
 
         private void OnJoinedRoomAction()
         {
             if (!PhotonNetwork.OfflineMode)
-                CardChoice.instance.cards = defaultCards;
+                CardChoice.instance.cards = CardManager.defaultCards;
             NetworkingManager.RaiseEventOthers(NetworkEventType.StartHandshake);
 
             // send available card pool to the master client
             if (!PhotonNetwork.IsMasterClient)
             {
                 var cardSelection = new List<CardInfo>();
-                cardSelection.AddRange(activeCards);
-                cardSelection.AddRange(inactiveCards);
+                cardSelection.AddRange(CardManager.activeCards);
+                cardSelection.AddRange(CardManager.inactiveCards);
                 NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_CardHandshake), (object)cardSelection.Select(c => c.cardName).ToArray());
             }
 
@@ -379,24 +382,50 @@ namespace UnboundLib
         private static void RPC_CardHandshake(string[] cards)
         {
             if (!PhotonNetwork.IsMasterClient) return;
-            
+
             // disable any cards which aren't shared by other players
-            foreach (var c in CardToggleHandler.toggles)
+
+            foreach (var card in CardManager.cards)
             {
-                c.SetValue(cards.Contains(c.info.cardName) && c.isEnabled.Value);
+                if (cards.Contains(card.Key) && card.Value.enabled)
+                {
+                    CardManager.EnableCard(card.Value.cardInfo);
+                }
+                else
+                {
+                    CardManager.DisableCard(card.Value.cardInfo);
+                }
+            }
+            
+            foreach (var obj in ToggleCardsMenuHandler.cardObjs)
+            {
+                ToggleCardsMenuHandler.UpdateVisualsCardObj(obj, CardManager.IsCardActive(CardManager.GetCardInfoWithName(obj.name)));
             }
 
             // reply to all users with new list of valid cards
-            NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_HostCardHandshakeResponse), (object)activeCards.Select(c => c.cardName).ToArray());
+            NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_HostCardHandshakeResponse), (object)CardManager.activeCards.Select(c => c.cardName).ToArray());
         }
 
         [UnboundRPC]
         private static void RPC_HostCardHandshakeResponse(string[] cards)
         {
             // enable only cards that the host has specified are allowed
-            foreach (var c in CardToggleHandler.toggles)
+
+            foreach (var card in CardManager.cards)
             {
-                c.SetValue(cards.Contains(c.info.cardName));
+                if (cards.Contains(card.Key))
+                {
+                    CardManager.EnableCard(card.Value.cardInfo);
+                }
+                else
+                {
+                    CardManager.DisableCard(card.Value.cardInfo);
+                }
+            }
+            
+            foreach (var obj in ToggleCardsMenuHandler.cardObjs)
+            {
+                ToggleCardsMenuHandler.UpdateVisualsCardObj(obj, CardManager.IsCardActive(CardManager.GetCardInfoWithName(obj.name)));
             }
         }
 
