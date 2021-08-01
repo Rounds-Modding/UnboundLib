@@ -51,7 +51,7 @@
   <ItemGroup>
     <EmbeddedResource Include="..\AssetsEmbedded\unboundui" />
     <EmbeddedResource Include="..\AssetsEmbedded\modoptionsui" />
-    <EmbeddedResource Include="..\AssetsEmbedded\levelmenu ui" />
+    <EmbeddedResource Include="..\AssetsEmbedded\toggle ui" />
   </ItemGroup>
 
   <ItemGroup>

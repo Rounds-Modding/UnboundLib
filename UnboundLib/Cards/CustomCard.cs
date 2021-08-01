@@ -7,6 +7,7 @@ using Photon.Pun;
 using TMPro;
 using System.Linq;
 using UnboundLib.Utils;
+using UnboundLib.Utils.UI;
 
 namespace UnboundLib.Cards
 {
@@ -118,11 +119,12 @@ namespace UnboundLib.Cards
                 if (customCard.GetEnabled())
                 {
                     // Add this card to the list of all custom cards
-                    Unbound.activeCards.Add(newCardInfo);
-                    Unbound.activeCards = new ObservableCollection<CardInfo>(Unbound.activeCards.OrderBy(i => i.cardName));
-                    Unbound.activeCards.CollectionChanged += Unbound.CardsChanged;
+                    CardManager.activeCards.Add(newCardInfo);
+                    CardManager.activeCards = new ObservableCollection<CardInfo>(CardManager.activeCards.OrderBy(i => i.cardName));
+                    CardManager.activeCards.CollectionChanged += CardManager.CardsChanged;
                     // Register card with the toggle menu
-                    CardToggleMenuHandler.Instance.AddCardToggle(newCardInfo);
+                    CardManager.cards.Add(newCardInfo.cardName,
+                        new Card(customCard.GetModName(), Unbound.config.Bind("Toggle modded cards", newCardInfo.cardName, true).Value, newCardInfo));
                 }
 
                 

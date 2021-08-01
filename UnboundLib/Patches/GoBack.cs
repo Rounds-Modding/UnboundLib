@@ -16,6 +16,11 @@ namespace UnboundLib.Patches
                 ToggleLevelMenuHandler.instance.levelMenuCanvas.SetActive (false);
                 return false;
             }
+            if (Input.GetKeyDown(KeyCode.Escape) && ToggleCardsMenuHandler.IsActive(ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu")))
+            {
+                ToggleCardsMenuHandler.SetActive(ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu"), false);
+                return false;
+            }
 
             return true;
         }

@@ -20,9 +20,6 @@ namespace UnboundLib.Utils.UI
         // Draw level
         public bool IsDrawingLevels;
 
-        // level ui asset bundle
-        public AssetBundle levelMenuUI;
-        
         // lvl canvas GameObject
         public GameObject levelMenuCanvas;
 
@@ -54,8 +51,7 @@ namespace UnboundLib.Utils.UI
         private bool justRightClicked;
         private Vector2 staticMousePos;
 
-        private bool justStartedPlaying;
-        private bool justStoppedPlaying;
+        private bool disabled;
 
         private string currentCategory
         {
@@ -80,14 +76,12 @@ namespace UnboundLib.Utils.UI
         {
             instance = this;
             
-            // Load assetBundle
-            levelMenuUI = AssetUtils.LoadAssetBundleFromResources("levelmenu ui", typeof(ToggleLevelMenuHandler).Assembly);
             // Load assets
-            var _levelMenuCanvas = levelMenuUI.LoadAsset<GameObject>("LevelMenuCanvas");
-            levelObj = levelMenuUI.LoadAsset<GameObject>("LevelObj");
-            categoryButton = levelMenuUI.LoadAsset<GameObject>("CategoryButton");
-            scrollView = levelMenuUI.LoadAsset<GameObject>("ScrollView");
-            rightClickMenu = levelMenuUI.LoadAsset<GameObject>("RightClickMenu");
+            var _levelMenuCanvas = Unbound.toggleUI.LoadAsset<GameObject>("LevelMenuCanvas");
+            levelObj = Unbound.toggleUI.LoadAsset<GameObject>("LevelObj");
+            categoryButton = Unbound.toggleUI.LoadAsset<GameObject>("CategoryButton");
+            scrollView = Unbound.toggleUI.LoadAsset<GameObject>("ScrollView");
+            rightClickMenu = Unbound.toggleUI.LoadAsset<GameObject>("RightClickMenu");
 
             // Create guiStyle for waiting text
             guiStyle = new GUIStyle {fontSize = 100, normal = {textColor = Color.white}};
@@ -101,9 +95,9 @@ namespace UnboundLib.Utils.UI
                 
             // Create levelMenuCanvas
             levelMenuCanvas = Instantiate(_levelMenuCanvas);
-            Object.DontDestroyOnLoad(levelMenuCanvas);
+            DontDestroyOnLoad(levelMenuCanvas);
             levelMenuCanvas.GetComponent<Canvas>().worldCamera = Camera.current;
-            SetActive(false);
+            levelMenuCanvas.SetActive(false);
 
             // Set important root objects
             categoryContent = levelMenuCanvas.transform.Find("LevelMenu/Top/Categories/ButtonsScroll/Viewport/Content");
@@ -164,6 +158,7 @@ namespace UnboundLib.Utils.UI
                 }
             });
             
+            // get and set the redraw all button
             var redrawAllButton = levelMenuCanvas.transform.Find("LevelMenu/Top/Redraw all").GetComponent<Button>();    
             redrawAllButton.onClick.AddListener(() =>
             {
@@ -175,7 +170,7 @@ namespace UnboundLib.Utils.UI
                 StartCoroutine(LoadScenesForRedrawing(levelsThatNeedToRedrawn.ToArray()));
             });
 
-            this.ExecuteAfterSeconds(1, () =>
+            this.ExecuteAfterSeconds(0.5f, () =>
             {
                 levelMenuCanvas.SetActive(true);
                 
@@ -191,7 +186,7 @@ namespace UnboundLib.Utils.UI
                     }
 
                 }
-                // Create lvlObj's
+                // Create lvlObjs
                 foreach (var level in LevelManager.levels)
                 {
                     if (!File.Exists(Path.Combine(Path.Combine(Paths.ConfigPath, "LevelImages"), LevelManager.GetVisualName(level.Value.name) + ".png")))
@@ -247,6 +242,7 @@ namespace UnboundLib.Utils.UI
                             scroll.Value.gameObject.SetActive(false);
                         }
             
+                        scrollViews[category].GetComponent<ScrollRect>().normalizedPosition = new Vector2(0, 1);
                         scrollViews[category].gameObject.SetActive(true);
                     });
                     var toggle = categoryObj.GetComponentInChildren<Toggle>();
@@ -354,10 +350,10 @@ namespace UnboundLib.Utils.UI
             }
             NetworkConnectionHandler.instance.NetworkRestart();
             IsDrawingLevels = false;
-            if (CardToggleMenuHandler.Instance.transform.parent.Find("Unbound Text Object"))
-            {
-                Destroy(CardToggleMenuHandler.Instance.transform.parent.Find("Unbound Text Object").gameObject);
-            }
+            // if (CardToggleMenuHandler.Instance.transform.parent.Find("Unbound Text Object"))
+            // {
+            //     Destroy(CardToggleMenuHandler.Instance.transform.parent.Find("Unbound Text Object").gameObject);
+            // }
 
             foreach (var lvlObj in lvlObjs)
             {
@@ -371,7 +367,6 @@ namespace UnboundLib.Utils.UI
         private IEnumerator LoadScene(string sceneName)
         {
             var isDone = false;
-            UnityEngine.Debug.LogWarning("Loading: " + sceneName);
             var scene = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
             scene.completed += operation =>
             {
@@ -379,7 +374,6 @@ namespace UnboundLib.Utils.UI
 #pragma warning disable 618
                 SceneManager.UnloadScene(sceneName);
 #pragma warning restore 618
-                UnityEngine.Debug.LogWarning("Done loading: " + sceneName);
                 isDone = true;
             };
 
@@ -512,28 +506,26 @@ namespace UnboundLib.Utils.UI
 
         private void Update()
         {
-            // Activate and deactivate the menu
-            if (Input.GetKeyDown(KeyCode.F2))
-            {
-                SetActive(!levelMenuCanvas.activeInHierarchy);
-            }
+            // // Activate and deactivate the menu
+            // if (Input.GetKeyDown(KeyCode.F2))
+            // {
+            //     SetActive(!levelMenuCanvas.activeInHierarchy);
+            // }
 
             if (IsDrawingLevels)
             {
                 levelMenuCanvas.SetActive(false);
             }
 
-            if (PhotonNetwork.IsConnected || (levelMenuCanvas.activeInHierarchy && GameManager.instance.isPlaying) && justStartedPlaying == false)
+            if (GameManager.instance.isPlaying && !disabled)
             {
-                justStoppedPlaying = false;
                 levelMenuCanvas.transform.Find("LevelMenu/Top/Redraw all").gameObject.SetActive(false);
-                justStartedPlaying = true;
+                disabled = true;
             }
-            if (levelMenuCanvas.activeInHierarchy && !GameManager.instance.isPlaying && justStoppedPlaying == false)
+            if (!GameManager.instance.isPlaying && disabled)
             {
-                justStartedPlaying = false;
                 levelMenuCanvas.transform.Find("LevelMenu/Top/Redraw all").gameObject.SetActive(true);
-                justStoppedPlaying = true;
+                disabled = false;
             }
 
             // Remove right click menu when mouse gets too far away

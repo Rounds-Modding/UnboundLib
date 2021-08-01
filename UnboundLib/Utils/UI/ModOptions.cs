@@ -64,7 +64,7 @@ namespace UnboundLib.Utils.UI
                 visibleObj.transform.parent = MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main");
 
                 // Create toggle cards button
-                MenuHandler.CreateButton("Toggle Cards", modOptionsMenu, () => { CardToggleMenuHandler.Instance.Show(); });
+                MenuHandler.CreateButton("Toggle Cards", modOptionsMenu, () => { ToggleCardsMenuHandler.SetActive(ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu"), true); });
                 
                 // Create toggle levels button
                 MenuHandler.CreateButton("Toggle Levels", modOptionsMenu, () => { ToggleLevelMenuHandler.instance.SetActive(true); });

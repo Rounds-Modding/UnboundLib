@@ -188,7 +188,6 @@ namespace UnboundLib.Utils
         public static void EnableLevel(string levelName, bool saved = true)
         {
             if (activeLevels.Contains(levelName)) return;
-            //UnityEngine.Debug.LogWarning("Trying to enable: " + levelName);
             if (!activeLevels.Contains(levelName))
             {
                 activeLevels.Add(levelName);
@@ -220,7 +219,6 @@ namespace UnboundLib.Utils
         public static void DisableLevel(string levelName, bool saved = true)
         {
             if (inactiveLevels.Contains(levelName)) return;
-            //UnityEngine.Debug.LogWarning("Trying to disable: " + levelName);
             if (activeLevels.Contains(levelName))
             {
                 activeLevels.Remove(levelName);
@@ -302,7 +300,7 @@ namespace UnboundLib.Utils
                 if (!categories.Contains(category))
                 {
                     categories.Add(category);
-                    categoryBools[category] = Unbound.config.Bind("Levels categories", category, true);
+                    categoryBools[category] = Unbound.config.Bind("Level categories", category, true);
                 }
                 if (!Unbound.config.Bind("Levels: " + levels[path].category, GetVisualName(path), true).Value)
                 {
