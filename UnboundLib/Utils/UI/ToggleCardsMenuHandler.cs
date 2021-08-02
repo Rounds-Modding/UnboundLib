@@ -122,6 +122,14 @@ namespace UnboundLib.Utils.UI
                     }
                 }
             });
+            
+            // get and set info button
+            var infoButton = toggleCardsCanvas.transform.Find("CardMenu/Top/Help").GetComponent<Button>();
+            var infoMenu = toggleCardsCanvas.transform.Find("CardMenu/InfoMenu").gameObject;
+            infoButton.onClick.AddListener(() =>
+            {
+                infoMenu.SetActive(!infoMenu.activeInHierarchy);
+            });
 
             this.ExecuteAfterSeconds(0.5f, () =>
             {

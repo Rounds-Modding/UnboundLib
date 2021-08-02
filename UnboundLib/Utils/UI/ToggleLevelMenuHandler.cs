@@ -44,6 +44,7 @@ namespace UnboundLib.Utils.UI
 
         // A list of levelNames that need to redraw their art
         private readonly List<string> levelsThatNeedToRedrawn = new List<string>();
+        private readonly List<string> levelsThatHaveBeenRedrawn = new List<string>();
 
         // List of every lvlObj
         public readonly List<GameObject> lvlObjs = new List<GameObject>();
@@ -53,7 +54,10 @@ namespace UnboundLib.Utils.UI
         private bool justRightClicked;
         private Vector2 staticMousePos;
 
+        private TextMeshProUGUI redrawAllText;
+
         private bool disabled;
+        private bool manualRedraw;
 
         private string currentCategory
         {
@@ -86,7 +90,7 @@ namespace UnboundLib.Utils.UI
             rightClickMenu = Unbound.toggleUI.LoadAsset<GameObject>("RightClickMenu");
 
             // Create guiStyle for waiting text
-            guiStyle = new GUIStyle {fontSize = 100, normal = {textColor = Color.white}};
+            guiStyle = new GUIStyle {fontSize = 100, normal = {textColor = Color.black}};
             
             // // Clear all lists
             //     currentLevelsInMenu.Clear();
@@ -146,7 +150,7 @@ namespace UnboundLib.Utils.UI
 
                     foreach (var lvlObj in lvlObjs.Where(lvlObj => levelsInCategory.Contains(lvlObj.name)))
                     {
-                        UpdateVisualsLevelObj(lvlObj, false);
+                        UpdateVisualsLevelObj(lvlObj);
                     }
                 }
                 else
@@ -155,21 +159,35 @@ namespace UnboundLib.Utils.UI
 
                     foreach (var lvlObj in lvlObjs.Where(lvlObj => levelsInCategory.Contains(lvlObj.name)))
                     {
-                        UpdateVisualsLevelObj(lvlObj, true);
+                        UpdateVisualsLevelObj(lvlObj);
                     }
                 }
             });
             
             // get and set the redraw all button
-            var redrawAllButton = levelMenuCanvas.transform.Find("LevelMenu/Top/Redraw all").GetComponent<Button>();    
+            var redrawAllButton = levelMenuCanvas.transform.Find("LevelMenu/Top/Redraw all").GetComponent<Button>();
+            redrawAllText = redrawAllButton.GetComponentInChildren<TextMeshProUGUI>();
             redrawAllButton.onClick.AddListener(() =>
             {
-                foreach (var level in LevelManager.GetLevelsInCategory(currentCategory))
+                if (redrawAllText.text == "Draw all thumbnails")
                 {
-                    levelsThatNeedToRedrawn.Add(level);
+                    levelsThatNeedToRedrawn.AddRange(LevelManager.levels.Select(lvlObj => lvlObj.Key));
+                }
+                else
+                {
+                    levelsThatNeedToRedrawn.AddRange(LevelManager.GetLevelsInCategory(currentCategory));
                 }
 
+                manualRedraw = true;
                 StartCoroutine(LoadScenesForRedrawing(levelsThatNeedToRedrawn.ToArray()));
+            });
+            
+            // get and set info button
+            var infoButton = levelMenuCanvas.transform.Find("LevelMenu/Top/Help").GetComponent<Button>();
+            var infoMenu = levelMenuCanvas.transform.Find("LevelMenu/InfoMenu").gameObject;
+            infoButton.onClick.AddListener(() =>
+            {
+                infoMenu.SetActive(!infoMenu.activeInHierarchy);
             });
 
             this.ExecuteAfterSeconds(0.5f, () =>
@@ -206,26 +224,41 @@ namespace UnboundLib.Utils.UI
                     lvlObj.AddComponent<LvlObj>();
                     lvlObj.GetComponent<Button>().onClick.AddListener(() =>
                     {
+                        if (Input.GetKey(KeyCode.LeftShift))
+                        {
+                            if (level.Value.selected)
+                            {
+                                level.Value.selected = false;
+                            }
+                            else
+                            {
+                                level.Value.selected = true;
+                            }
+                            
+                            UpdateVisualsLevelObj(lvlObj);
+                            return;
+                        }
+                        
                         if (level.Value.enabled)
                         {
                             LevelManager.DisableLevel(level.Key);
                             level.Value.enabled = false;
-                            UpdateVisualsLevelObj(lvlObj, level.Value.enabled);
+                            UpdateVisualsLevelObj(lvlObj);
                         }
                         else
                         {
                             LevelManager.EnableLevel(level.Key);
                             level.Value.enabled = true;
-                            UpdateVisualsLevelObj(lvlObj, level.Value.enabled);
+                            UpdateVisualsLevelObj(lvlObj);
                         }
                     });
 
                     lvlObjs.Add(lvlObj);
-                    UpdateVisualsLevelObj(lvlObj, level.Value.enabled);
+                    UpdateVisualsLevelObj(lvlObj);
                     if (!Unbound.config.Bind("Levels: " + level.Value.category, LevelManager.GetVisualName(level.Key), true).Value)
                     {
                         LevelManager.DisableLevel(level.Key);
-                        UpdateVisualsLevelObj(lvlObj, false);
+                        UpdateVisualsLevelObj(lvlObj);
                     }
                     UpdateImage(lvlObj, Path.Combine(Path.Combine(Paths.ConfigPath, "LevelImages"), LevelManager.GetVisualName(level.Key) + ".png"));
                 }
@@ -300,14 +333,14 @@ namespace UnboundLib.Utils.UI
                 levelMenuCanvas.SetActive(false);
                 
                 // Detect which levels need to redraw
-                if(levelsThatNeedToRedrawn.Count != 0) StartCoroutine(LoadScenesForRedrawing(levelsThatNeedToRedrawn.ToArray()));
+                //if(levelsThatNeedToRedrawn.Count != 0) StartCoroutine(LoadScenesForRedrawing(levelsThatNeedToRedrawn.ToArray()));
             });
         }
 
         // Update the visuals of a lvlObj
-        public static void UpdateVisualsLevelObj(GameObject lvlObj, bool levelEnabled)
+        public static void UpdateVisualsLevelObj(GameObject lvlObj)
         {
-            if (levelEnabled)
+            if (LevelManager.levels[lvlObj.name].enabled)
             {   
                 lvlObj.transform.Find("ImageHolder").GetComponentInChildren<Image>().color = Color.white;
                 lvlObj.GetComponentInChildren<TextMeshProUGUI>().color = Color.white;
@@ -317,6 +350,16 @@ namespace UnboundLib.Utils.UI
                 lvlObj.transform.Find("ImageHolder").GetComponentInChildren<Image>().color = new Color(0.5f,0.5f,0.5f);
                 lvlObj.GetComponentInChildren<TextMeshProUGUI>().color = new Color(0.5f,0.5f,0.5f);
             }
+            
+            if (LevelManager.levels[lvlObj.name].selected)
+            {
+                lvlObj.transform.Find("Glow").gameObject.SetActive(true);
+            }
+            else
+            {
+                lvlObj.transform.Find("Glow").gameObject.SetActive(false);
+            }
+            
 
             foreach (var category in LevelManager.categories)
             {
@@ -347,17 +390,22 @@ namespace UnboundLib.Utils.UI
             {
                 ArtHandler.instance.NextArt();
                 yield return LoadScene(sceneName);
-                yield return new WaitForSeconds(0.3f);
+                levelsThatHaveBeenRedrawn.Add(sceneName);
             }
+            levelsThatNeedToRedrawn.Clear();
+            levelsThatHaveBeenRedrawn.Clear();
             NetworkConnectionHandler.instance.NetworkRestart();
             IsDrawingLevels = false;
-            // if (CardToggleMenuHandler.Instance.transform.parent.Find("Unbound Text Object"))
-            // {
-            //     Destroy(CardToggleMenuHandler.Instance.transform.parent.Find("Unbound Text Object").gameObject);
-            // }
 
+
+            foreach (var lvl in LevelManager.levels.Where(lvl => lvl.Value.selected))
+            {
+                lvl.Value.selected = false;
+            }
+            
             foreach (var lvlObj in lvlObjs)
             {
+                UpdateVisualsLevelObj(lvlObj);
                 UpdateImage(lvlObj, Path.Combine(Path.Combine(Paths.ConfigPath, "LevelImages"), LevelManager.GetVisualName(lvlObj.name) + ".png"));
             }
 
@@ -365,12 +413,22 @@ namespace UnboundLib.Utils.UI
             {
                 if (obj.name == "UnboundLib Canvas")
                 {
-                    Destroy(obj.transform.Find("Unbound Text Object").gameObject);
+                    //Destroy(obj.transform.Find("Unbound Text Object")?.gameObject);
+                    obj.SetActive(false);
                 }
             }
 
-            levelsThatNeedToRedrawn.Clear();
             RemoveAllRightClickMenus();
+
+            if (manualRedraw)
+            {
+                this.ExecuteAfterSeconds(0.25f, () =>
+                {
+                    levelMenuCanvas.SetActive(true);
+                });
+            }
+
+            manualRedraw = false;
         }
 
         private IEnumerator LoadScene(string sceneName)
@@ -380,11 +438,20 @@ namespace UnboundLib.Utils.UI
             void NewSceneLoaded(Scene scene, LoadSceneMode mode)
             {
                 SceneManager.sceneLoaded -= NewSceneLoaded;
+                
+                scene.GetRootGameObjects()[0].transform.position = Vector3.zero;
 
-                this.ExecuteAfterFrames(1, () => {
+                this.ExecuteAfterSeconds( 0.05f, () => {
                     TakeScreenshot(sceneName);
-                    SceneManager.UnloadSceneAsync(scene);
-                    isDone = true;
+                    var unloadSceneAsync = SceneManager.UnloadSceneAsync(scene);
+                    scene.GetRootGameObjects()[0].transform.position = new Vector3(100,100,0);
+                    unloadSceneAsync.completed += operation =>
+                    {
+                        this.ExecuteAfterSeconds(0.1f, () =>
+                        {
+                            isDone = true;
+                        });
+                    };
                 });
             }
 
@@ -467,7 +534,7 @@ namespace UnboundLib.Utils.UI
             #endif
         }
 
-        // This is executed when rightClicking on a lvlObj
+        // This is executed when right Clicking on a lvlObj
         public void RightClickedAt(Vector2 position, GameObject obj)
         {
             if (GameManager.instance.isPlaying) return;
@@ -476,30 +543,28 @@ namespace UnboundLib.Utils.UI
             justRightClicked = true;
             var rightMenu = Instantiate(rightClickMenu, position, Quaternion.identity, levelMenuCanvas.transform.Find("LevelMenu"));
             var levelKey = obj.name;
-            
-            // var toggleButton = rightMenu.transform.Find("Toggle").GetComponent<Button>();
-            //
-            // toggleButton.onClick.AddListener(() =>
-            // {
-            //     if (LevelManager.levels[obj.name].enabled)
-            //     {
-            //         LevelManager.DisableLevel(levelKey);
-            //         LevelManager.levels[obj.name].enabled = false;
-            //         UpdateVisualsLevelObj(obj, LevelManager.levels[obj.name].enabled);
-            //     }
-            //     else
-            //     {
-            //         LevelManager.EnableLevel(levelKey);
-            //         LevelManager.levels[obj.name].enabled = true;
-            //         UpdateVisualsLevelObj(obj, LevelManager.levels[obj.name].enabled);
-            //     }
-            // });
-            
+
+            var selectedCount = LevelManager.levels.Count(lvl => lvl.Value.selected);
+
             // get and set redraw button
             var redrawButton = rightMenu.transform.Find("Redraw").GetComponent<Button>();
+            if (selectedCount > 0)
+            {
+                redrawButton.GetComponentInChildren<TextMeshProUGUI>().text = "Redraw selected level thumbnails";
+            }
             redrawButton.onClick.AddListener(() =>
             {
-                StartCoroutine(LoadScenesForRedrawing(new []{ levelKey}));
+                if (selectedCount > 0)
+                {
+                    levelsThatNeedToRedrawn.AddRange(from lvl in LevelManager.levels where lvl.Value.selected select lvl.Key);
+                }
+                else
+                {
+                    levelsThatHaveBeenRedrawn.Add(levelKey);
+                }
+
+                manualRedraw = true;
+                StartCoroutine(LoadScenesForRedrawing(levelsThatNeedToRedrawn.ToArray()));
             });
 
         }
@@ -546,6 +611,17 @@ namespace UnboundLib.Utils.UI
                 disabled = false;
             }
 
+            if (redrawAllText.text != "Draw all thumbnails" &&
+                !Directory.Exists(Path.Combine(Paths.ConfigPath, "LevelImages")))
+            {
+                redrawAllText.text = "Draw all thumbnails";
+            }
+            else if (redrawAllText.text == "Draw all thumbnails" &&
+                     Directory.Exists(Path.Combine(Paths.ConfigPath, "LevelImages")))
+            {
+                redrawAllText.text = "Redraw all in category";
+            }
+
             // Remove right click menu when mouse gets too far away
             if (mousePosOnRightClickMenu != Vector2.zero)
             {
@@ -574,7 +650,13 @@ namespace UnboundLib.Utils.UI
         {
             if (IsDrawingLevels)
             {
-                GUI.Label(new Rect(Screen.width / 3.8f, Screen.height / 2.5f, 300, 300), "Drawing level thumbnails.\nThis may take a while.", guiStyle );
+                var boxStyle = guiStyle;
+                var background = new Texture2D(1, 1);
+                background.SetPixel(0,0, Color.gray);
+                background.Apply();
+                boxStyle.normal.background = background;
+                GUI.Box(new Rect(0,0, Screen.width, Screen.height), "", boxStyle);
+                GUI.Label(new Rect(Screen.width / 3.8f, Screen.height / 2.5f, 300, 300), "Drawing level thumbnails.\nThis may take a while.\n " + ((float)levelsThatHaveBeenRedrawn.Count/(float)levelsThatNeedToRedrawn.Count).ToString("P1"), guiStyle );
             }
         }
     }

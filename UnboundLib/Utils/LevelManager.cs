@@ -145,7 +145,7 @@ namespace UnboundLib.Utils
             
             foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs)
             {
-                ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj, IsLevelActive(obj.name));
+                ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
             }
 
             // reply to all users with new list of valid levels
@@ -172,7 +172,7 @@ namespace UnboundLib.Utils
             
             foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs)
             {
-                ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj, IsLevelActive(obj.name));
+                ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
             }
         }
 
@@ -292,7 +292,7 @@ namespace UnboundLib.Utils
                 activeLevels.Add(path);
                 if(!levels.ContainsKey(path))
                 {
-                    levels[path] = new Level(path, true, 5,category);
+                    levels[path] = new Level(path, true, false,category);
                 }
                 else
                 {
@@ -386,14 +386,14 @@ namespace UnboundLib.Utils
     {
         public string name;
         public bool enabled;
-        public int timesPlayed;
+        public bool selected;
         public string category;
 
-        public Level(string name, bool enabled, int timesPlayed = 0,string category = "Default")
+        public Level(string name, bool enabled, bool selected = false ,string category = "Default")
         {
             this.name = name;
             this.enabled = enabled;
-            this.timesPlayed = timesPlayed;
+            this.selected = selected;
             this.category = category;
         }
     }
