@@ -122,7 +122,7 @@ namespace UnboundLib.Cards
                     CardManager.activeCards.CollectionChanged += CardManager.CardsChanged;
                     // Register card with the toggle menu
                     CardManager.cards.Add(newCardInfo.cardName,
-                        new Card(customCard.GetModName(), Unbound.config.Bind("Toggle modded cards", newCardInfo.cardName, true).Value, newCardInfo));
+                        new Card(customCard.GetModName(), Unbound.config.Bind("Cards: " + customCard.GetModName(), newCardInfo.cardName, true).Value, newCardInfo));
                 }
 
                 
