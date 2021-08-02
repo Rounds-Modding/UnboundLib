@@ -34,7 +34,6 @@ namespace UnboundLib.Utils
             
             // Set activeCards CollectionChanged event
             activeCards.CollectionChanged += CardsChanged;
-            
         }
 
         public static void FirstTimeStart()
@@ -97,10 +96,10 @@ namespace UnboundLib.Utils
                 inactiveCards.Remove(card);
             }
 
-            cards[card.cardName].enabled = true;
             
             if (saved)
             {
+                cards[card.cardName].enabled = true;
                 Unbound.config.Bind("Cards: " + cards[card.cardName].category, card.cardName, true).Value = true;
             }
         }
@@ -125,10 +124,10 @@ namespace UnboundLib.Utils
                 inactiveCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
             }
             
-            cards[card.cardName].enabled = false;
             
             if (saved)
             {
+                cards[card.cardName].enabled = false;
                 Unbound.config.Bind("Cards: " + cards[card.cardName].category, card.cardName, true).Value = false;
             }
         }

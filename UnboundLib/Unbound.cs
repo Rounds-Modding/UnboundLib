@@ -267,7 +267,7 @@ namespace UnboundLib
             foreach (var card in CardManager.defaultCards)
             {
                 CardManager.cards.Add(card.cardName,
-                    new Card("Default", config.Bind("Cards: " + CardManager.GetCardInfoWithName(card.cardName), card.cardName, true).Value, card));
+                    new Card("Default", config.Bind("Cards: Default", card.cardName, true).Value, card));
             }
 
             // hook up Photon callbacks

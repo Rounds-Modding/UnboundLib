@@ -276,7 +276,6 @@ namespace UnboundLib.Utils.UI
                             }
                             else
                             {
-                                obj.Value.Find("Darken").gameObject.SetActive(true);
                                 LevelManager.categoryBools[category].Value = false;
                                 foreach (Transform trs in obj.Value.Find("Viewport/Content"))
                                 {

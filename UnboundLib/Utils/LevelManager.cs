@@ -199,10 +199,10 @@ namespace UnboundLib.Utils
                 inactiveLevels.Remove(levelName);
             }
 
-            levels[levelName].enabled = true;
             
             if (saved)
             {
+                levels[levelName].enabled = true;
                 Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = true;
             }
         }
@@ -229,10 +229,10 @@ namespace UnboundLib.Utils
                 inactiveLevels.Sort((x, y) => string.CompareOrdinal(x, y));
             }
             
-            levels[levelName].enabled = false;
             
             if (saved)
             {
+                levels[levelName].enabled = false;
                 Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = false;
             }
         }
