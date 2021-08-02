@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,9 +7,11 @@ using BepInEx;
 using Photon.Pun;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using HarmonyLib;
 
 namespace UnboundLib.Utils.UI
 {
@@ -372,20 +375,29 @@ namespace UnboundLib.Utils.UI
 
         private IEnumerator LoadScene(string sceneName)
         {
-            var isDone = false;
-            var scene = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
-            scene.completed += operation =>
-            {
-                TakeScreenshot(sceneName);
-#pragma warning disable 618
-                SceneManager.UnloadScene(sceneName);
-#pragma warning restore 618
-                isDone = true;
-            };
+            bool isDone = false;
 
-            if(isDone)
+            void NewSceneLoaded(Scene scene, LoadSceneMode mode)
             {
-                yield break;
+                SceneManager.sceneLoaded -= NewSceneLoaded;
+
+                this.ExecuteAfterFrames(1, () => {
+                    TakeScreenshot(sceneName);
+                    SceneManager.UnloadSceneAsync(scene);
+                    isDone = true;
+                });
+            }
+
+            var sceneLoadedMethod = AccessTools.Method(typeof(MapManager), "OnLevelFinishedLoading");
+            var existingSceneLoaded = (UnityAction<Scene, LoadSceneMode>) Delegate.CreateDelegate(typeof(UnityAction<Scene, LoadSceneMode>), MapManager.instance, sceneLoadedMethod);
+
+            MapManager.instance.RPCA_LoadLevel(sceneName);
+            SceneManager.sceneLoaded -= existingSceneLoaded;
+            SceneManager.sceneLoaded += NewSceneLoaded;
+
+            while (!isDone)
+            {
+                yield return null;
             }
         }
 

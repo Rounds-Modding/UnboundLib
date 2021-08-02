@@ -494,7 +494,13 @@ namespace UnboundLib
         }
 
         [ObsoleteAttribute("This method is obsolete. Use LevelManager.RegisterMaps() instead.", false)]
-        public static void RegisterMaps(IEnumerable<string> paths, string categoryName = "Modded")
+        public static void RegisterMaps(IEnumerable<string> paths)
+        {
+            Unbound.RegisterMaps(paths, "Modded");
+        }
+
+        [ObsoleteAttribute("This method is obsolete. Use LevelManager.RegisterMaps() instead.", false)]
+        public static void RegisterMaps(IEnumerable<string> paths, string categoryName)
         {
             LevelManager.RegisterMaps(paths);
         }

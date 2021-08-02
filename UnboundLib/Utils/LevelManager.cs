@@ -269,7 +269,9 @@ namespace UnboundLib.Utils
                 .Replace("Assets", "")
                 .Replace(".unity", "");
             visualName = Regex.Replace(visualName, "/.*/", string.Empty);
-            visualName = visualName.Replace("/", "");
+            visualName = visualName.Replace("/", "_");
+            visualName = visualName.Replace("\\", "_");
+            visualName = visualName.Replace(":", "_");
             return visualName;
         }
 
