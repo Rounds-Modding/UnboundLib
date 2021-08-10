@@ -1,18 +1,8 @@
-﻿using BepInEx;
-using HarmonyLib;
-using Photon.Pun;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
-using Jotunn.Utils;
 using TMPro;
-using UnboundLib.GameModes;
-using UnboundLib.Networking;
-using UnboundLib.Utils.UI;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
@@ -49,7 +39,7 @@ namespace UnboundLib.Utils.UI
             Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.2f : 0f, () =>
             {
                 // Create mod options menu
-                CreditsMenu = MenuHandler.CreateMenu("CREDITS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, true, 5);
+                CreditsMenu = MenuHandler.CreateMenu("CREDITS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, null,true, 5);
 
                 // Fix main menu layout
                 void fixMainMenuLayout()

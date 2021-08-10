@@ -45,21 +45,21 @@ namespace UnboundLib.Utils.UI
         }
 
         // Creates a menu and returns its gameObject
-        public static GameObject CreateMenu(string Name, UnityAction buttonAction, GameObject parent, int size = 50, bool forceUpper = true, bool setBarHeight = true, bool setFontSize = true, int siblingIndex = -1)
+        public static GameObject CreateMenu(string Name, UnityAction buttonAction, GameObject parentForButton, int size = 50, bool forceUpper = true, bool setBarHeight = true, GameObject parentForMenu = null,  bool setFontSize = true, int siblingIndex = -1)
         {
-            var obj = GameObject.Instantiate(menuBase, MainMenuHandler.instance.transform.Find("Canvas/ListSelector"));
+            var obj = parentForButton ? GameObject.Instantiate(menuBase, MainMenuHandler.instance.transform.Find("Canvas/ListSelector")) : parentForMenu;
             obj.name = Name;
             
             // Assign back objects
-            var goBackObject = parent.GetComponentInParent<ListMenuPage>();
+            var goBackObject = parentForButton.GetComponentInParent<ListMenuPage>();
             obj.GetComponentInChildren<GoBack>(true).target = goBackObject;
             obj.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(ClickBack(goBackObject));
             obj.transform.Find("Group/Back").gameObject.GetComponent<Button>().onClick.AddListener(ClickBack(goBackObject));
 
             // Create button to menu
             Transform buttonParent = null;
-            if (parent.transform.Find("Group/Grid/Scroll View/Viewport/Content")) buttonParent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content");
-            else if (parent.transform.Find("Group")) buttonParent = parent.transform.Find("Group");
+            if (parentForButton.transform.Find("Group/Grid/Scroll View/Viewport/Content")) buttonParent = parentForButton.transform.Find("Group/Grid/Scroll View/Viewport/Content");
+            else if (parentForButton.transform.Find("Group")) buttonParent = parentForButton.transform.Find("Group");
             
             var button = GameObject.Instantiate(buttonBase, buttonParent);
             button.GetComponent<ListMenuButton>().setBarHeight = setBarHeight ? size : 0;

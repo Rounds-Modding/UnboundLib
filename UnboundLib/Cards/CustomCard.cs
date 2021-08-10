@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Collections.ObjectModel;
 using UnityEngine;
 using Photon.Pun;
 using TMPro;
 using System.Linq;
+using UnboundLib.Utils;
 
 namespace UnboundLib.Cards
 {
@@ -116,10 +117,12 @@ namespace UnboundLib.Cards
                 if (customCard.GetEnabled())
                 {
                     // Add this card to the list of all custom cards
-                    Unbound.activeCards.Add(newCardInfo);
-                    Unbound.activeCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
+                    CardManager.activeCards.Add(newCardInfo);
+                    CardManager.activeCards = new ObservableCollection<CardInfo>(CardManager.activeCards.OrderBy(i => i.cardName));
+                    CardManager.activeCards.CollectionChanged += CardManager.CardsChanged;
                     // Register card with the toggle menu
-                    CardToggleMenuHandler.Instance.AddCardToggle(newCardInfo);
+                    CardManager.cards.Add(newCardInfo.cardName,
+                        new Card(customCard.GetModName(), Unbound.config.Bind("Cards: " + customCard.GetModName(), newCardInfo.cardName, true).Value, newCardInfo));
                 }
 
                 

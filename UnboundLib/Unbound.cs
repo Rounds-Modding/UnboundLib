@@ -4,12 +4,14 @@ using Photon.Pun;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
+using BepInEx.Configuration;
 using Jotunn.Utils;
 using TMPro;
 using UnboundLib.GameModes;
 using UnboundLib.Networking;
+using UnboundLib.Utils;
 using UnboundLib.Utils.UI;
 using UnityEngine;
 using UnityEngine.Events;
@@ -23,11 +25,13 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.4.0";
+        public const string Version = "2.5.0";
 
-        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new string[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
+        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
         public static Unbound Instance { get; private set; }
+        
+        public static readonly ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
 
         private Canvas _canvas;
         public Canvas canvas
@@ -55,13 +59,12 @@ namespace UnboundLib
 
         internal static CardInfo templateCard;
 
-        internal static CardInfo[] defaultCards;
-        internal static List<CardInfo> activeCards = new List<CardInfo>();
-        internal static List<CardInfo> inactiveCards = new List<CardInfo>();
-
-        internal static string[] defaultLevels;
-        internal static List<string> activeLevels = new List<string>();
-        internal static List<string> inactiveLevels = new List<string>();
+        [Obsolete("This should not be used anymore instead use CardManager.defaultCards")]
+        internal static CardInfo[] defaultCards => CardManager.defaultCards;
+        [Obsolete("This should not be used anymore instead use CardManager.activeCards")]
+        internal static List<CardInfo> activeCards => CardManager.activeCards.ToList();
+        [Obsolete("This should not be used anymore instead use CardManager.inactiveCards")]
+        internal static List<CardInfo> inactiveCards => CardManager.inactiveCards;
 
         public delegate void OnJoinedDelegate();
         public delegate void OnLeftDelegate();
@@ -75,6 +78,7 @@ namespace UnboundLib
         internal static List<Action> handShakeActions = new List<Action>();
 
         internal static AssetBundle UIAssets;
+        public static AssetBundle toggleUI;
         private static GameObject modalPrefab;
 
         public Unbound()
@@ -89,10 +93,8 @@ namespace UnboundLib
                 // reapply cards and levels
                 this.ExecuteAfterSeconds(0.1f, () =>
                 {
-                    activeLevels.AddRange(inactiveLevels);
-                    inactiveLevels.Clear();
-                    MapManager.instance.levels = activeLevels.ToArray();
-                    CardChoice.instance.cards = activeCards.ToArray();
+                    MapManager.instance.levels = LevelManager.activeLevels.ToArray();
+                    CardChoice.instance.cards = CardManager.activeCards.ToArray();
                 });
 
 
@@ -113,7 +115,47 @@ namespace UnboundLib
                 });
 
                 ModOptions.Instance.CreateModOptions(firstTime);
-                Utils.UI.Credits.Instance.CreateCreditsMenu(firstTime);
+                Credits.Instance.CreateCreditsMenu(firstTime);
+
+                var time = firstTime;
+                this.ExecuteAfterSeconds(firstTime ? 0.5f : 0, () =>
+                {
+                    var resumeButton = UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group/Resume").gameObject;
+                    // Create options button in escapeMenu
+                    var optionsMenu = Instantiate(MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Options").gameObject,UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main"));
+                    var menuBut = optionsMenu.transform.Find("Group/Back").GetComponent<Button>();
+                    menuBut.onClick = new Button.ButtonClickedEvent();
+                    menuBut.onClick.AddListener(() =>
+                    {
+                        optionsMenu.transform.Find("Group").gameObject.SetActive(false);
+                        UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject.SetActive(true);
+                    });
+
+                    var optionsButton =  Instantiate(resumeButton, UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group"));
+                    optionsButton.transform.SetSiblingIndex(2);
+                    optionsButton.GetComponentInChildren<TextMeshProUGUI>().text = "OPTIONS";
+                    optionsButton.GetComponent<Button>().onClick = new Button.ButtonClickedEvent();
+                    optionsButton.GetComponent<Button>().onClick.AddListener((() =>
+                    {
+                        optionsMenu.transform.Find("Group").gameObject.SetActive(true);
+                        UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject.SetActive(false);
+                    }));
+                    
+                    // Create toggleLevelButton in escapeMenu
+                    var toggleLevelsButton =  Instantiate(resumeButton, UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group"));
+                    toggleLevelsButton.transform.SetSiblingIndex(3);
+                    toggleLevelsButton.GetComponentInChildren<TextMeshProUGUI>().text = "TOGGLE LEVELS";
+                    toggleLevelsButton.GetComponent<Button>().onClick = new Button.ButtonClickedEvent();
+                    toggleLevelsButton.GetComponent<Button>().onClick.AddListener((() =>
+                    {
+                        ToggleLevelMenuHandler.instance.SetActive(true);
+                    }));
+
+                    if (time)
+                    {
+                        CardManager.FirstTimeStart();
+                    }
+                });
 
                 firstTime = false;
 
@@ -141,13 +183,25 @@ namespace UnboundLib
             };
 
 
-            // apply cards on game start
-            IEnumerator ResetCardsOnStart(IGameModeHandler gm)
+            // apply cards and levels on game start
+            IEnumerator ResetCardsAndLevelsOnStart(IGameModeHandler gm)
             {
-                CardChoice.instance.cards = activeCards.ToArray();
+                CardChoice.instance.cards = CardManager.activeCards.ToArray();
+                MapManager.instance.levels = LevelManager.activeLevels.ToArray();
                 yield break;
             }
-            GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsOnStart);
+            GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsAndLevelsOnStart);
+            
+            // Load toggleUI asset bundle
+            toggleUI = AssetUtils.LoadAssetBundleFromResources("toggle ui", typeof(ToggleLevelMenuHandler).Assembly);
+
+            // Add managers
+            gameObject.AddComponent<LevelManager>();
+            gameObject.AddComponent<CardManager>();
+            
+            // Add menu handlers
+            gameObject.AddComponent<ToggleLevelMenuHandler>();
+            gameObject.AddComponent<ToggleCardsMenuHandler>();
         }
 
         private void Awake()
@@ -172,9 +226,6 @@ namespace UnboundLib
 
         private void Start()
         {
-            // store default cards
-            defaultCards = (CardInfo[]) CardChoice.instance.cards.Clone();
-
             // request mod handshake
             NetworkingManager.RegisterEvent(NetworkEventType.StartHandshake, (data) =>
             {
@@ -188,16 +239,15 @@ namespace UnboundLib
                 {
                     NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake);
                 }
-
-                CardChoice.instance.cards = defaultCards;
+                CardChoice.instance.cards = CardManager.defaultCards;
             });
 
             // receive mod handshake
             NetworkingManager.RegisterEvent(NetworkEventType.FinishHandshake, (data) =>
             {
                 // attempt to syncronize levels and cards with other players
-                CardChoice.instance.cards = activeCards.ToArray();
-                NetworkingManager.RPC(typeof(Unbound), nameof(RPC_MapHandshake), (object)activeLevels.ToArray());
+                CardChoice.instance.cards = CardManager.activeCards.ToArray();
+                MapManager.instance.levels = LevelManager.activeLevels.ToArray();
 
                 if (data.Length > 0)
                 {
@@ -210,22 +260,20 @@ namespace UnboundLib
             templateCard = (from c in CardChoice.instance.cards
                             where c.cardName.ToLower() == "huge"
                             select c).FirstOrDefault();
-            defaultCards = CardChoice.instance.cards;
-            activeCards.AddRange(defaultCards);
+            CardManager.defaultCards = CardChoice.instance.cards;
 
+            
             // register default cards with toggle menu
-            foreach (var card in defaultCards)
+            foreach (var card in CardManager.defaultCards)
             {
-                CardToggleMenuHandler.Instance.AddCardToggle(card, false);
+                CardManager.cards.Add(card.cardName,
+                    new Card("Default", config.Bind("Cards: Default", card.cardName, true).Value, card));
             }
-
-            // add default activeLevels to level list
-            defaultLevels = MapManager.instance.levels;
-            activeLevels.AddRange(MapManager.instance.levels);
 
             // hook up Photon callbacks
             var networkEvents = gameObject.AddComponent<NetworkEventCallbacks>();
             networkEvents.OnJoinedRoomEvent += OnJoinedRoomAction;
+            networkEvents.OnJoinedRoomEvent += LevelManager.OnJoinedRoomAction;
             networkEvents.OnLeftRoomEvent += OnLeftRoomAction;
 
             // sync modded clients
@@ -237,9 +285,15 @@ namespace UnboundLib
             if (Input.GetKeyDown(KeyCode.F1) && !ModOptions.noDeprecatedMods)
             {
                 ModOptions.showModUi = !ModOptions.showModUi;
-            }
-
-            GameManager.lockInput = ModOptions.showModUi || DevConsole.isTyping;
+            } 
+            
+            
+            GameManager.lockInput = ModOptions.showModUi || DevConsole.isTyping ||
+                                    ToggleLevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy || 
+                                    (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group") &&
+                                    UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group").gameObject.activeInHierarchy) ||
+                                    (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group") && 
+                                    UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject.activeInHierarchy);
         }
 
         private void OnGUI()
@@ -268,10 +322,10 @@ namespace UnboundLib
             if (showingSpecificMod) return;
 
             GUILayout.Label("UnboundLib Options\nThis menu is deprecated");
-            if (GUILayout.Button("Toggle Cards"))
-            {
-                CardToggleMenuHandler.Instance.Show();
-            }
+            // if (GUILayout.Button("Toggle Cards"))
+            // {
+            //     CardToggleMenuHandler.Instance.Show();
+            // }
 
             GUILayout.Label("Mod Options:");
             foreach (var md in ModOptions.GUIListeners.Keys)
@@ -291,22 +345,22 @@ namespace UnboundLib
             if (UIAssets != null)
             {
                 modalPrefab = UIAssets.LoadAsset<GameObject>("Modal");
-                Instantiate(UIAssets.LoadAsset<GameObject>("Card Toggle Menu"), canvas.transform).AddComponent<CardToggleMenuHandler>();
+                //Instantiate(UIAssets.LoadAsset<GameObject>("Card Toggle Menu"), canvas.transform).AddComponent<CardToggleMenuHandler>();
             }
         }
 
         private void OnJoinedRoomAction()
         {
             if (!PhotonNetwork.OfflineMode)
-                CardChoice.instance.cards = defaultCards;
+                CardChoice.instance.cards = CardManager.defaultCards;
             NetworkingManager.RaiseEventOthers(NetworkEventType.StartHandshake);
 
             // send available card pool to the master client
             if (!PhotonNetwork.IsMasterClient)
             {
                 var cardSelection = new List<CardInfo>();
-                cardSelection.AddRange(activeCards);
-                cardSelection.AddRange(inactiveCards);
+                cardSelection.AddRange(CardManager.activeCards);
+                cardSelection.AddRange(CardManager.inactiveCards);
                 NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_CardHandshake), (object)cardSelection.Select(c => c.cardName).ToArray());
             }
 
@@ -326,40 +380,51 @@ namespace UnboundLib
         private static void RPC_CardHandshake(string[] cards)
         {
             if (!PhotonNetwork.IsMasterClient) return;
-            
+
             // disable any cards which aren't shared by other players
-            foreach (var c in CardToggleHandler.toggles)
+
+            foreach (var card in CardManager.cards)
             {
-                c.SetValue(cards.Contains(c.info.cardName) && c.isEnabled.Value);
+                if (cards.Contains(card.Key) && card.Value.enabled)
+                {
+                    CardManager.EnableCard(card.Value.cardInfo);
+                }
+                else
+                {
+                    CardManager.DisableCard(card.Value.cardInfo);
+                }
+            }
+            
+            foreach (var obj in ToggleCardsMenuHandler.cardObjs)
+            {
+                ToggleCardsMenuHandler.UpdateVisualsCardObj(obj, CardManager.IsCardActive(CardManager.GetCardInfoWithName(obj.name)));
             }
 
             // reply to all users with new list of valid cards
-            NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_HostCardHandshakeResponse), (object)activeCards.Select(c => c.cardName).ToArray());
+            NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_HostCardHandshakeResponse), (object)CardManager.activeCards.Select(c => c.cardName).ToArray());
         }
 
         [UnboundRPC]
         private static void RPC_HostCardHandshakeResponse(string[] cards)
         {
             // enable only cards that the host has specified are allowed
-            foreach (var c in CardToggleHandler.toggles)
+
+            foreach (var card in CardManager.cards)
             {
-                c.SetValue(cards.Contains(c.info.cardName));
+                if (cards.Contains(card.Key))
+                {
+                    CardManager.EnableCard(card.Value.cardInfo);
+                }
+                else
+                {
+                    CardManager.DisableCard(card.Value.cardInfo);
+                }
             }
-        }
-
-        [UnboundRPC]
-        private static void RPC_MapHandshake(string[] maps)
-        {
-            var difference = maps.Except(activeLevels).ToArray();
-
-            inactiveLevels.AddRange(difference);
-
-            foreach (var c in difference)
+            
+            foreach (var obj in ToggleCardsMenuHandler.cardObjs)
             {
-                activeLevels.Remove(c);
+                ToggleCardsMenuHandler.UpdateVisualsCardObj(obj, CardManager.IsCardActive(CardManager.GetCardInfoWithName(obj.name)));
             }
-
-            MapManager.instance.levels = activeLevels.ToArray();
         }
 
         [UnboundRPC]
@@ -384,7 +449,7 @@ namespace UnboundLib
         }
         public static void RegisterCredits(string modName, string[] credits = null, string[] linkTexts = null, string[] linkURLs = null)
         {
-            Utils.UI.Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkTexts, linkURLs));
+            Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkTexts, linkURLs));
         }
 
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
@@ -399,7 +464,7 @@ namespace UnboundLib
 
         public static void RegisterCredits(string modName, string[] credits = null, string linkText = "", string linkURL = "")
         {
-            Utils.UI.Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkText, linkURL));
+            Credits.Instance.RegisterModCredits(new ModCredits(modName, credits, linkText, linkURL));
         }
 
         public static void RegisterClientSideMod(string GUID)
@@ -421,79 +486,30 @@ namespace UnboundLib
             handShakeActions.Add(() => NetworkingManager.RaiseEventOthers($"ModLoader_{modId}_StartHandshake"));
         }
 
+        #region Remove these at a later date when mod's have updated to LevelManager
+        [ObsoleteAttribute("This method is obsolete. Use LevelManager.RegisterMaps() instead.", false)]
         public static void RegisterMaps(AssetBundle assetBundle)
         {
-            RegisterMaps(assetBundle.GetAllScenePaths());
+            LevelManager.RegisterMaps(assetBundle);
         }
 
+        [ObsoleteAttribute("This method is obsolete. Use LevelManager.RegisterMaps() instead.", false)]
         public static void RegisterMaps(IEnumerable<string> paths)
         {
-            activeLevels.AddRange(paths);
-            activeLevels = activeLevels.Distinct().ToList();
-            MapManager.instance.levels = activeLevels.ToArray();
+            Unbound.RegisterMaps(paths, "Modded");
         }
 
-        // loads a map in via its name prefixed with a forward-slash
-        internal static void SpawnMap(string message)
+        [ObsoleteAttribute("This method is obsolete. Use LevelManager.RegisterMaps() instead.", false)]
+        public static void RegisterMaps(IEnumerable<string> paths, string categoryName)
         {
-            if (!message.StartsWith("/"))
-            {
-                return;
-            }
-            // search code copied from card search 
-            try
-            {
-                var currentLevels = MapManager.instance.levels;
-                var levelId = -1;
-                var bestMatches = 0f;
+            LevelManager.RegisterMaps(paths);
+        }
+        #endregion
 
-                // parse message
-                var formattedMessage = message.ToUpper()
-                    .Replace(" ", "_")
-                    .Replace("/", "");
-
-                for (var i = 0; i < currentLevels.Length; i++)
-                {
-                    var text = currentLevels[i].ToUpper()
-                        .Replace(" ", "")
-                        .Replace("ASSETS", "")
-                        .Replace(".UNITY", "");
-                    text = Regex.Replace(text, "/.*/", string.Empty);
-                    text = text.Replace("/", "");
-
-                    var currentMatches = 0f;
-                    for (int j = 0; j < formattedMessage.Length; j++)
-                    {
-                        if (text.Length > j && formattedMessage[j] == text[j])
-                        {
-                            currentMatches += 1f / formattedMessage.Length;
-                        }
-                    }
-                    currentMatches -= (float)Mathf.Abs(formattedMessage.Length - text.Length) * 0.001f;
-                    if (currentMatches > 0.1f && currentMatches > bestMatches)
-                    {
-                        bestMatches = currentMatches;
-                        levelId = i;
-                    }
-                }
-                if (levelId != -1)
-                {
-                    MapManager.instance.LoadLevelFromID(levelId, false, true);
-                }
-            }
-            catch (Exception e)
-            {
-                BuildModal()
-                    .Title("Error Loading Level")
-                    .Message($"No map found named:\n{message}\n\nError:\n{e.ToString()}")
-                    .CancelButton("Copy", () =>
-                    {
-                        BuildInfoPopup("Copied Message!");
-                        GUIUtility.systemCopyBuffer = e.ToString();
-                    })
-                    .CancelButton("Cancel", () => { })
-                    .Show();
-            }
+        public static bool IsNotPlayingOrConnected()
+        {
+            return (GameManager.instance && !GameManager.instance.battleOngoing) &&
+                   (PhotonNetwork.OfflineMode || !PhotonNetwork.IsConnected);
         }
     }
 }

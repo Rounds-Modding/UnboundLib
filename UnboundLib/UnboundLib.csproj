@@ -51,6 +51,7 @@
   <ItemGroup>
     <EmbeddedResource Include="..\AssetsEmbedded\unboundui" />
     <EmbeddedResource Include="..\AssetsEmbedded\modoptionsui" />
+    <EmbeddedResource Include="..\AssetsEmbedded\toggle ui" />
   </ItemGroup>
 
   <ItemGroup>
@@ -92,6 +93,9 @@
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
       <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
