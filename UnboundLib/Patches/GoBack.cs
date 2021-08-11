@@ -40,7 +40,7 @@ namespace UnboundLib.Patches
             }
             
 
-            return false;
+            return true;
         }
     }
 }
