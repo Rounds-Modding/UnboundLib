@@ -290,7 +290,8 @@ namespace UnboundLib
                                      UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject
                                          .activeInHierarchy) ||
 
-                                    ModOptions.showingModOptions;
+                                    ModOptions.showingModOptions ||
+                                    ToggleCardsMenuHandler.menuOpenFromOutside;
         }
 
         private void OnGUI()
@@ -384,7 +385,7 @@ namespace UnboundLib
                 }
             }
             
-            foreach (var obj in ToggleCardsMenuHandler.cardObjs)
+            foreach (var obj in ToggleCardsMenuHandler.cardObjs.Keys)
             {
                 ToggleCardsMenuHandler.UpdateVisualsCardObj(obj, CardManager.IsCardActive(CardManager.GetCardInfoWithName(obj.name)));
             }
@@ -410,7 +411,7 @@ namespace UnboundLib
                 }
             }
             
-            foreach (var obj in ToggleCardsMenuHandler.cardObjs)
+            foreach (var obj in ToggleCardsMenuHandler.cardObjs.Keys)
             {
                 ToggleCardsMenuHandler.UpdateVisualsCardObj(obj, CardManager.IsCardActive(CardManager.GetCardInfoWithName(obj.name)));
             }

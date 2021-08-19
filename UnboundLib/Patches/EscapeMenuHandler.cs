@@ -11,7 +11,7 @@ namespace UnboundLib.Patches
         [HarmonyPrefix]
         private static bool Update(EscapeMenuHandler __instance)
         {
-            if (Input.GetKeyDown(KeyCode.Escape))
+            if (Input.GetKeyDown(KeyCode.Escape) && !ToggleCardsMenuHandler.disableEscapeButton)
             {
                 if (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group").gameObject.activeInHierarchy)
                 {
