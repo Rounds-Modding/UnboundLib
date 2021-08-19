@@ -35,10 +35,9 @@ namespace UnboundLib.Utils.UI
         }
         internal void CreateCreditsMenu(bool firstTime)
         {
-            // create mod options
             Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.2f : 0f, () =>
             {
-                // Create mod options menu
+                // Create credits menu
                 CreditsMenu = MenuHandler.CreateMenu("CREDITS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, null,true, 5);
 
                 // Fix main menu layout

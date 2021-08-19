@@ -14,6 +14,9 @@ namespace UnboundLib.Utils.UI
 
         public static readonly List<GameObject> cardObjs = new List<GameObject>();
 
+        private readonly List<Button> buttonsToDisable = new List<Button>();
+        private readonly List<Toggle> togglesToDisable = new List<Toggle>();
+
         public static GameObject toggleCardsCanvas;
 
         private GameObject cardObj;
@@ -96,6 +99,7 @@ namespace UnboundLib.Utils.UI
             
             // Create and set toggle all button
             var toggleAllButton = toggleCardsCanvas.transform.Find("CardMenu/Top/Toggle all").GetComponent<Button>();
+            buttonsToDisable.Add(toggleAllButton);
             toggleAllButton.onClick.AddListener(() =>
             {
                 if (currentCategory == null) return;
@@ -174,6 +178,7 @@ namespace UnboundLib.Utils.UI
                             UpdateVisualsCardObj(crdObj, card.Value.enabled);
                         }
                     });
+                    buttonsToDisable.Add(crdObj.GetComponent<Button>());
                         
                     crdObj.transform.GetComponentInChildren<TextMeshProUGUI>().text = card.Key;
                     crdObj.transform.GetComponentsInChildren<TextMeshProUGUI>()[1].text = card.Value.cardInfo.cardDestription;
@@ -214,6 +219,7 @@ namespace UnboundLib.Utils.UI
                         SetActive(scrollViews[category].transform, true);
                     });
                     var toggle = categoryObj.GetComponentInChildren<Toggle>();
+                    togglesToDisable.Add(toggle);
                     toggle.onValueChanged.AddListener(value =>
                     {
                         if (!value)
@@ -313,12 +319,26 @@ namespace UnboundLib.Utils.UI
 
             if (GameManager.instance.isPlaying && !disabled)
             {
-                toggleCardsCanvas.SetActive(false);
+                foreach (var button in buttonsToDisable)
+                {
+                    button.interactable = false;
+                }
+                foreach (var toggle in togglesToDisable)
+                {
+                    toggle.interactable = false;
+                }
                 disabled = true;
             }
             if (!GameManager.instance.isPlaying && disabled)
             {
-                toggleCardsCanvas.SetActive(true);
+                foreach (var button in buttonsToDisable)
+                {
+                    button.interactable = true;
+                }
+                foreach (var toggle in togglesToDisable)
+                {
+                    toggle.interactable = true;
+                }
                 disabled = false;
             }
         }

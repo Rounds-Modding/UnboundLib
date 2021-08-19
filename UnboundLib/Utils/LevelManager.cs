@@ -163,8 +163,8 @@ namespace UnboundLib.Utils
                 if (levels.Contains(c))
                 {
                     EnableLevel(c);
-                }
-                if (!levels.Contains(c))
+                } 
+                else
                 {
                     DisableLevel(c);
                 }
