@@ -26,7 +26,7 @@ namespace UnboundLib.Utils.UI
         private Credits()
         {
             // singleton first time setup
-            Credits.Instance = this;
+            Instance = this;
 
         }
         internal void RegisterModCredits(ModCredits modCredits)
@@ -80,13 +80,13 @@ namespace UnboundLib.Utils.UI
                 // add credits for each mod
 
                 // ROUNDS
-                this.AddModCredits(Credits.roundsCredits, RoundsCredits);
+                AddModCredits(roundsCredits, RoundsCredits);
                 // UNBOUND
-                this.AddModCredits(Unbound.modCredits, UnboundCredits);
+                AddModCredits(Unbound.modCredits, UnboundCredits);
 
-                foreach (string modName in this.modCredits.Keys)
+                foreach (string modName in modCredits.Keys)
                 {
-                    this.AddModCredits(this.modCredits[modName], this.creditsMenus[modName]);
+                    AddModCredits(modCredits[modName], creditsMenus[modName]);
                 }
 
             });
@@ -135,8 +135,8 @@ namespace UnboundLib.Utils.UI
         {
             this.modName = modName;
             this.credits = credits;
-            this.linkTexts = new string[] { linkText };
-            this.linkURLs = new string[] { linkURL };
+            linkTexts = new string[] { linkText };
+            linkURLs = new string[] { linkURL };
         }
     }
 

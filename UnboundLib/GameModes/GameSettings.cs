@@ -32,16 +32,16 @@ namespace UnboundLib.GameModes
 
         public GameSettings()
         { 
-            this.values = new Dictionary<string, object>();
+            values = new Dictionary<string, object>();
         }
 
         public GameSettings(GameSettings settingsToCopy)
         {
-            this.values = new Dictionary<string, object>();
+            values = new Dictionary<string, object>();
 
             foreach (var entry in settingsToCopy)
             {
-                this.values.Add(entry.Key, entry.Value);
+                values.Add(entry.Key, entry.Value);
             }
         }
 
@@ -50,51 +50,51 @@ namespace UnboundLib.GameModes
                 throw new ArgumentException($"Setting \"{name}\" must be serializable");
             }
 
-            if (this.values.ContainsKey(name)) {
+            if (values.ContainsKey(name)) {
                 throw new ArgumentException($"Setting \"{name}\" already exists");
             }
 
-            this.values.Add(name, initialValue);
+            values.Add(name, initialValue);
         }
 
         public bool ContainsKey(string name) {
-            return this.values.ContainsKey(name);
+            return values.ContainsKey(name);
         }
 
         public bool TryGetValue(string name, out object value)
         {
-            return this.values.TryGetValue(name, out value);
+            return values.TryGetValue(name, out value);
         }
 
         public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
         {
-            return this.values.GetEnumerator();
+            return values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {
-            return this.values.GetEnumerator();
+            return values.GetEnumerator();
         }
 
         public IEnumerable<string> Keys {
             get {
-                return this.values.Keys;
+                return values.Keys;
             }
         }
 
         public IEnumerable<object> Values {
             get {
-                return this.values.Values;
+                return values.Values;
             }
         }
 
         public int Count {
             get {
-                return this.values.Count;
+                return values.Count;
             }
         }
 
         public object this[string setting] {
-            get { return this.values[setting]; }
+            get { return values[setting]; }
         }
     }
 }

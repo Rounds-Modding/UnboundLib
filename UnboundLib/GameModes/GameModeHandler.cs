@@ -8,7 +8,7 @@ namespace UnboundLib.GameModes
         public T GameMode {
             get
             {
-                return GameModeManager.GetGameMode<T>(this.gameModeId);
+                return GameModeManager.GetGameMode<T>(gameModeId);
             }
         }
 
@@ -16,7 +16,7 @@ namespace UnboundLib.GameModes
         {
             get
             {
-                return this.GameMode;
+                return GameMode;
             }
         }
 
@@ -33,11 +33,11 @@ namespace UnboundLib.GameModes
 
         public void SetSettings(GameSettings settings)
         {
-            this.Settings = settings;
+            Settings = settings;
 
-            foreach (var entry in this.Settings)
+            foreach (var entry in Settings)
             {
-                this.ChangeSetting(entry.Key, entry.Value);
+                ChangeSetting(entry.Key, entry.Value);
             }
         }
 
@@ -45,12 +45,12 @@ namespace UnboundLib.GameModes
         {
             var newSettings = new GameSettings();
 
-            foreach (var entry in this.Settings)
+            foreach (var entry in Settings)
             {
                 newSettings.Add(entry.Key, entry.Key == name ? value : entry.Value);
             }
 
-            this.Settings = newSettings;
+            Settings = newSettings;
         }
 
         public abstract void PlayerJoined(Player player);

@@ -58,7 +58,7 @@ namespace UnboundLib.Networking
             }
         }
 
-        internal static System.Collections.IEnumerator Check()
+        internal static IEnumerator Check()
         {
             float startTime = Time.time;
             while (clientsServerSideGUIDs.Keys.Count < PhotonNetwork.PlayerList.Except(new List<Photon.Realtime.Player> { PhotonNetwork.LocalPlayer }).ToList().Count)

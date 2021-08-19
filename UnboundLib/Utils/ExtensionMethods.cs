@@ -215,8 +215,8 @@ namespace UnboundLib
             var declaringType = ((FieldInfo)instructions[1].operand).DeclaringType;
 
             // Finding docs about generated IL code is impossible, but the fields we care about seem to be named <>1__state and <>2__current
-            var f_state = ExtensionMethods.GetFieldInfo(declaringType, "<>1__state");
-            var f_current = ExtensionMethods.GetFieldInfo(declaringType, "<>2__current");
+            var f_state = GetFieldInfo(declaringType, "<>1__state");
+            var f_current = GetFieldInfo(declaringType, "<>2__current");
 
             // IEnumerator methods contain a jump table within the first few instructions
             var jumpTable = instructions.Find(ins => ins.opcode == OpCodes.Switch);

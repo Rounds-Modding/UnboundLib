@@ -11,7 +11,7 @@
 
         public ArmsRaceHandler() : base("Arms race")
         {
-            this.Settings = new GameSettings()
+            Settings = new GameSettings()
             {
                 { "pointsToWinRound", 2 },
                 { "roundsToWinGame", 5 }
@@ -20,17 +20,17 @@
 
         public override void SetActive(bool active)
         {
-            this.GameMode.gameObject.SetActive(active);
+            GameMode.gameObject.SetActive(active);
         }
 
         public override void PlayerJoined(Player player)
         {
-            this.GameMode.PlayerJoined(player);
+            GameMode.PlayerJoined(player);
         }
 
         public override void PlayerDied(Player killedPlayer, int playersAlive)
         {
-            this.GameMode.PlayerDied(killedPlayer, playersAlive);
+            GameMode.PlayerDied(killedPlayer, playersAlive);
         }
 
         public override TeamScore GetTeamScore(int teamID)
@@ -49,19 +49,19 @@
         {
             if (teamID == 0)
             {
-                this.GameMode.p1Points = score.points;
-                this.GameMode.p1Rounds = score.rounds;
+                GameMode.p1Points = score.points;
+                GameMode.p1Rounds = score.rounds;
             }
             if (teamID == 1)
             {
-                this.GameMode.p2Points = score.points;
-                this.GameMode.p2Rounds = score.rounds;
+                GameMode.p2Points = score.points;
+                GameMode.p2Rounds = score.rounds;
             }
         }
 
         public override void StartGame()
         {
-            this.GameMode.StartGame();
+            GameMode.StartGame();
         }
 
         public override void ResetGame()
@@ -77,13 +77,13 @@
             if (name == "roundsToWinGame")
             {
                 int roundsToWinGame = (int) value;
-                this.GameMode.roundsToWinGame = roundsToWinGame;
+                GameMode.roundsToWinGame = roundsToWinGame;
                 UIHandler.instance.InvokeMethod("SetNumberOfRounds", roundsToWinGame);
             }
 
             if (name == "pointsToWinRound")
             {
-                this.GameMode.SetFieldValue("pointsToWinRound", (int) value);
+                GameMode.SetFieldValue("pointsToWinRound", (int) value);
             }
         }
     }

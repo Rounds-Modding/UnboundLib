@@ -151,7 +151,7 @@ namespace UnboundLib.Cards
         {
             while (t.transform.childCount > 0)
             {
-                GameObject.DestroyImmediate(t.transform.GetChild(0).gameObject);
+                DestroyImmediate(t.transform.GetChild(0).gameObject);
             }
         }
 
@@ -160,9 +160,9 @@ namespace UnboundLib.Cards
             private readonly Vector3 localpos = new Vector3(-50f, -50f, 0f);
             void Update()
             {
-                if (this.gameObject.transform.localPosition != this.localpos)
+                if (gameObject.transform.localPosition != localpos)
                 {
-                    this.gameObject.transform.localPosition = this.localpos;
+                    gameObject.transform.localPosition = localpos;
                     Destroy(this,1f);
                 }
             }
