@@ -365,6 +365,7 @@ namespace UnboundLib.Utils.UI
             disableButtons = true;
             toggleCardsCanvas.transform.Find("CardMenu/Top/Help").gameObject.SetActive(true);
             toggleCardsCanvas.transform.Find("CardMenu/Top/Toggle all").gameObject.SetActive(true);
+            ResetCardActions();
             foreach (Transform trans in toggleCardsCanvas.transform.Find(
                 "CardMenu/Top/Categories/ButtonsScroll/Viewport/Content"))
             {
