@@ -197,6 +197,7 @@ namespace UnboundLib.Networking
 
         }
 
+        public static GameObject uiParent;
         [UnboundRPC]
         private static void AddFlags(int actorID, string[] flags, bool error)
         {
@@ -217,7 +218,6 @@ namespace UnboundLib.Networking
             
             var nickName = PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName;
 
-            GameObject parent;
             var _uiHolder = MenuHandler.modOptionsUI.LoadAsset<GameObject>("uiHolder");
             var _checkmark =  MenuHandler.modOptionsUI.LoadAsset<GameObject>("checkmark");
             var _redx = MenuHandler.modOptionsUI.LoadAsset<GameObject>("redx");
@@ -229,29 +229,29 @@ namespace UnboundLib.Networking
                 // t.transform.parent = UIHandler.instance.transform.Find("Canvas");
                 // t.transform.localScale = Vector3.one;
                 // t.AddComponent<RectTransform>();
-                parent = GameObject.Instantiate(_uiHolder,UIHandler.instance.transform.Find("Canvas"));
-                parent.name = "UIHolder";
-                parent.GetComponent<RectTransform>().localPosition = new Vector3(-975, 486, 2565);
-                parent.GetOrAddComponent<DetectUnmodded>();
-                parent.GetComponent<VerticalLayoutGroup>().spacing = -60;
+                uiParent = GameObject.Instantiate(_uiHolder,UIHandler.instance.transform.Find("Canvas"));
+                uiParent.name = "UIHolder";
+                uiParent.GetComponent<RectTransform>().localPosition = new Vector3(-975, 486, 2565);
+                uiParent.GetOrAddComponent<DetectUnmodded>();
+                uiParent.GetComponent<VerticalLayoutGroup>().spacing = -60;
             }
             else
             {
-                parent = UIHandler.instance.transform.Find("Canvas/UIHolder").gameObject;
+                uiParent = UIHandler.instance.transform.Find("Canvas/UIHolder").gameObject;
             }
             
             GameObject playerObj;
-            if (!parent.transform.Find(nickName))
+            if (!uiParent.transform.Find(nickName))
             {
                 playerObj = new GameObject();
                 playerObj.AddComponent<RectTransform>();
-                playerObj.transform.SetParent(parent.transform, true);
+                playerObj.transform.SetParent(uiParent.transform, true);
                 playerObj.transform.localScale = Vector3.one;
                 playerObj.name = nickName;
             }
             else
             {
-                playerObj = parent.transform.Find(nickName).gameObject;
+                playerObj = uiParent.transform.Find(nickName).gameObject;
             }
 
             if (!playerObj.transform.Find(nickName))
@@ -290,13 +290,12 @@ namespace UnboundLib.Networking
             }
             Unbound.Instance.ExecuteAfterSeconds(0.1f, () =>
             {
-                parent.GetComponent<VerticalLayoutGroup>().SetLayoutVertical();
+                uiParent.GetComponent<VerticalLayoutGroup>().SetLayoutVertical();
             });
-            GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => disableSyncModUI(parent));
             //var UIHolder = new GameObject();
         }
 
-        private static IEnumerator disableSyncModUI(GameObject parent)
+        public static IEnumerator disableSyncModUI(GameObject parent)
         {
             GameObject.Destroy(parent);
             yield break;
