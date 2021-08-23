@@ -23,7 +23,7 @@ namespace UnboundLib.GameModes
         {
             get
             {
-                return GameModeManager.CurrentHandlerID == null ? null : GameModeManager.handlers[GameModeManager.CurrentHandlerID];
+                return CurrentHandlerID == null ? null : handlers[CurrentHandlerID];
             }
         }
 
@@ -32,10 +32,10 @@ namespace UnboundLib.GameModes
             PhotonPeer.RegisterType(typeof(GameSettings), 200, GameSettings.Serialize, GameSettings.Deserialize);
 
             // Add preset game modes
-            GameModeManager.handlers.Add("ArmsRace", new ArmsRaceHandler());
-            GameModeManager.gameModes.Add("ArmsRace", typeof(GM_ArmsRace));
-            GameModeManager.handlers.Add("Sandbox", new SandboxHandler());
-            GameModeManager.gameModes.Add("Sandbox", typeof(GM_Test));
+            handlers.Add("ArmsRace", new ArmsRaceHandler());
+            gameModes.Add("ArmsRace", typeof(GM_ArmsRace));
+            handlers.Add("Sandbox", new SandboxHandler());
+            gameModes.Add("Sandbox", typeof(GM_Test));
 
             SceneManager.sceneLoaded += (scene, mode) =>
             {
@@ -56,28 +56,28 @@ namespace UnboundLib.GameModes
                     GameObject.DestroyImmediate(versusGo.GetComponent<Button>());
                     var versusButton = versusGo.AddComponent<Button>();
                     versusButton.onClick.AddListener(characterSelectGo.GetComponent<ListMenuPage>().Open);
-                    versusButton.onClick.AddListener(() => GameModeManager.SetGameMode("ArmsRace"));
+                    versusButton.onClick.AddListener(() => SetGameMode("ArmsRace"));
 
                     GameObject.DestroyImmediate(sandboxGo.GetComponent<Button>());
                     var sandboxButton = sandboxGo.AddComponent<Button>();
                     sandboxButton.onClick.AddListener(MainMenuHandler.instance.Close);
                     sandboxButton.onClick.AddListener(() => {
-                        GameModeManager.SetGameMode("Sandbox");
-                        GameModeManager.CurrentHandler.StartGame();
+                        SetGameMode("Sandbox");
+                        CurrentHandler.StartGame();
                     });
 
                     // Add game modes back when the main scene is reloaded
-                    foreach (var id in GameModeManager.handlers.Keys)
+                    foreach (var id in handlers.Keys)
                     {
                         if (id != "ArmsRace" && id != "Sandbox")
                         {
-                            AddGameMode(id, GameModeManager.gameModes[id]);
+                            AddGameMode(id, gameModes[id]);
                         }
 
-                        GameModeManager.handlers[id].SetActive(false);
+                        handlers[id].SetActive(false);
                     }
 
-                    GameModeManager.SetGameMode(null);
+                    SetGameMode(null);
                 }
             };
         }
@@ -91,19 +91,19 @@ namespace UnboundLib.GameModes
             GameModeManager.hooks.TryGetValue(key, out hooks);
             GameModeManager.onceHooks.TryGetValue(key, out onceHooks);
 
-            if (hooks != null && GameModeManager.CurrentHandler != null)
+            if (hooks != null && CurrentHandler != null)
             {
                 foreach (var hook in hooks)
                 {
-                    yield return hook(GameModeManager.CurrentHandler);
+                    yield return hook(CurrentHandler);
                 }
             }
 
-            if (onceHooks != null && GameModeManager.CurrentHandler != null)
+            if (onceHooks != null && CurrentHandler != null)
             {
                 foreach (var hook in onceHooks)
                 {
-                    GameModeManager.RemoveHook(key, hook);
+                    RemoveHook(key, hook);
                 }
 
                 GameModeManager.onceHooks.Remove(key);
@@ -123,16 +123,16 @@ namespace UnboundLib.GameModes
             // Case-insensitive keys for QoL
             key = key.ToLower();
 
-            if (!GameModeManager.onceHooks.ContainsKey(key))
+            if (!onceHooks.ContainsKey(key))
             {
-                GameModeManager.onceHooks.Add(key, new List<Func<IGameModeHandler, IEnumerator>> { action });
+                onceHooks.Add(key, new List<Func<IGameModeHandler, IEnumerator>> { action });
             }
             else
             {
-                GameModeManager.onceHooks[key].Add(action);
+                onceHooks[key].Add(action);
             }
 
-            GameModeManager.AddHook(key, action);
+            AddHook(key, action);
         }
 
         public static void AddHook(string key, Func<IGameModeHandler, IEnumerator> action)
@@ -145,19 +145,19 @@ namespace UnboundLib.GameModes
             // Case-insensitive keys for QoL
             key = key.ToLower();
 
-            if (!GameModeManager.hooks.ContainsKey(key))
+            if (!hooks.ContainsKey(key))
             {
-                GameModeManager.hooks.Add(key, new List<Func<IGameModeHandler, IEnumerator>> { action });
+                hooks.Add(key, new List<Func<IGameModeHandler, IEnumerator>> { action });
             }
             else
             {
-                GameModeManager.hooks[key].Add(action);
+                hooks[key].Add(action);
             }
         }
 
         public static void RemoveHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
-            GameModeManager.hooks[key.ToLower()].Remove(action);
+            hooks[key.ToLower()].Remove(action);
         }
 
         public static T GetGameMode<T>(string gameModeId) where T : Component
@@ -167,32 +167,32 @@ namespace UnboundLib.GameModes
 
         public static void SetGameMode(string id)
         {
-            GameModeManager.SetGameMode(id, true);
+            SetGameMode(id, true);
         }
 
         public static void SetGameMode(string id, bool setActive)
         {
-            if (id != null && !GameModeManager.handlers.ContainsKey(id))
+            if (id != null && !handlers.ContainsKey(id))
             {
                 throw new ArgumentException($"No such game mode handler: {id}");
             }
 
-            if (GameModeManager.CurrentHandlerID == id)
+            if (CurrentHandlerID == id)
             {
                 return;
             }
 
             var pm = PlayerManager.instance;
 
-            if (GameModeManager.CurrentHandler != null)
+            if (CurrentHandler != null)
             {
                 var pmPlayerDied = (Action<Player, int>) pm.GetFieldValue("PlayerDiedAction");
-                pm.SetPropertyValue("PlayerJoinedAction", Delegate.Remove(pm.PlayerJoinedAction, new Action<Player>(GameModeManager.CurrentHandler.PlayerJoined)));
-                pm.SetFieldValue("PlayerDiedAction", Delegate.Remove(pmPlayerDied, new Action<Player, int>(GameModeManager.CurrentHandler.PlayerDied)));
-                GameModeManager.CurrentHandler.SetActive(false);
+                pm.SetPropertyValue("PlayerJoinedAction", Delegate.Remove(pm.PlayerJoinedAction, new Action<Player>(CurrentHandler.PlayerJoined)));
+                pm.SetFieldValue("PlayerDiedAction", Delegate.Remove(pmPlayerDied, new Action<Player, int>(CurrentHandler.PlayerDied)));
+                CurrentHandler.SetActive(false);
             }
 
-            GameModeManager.CurrentHandlerID = id;
+            CurrentHandlerID = id;
 
             if (id == null)
             {
@@ -204,30 +204,30 @@ namespace UnboundLib.GameModes
 
                 if (setActive)
                 {
-                    GameModeManager.CurrentHandler.SetActive(true);
+                    CurrentHandler.SetActive(true);
                 }
 
                 var pmPlayerDied = (Action<Player, int>) pm.GetFieldValue("PlayerDiedAction");
-                pm.SetPropertyValue("PlayerJoinedAction", Delegate.Combine(pm.PlayerJoinedAction, new Action<Player>(GameModeManager.CurrentHandler.PlayerJoined)));
-                pm.SetFieldValue("PlayerDiedAction", Delegate.Combine(pmPlayerDied, new Action<Player, int>(GameModeManager.CurrentHandler.PlayerDied)));
+                pm.SetPropertyValue("PlayerJoinedAction", Delegate.Combine(pm.PlayerJoinedAction, new Action<Player>(CurrentHandler.PlayerJoined)));
+                pm.SetFieldValue("PlayerDiedAction", Delegate.Combine(pmPlayerDied, new Action<Player, int>(CurrentHandler.PlayerDied)));
 
-                if (GameModeManager.OnGameModeChanged != null)
+                if (OnGameModeChanged != null)
                 {
-                    GameModeManager.OnGameModeChanged(GameModeManager.CurrentHandler);
+                    OnGameModeChanged(CurrentHandler);
                 }
             }
         }
 
         public static IGameModeHandler GetHandler(string id)
         {
-            return GameModeManager.handlers[id];
+            return handlers[id];
         }
 
         public static void AddHandler<TGameMode>(string id, IGameModeHandler handler) where TGameMode : MonoBehaviour
         {
-            GameModeManager.handlers.Add(id, handler);
-            GameModeManager.gameModes.Add(id, typeof(TGameMode));
-            GameModeManager.AddGameMode(id, typeof(TGameMode));
+            handlers.Add(id, handler);
+            gameModes.Add(id, typeof(TGameMode));
+            AddGameMode(id, typeof(TGameMode));
         }
 
         private static void AddGameMode(string id, Type type)

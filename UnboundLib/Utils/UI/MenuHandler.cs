@@ -47,7 +47,7 @@ namespace UnboundLib.Utils.UI
         // Creates a menu and returns its gameObject
         public static GameObject CreateMenu(string Name, UnityAction buttonAction, GameObject parentForButton, int size = 50, bool forceUpper = true, bool setBarHeight = true, GameObject parentForMenu = null,  bool setFontSize = true, int siblingIndex = -1)
         {
-            var obj = parentForButton ? GameObject.Instantiate(menuBase, MainMenuHandler.instance.transform.Find("Canvas/ListSelector")) : parentForMenu;
+            var obj = parentForMenu is null ? GameObject.Instantiate(menuBase, MainMenuHandler.instance.transform.Find("Canvas/ListSelector")) : GameObject.Instantiate(menuBase, parentForMenu.transform);
             obj.name = Name;
             
             // Assign back objects
@@ -56,11 +56,12 @@ namespace UnboundLib.Utils.UI
             obj.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(ClickBack(goBackObject));
             obj.transform.Find("Group/Back").gameObject.GetComponent<Button>().onClick.AddListener(ClickBack(goBackObject));
 
-            // Create button to menu
+            // GetParent for button
             Transform buttonParent = null;
             if (parentForButton.transform.Find("Group/Grid/Scroll View/Viewport/Content")) buttonParent = parentForButton.transform.Find("Group/Grid/Scroll View/Viewport/Content");
             else if (parentForButton.transform.Find("Group")) buttonParent = parentForButton.transform.Find("Group");
             
+            // Create button to menu
             var button = GameObject.Instantiate(buttonBase, buttonParent);
             button.GetComponent<ListMenuButton>().setBarHeight = setBarHeight ? size : 0;
             button.name = Name;
@@ -76,6 +77,7 @@ namespace UnboundLib.Utils.UI
                 buttonAction = () => 
                 {
                     obj.GetComponent<ListMenuPage>().Open();
+                    goBackObject.Close();
                 };
             }
             else
@@ -83,9 +85,9 @@ namespace UnboundLib.Utils.UI
                 buttonAction += () => 
                 {
                     obj.GetComponent<ListMenuPage>().Open();
+                    goBackObject.Close();
                 };
             }
-            
             button.GetComponent<Button>().onClick.AddListener(buttonAction);
 
             return obj;

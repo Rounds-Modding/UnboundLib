@@ -43,6 +43,16 @@ void Start()
 }
 ```
 
+## Credits Framework
+Registering credits for a mod is as simple as:
+
+```c#
+void Start()
+{
+    Unbound.RegisterCredits(string modName, string[] credits, string linkText, string linkURL);
+}
+```
+
 ## GameMode Framework
 The GameMode framework provides a modding-friendly API for custom game modes, allowing mods to target them without having to know about their existence.
 

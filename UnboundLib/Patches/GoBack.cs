@@ -24,6 +24,7 @@ namespace UnboundLib.Patches
                 {
                     ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/InfoMenu").gameObject
                         .SetActive(false);
+                    if(ToggleCardsMenuHandler.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
                     return false;
                 }
 
@@ -32,9 +33,11 @@ namespace UnboundLib.Patches
                     ToggleLevelMenuHandler.instance.levelMenuCanvas.SetActive (false);
                     return false;
                 }
-                if (ToggleCardsMenuHandler.IsActive(ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu")))
+                
+                if (!ToggleCardsMenuHandler.disableEscapeButton && ToggleCardsMenuHandler.IsActive(ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu")))
                 {
                     ToggleCardsMenuHandler.SetActive(ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu"), false);
+                    if(ToggleCardsMenuHandler.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
                     return false;
                 }
             }

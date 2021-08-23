@@ -28,6 +28,10 @@ namespace UnboundLib.Utils.UI
         // Dictionary of scrollView names(category name) compared with the transforms of the scroll views
         private readonly Dictionary<string, Transform> scrollViews = new Dictionary<string, Transform>();
         
+        //List of buttons and toggles to disable when not host
+        private readonly List<Button> buttonsToDisable = new List<Button>();
+        private readonly List<Toggle> togglesToDisable = new List<Toggle>();
+        
         // Content obj in category scroll view
         private Transform categoryContent;
         // Transform of root scroll views obj
@@ -57,6 +61,7 @@ namespace UnboundLib.Utils.UI
         private TextMeshProUGUI redrawAllText;
 
         private bool disabled;
+        private bool redrawDisabled;
         private bool manualRedraw;
 
         private string currentCategory
@@ -137,6 +142,7 @@ namespace UnboundLib.Utils.UI
 
             // Create and set toggle all button
             var toggleAllButton = levelMenuCanvas.transform.Find("LevelMenu/Top/Toggle all").GetComponent<Button>();
+            buttonsToDisable.Add(toggleAllButton);
             toggleAllButton.onClick.AddListener(() =>
             {
                 if (currentCategory == null) return;
@@ -166,6 +172,7 @@ namespace UnboundLib.Utils.UI
             
             // get and set the redraw all button
             var redrawAllButton = levelMenuCanvas.transform.Find("LevelMenu/Top/Redraw all").GetComponent<Button>();
+            buttonsToDisable.Add(redrawAllButton);
             redrawAllText = redrawAllButton.GetComponentInChildren<TextMeshProUGUI>();
             redrawAllButton.onClick.AddListener(() =>
             {
@@ -252,6 +259,7 @@ namespace UnboundLib.Utils.UI
                             UpdateVisualsLevelObj(lvlObj);
                         }
                     });
+                    buttonsToDisable.Add(lvlObj.GetComponent<Button>());
 
                     lvlObjs.Add(lvlObj);
                     UpdateVisualsLevelObj(lvlObj);
@@ -281,6 +289,7 @@ namespace UnboundLib.Utils.UI
                         scrollViews[category].gameObject.SetActive(true);
                     });
                     var toggle = categoryObj.GetComponentInChildren<Toggle>();
+                    togglesToDisable.Add(toggle);
                     toggle.onValueChanged.AddListener(value =>
                     {
                         if (!value)
@@ -303,8 +312,7 @@ namespace UnboundLib.Utils.UI
                                 LevelManager.categoryBools[category].Value = true;
                                 foreach (Transform trs in obj.Value.Find("Viewport/Content"))
                                 {
-                                    if (trs.name != "LevelObj" &&
-                                        trs.GetComponentsInChildren<Image>()[1].color == Color.white)
+                                    if (trs.name != "LevelObj" && trs.GetComponentsInChildren<Image>()[1].color == Color.white)
                                     {
                                         LevelManager.EnableLevel(trs.name, false);
                                     }
@@ -583,7 +591,7 @@ namespace UnboundLib.Utils.UI
 
         public void SetActive(bool active)
         {
-            if (PhotonNetwork.IsConnected && !PhotonNetwork.IsMasterClient) return;
+            //if (PhotonNetwork.IsConnected && !PhotonNetwork.IsMasterClient) return;
             levelMenuCanvas.SetActive(true);
         }
 
@@ -595,20 +603,45 @@ namespace UnboundLib.Utils.UI
             //     SetActive(!levelMenuCanvas.activeInHierarchy);
             // }
 
+            if (PhotonNetwork.IsConnected && !PhotonNetwork.IsMasterClient && !disabled)
+            {
+                foreach (var button in buttonsToDisable)
+                {
+                    button.interactable = false;
+                }
+                foreach (var toggle in togglesToDisable)
+                {
+                    toggle.interactable = false;
+                }
+                disabled = true;
+            }
+            if ((!PhotonNetwork.IsConnected || PhotonNetwork.IsMasterClient) && disabled)
+            {
+                foreach (var button in buttonsToDisable)
+                {
+                    button.interactable = true;
+                }
+                foreach (var toggle in togglesToDisable)
+                {
+                    toggle.interactable = true;
+                }
+                disabled = false;
+            }
+
             if (IsDrawingLevels)
             {
                 levelMenuCanvas.SetActive(false);
             }
 
-            if (GameManager.instance.isPlaying && !disabled)
+            if (GameManager.instance.isPlaying && !redrawDisabled)
             {
                 levelMenuCanvas.transform.Find("LevelMenu/Top/Redraw all").gameObject.SetActive(false);
-                disabled = true;
+                redrawDisabled = true;
             }
-            if (!GameManager.instance.isPlaying && disabled)
+            if (!GameManager.instance.isPlaying && redrawDisabled)
             {
                 levelMenuCanvas.transform.Find("LevelMenu/Top/Redraw all").gameObject.SetActive(true);
-                disabled = false;
+                redrawDisabled = false;
             }
 
             if (redrawAllText.text != "Draw all thumbnails" &&

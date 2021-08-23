@@ -25,7 +25,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.5.1";
+        public const string Version = "2.6.0";
 
         internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
@@ -116,7 +116,7 @@ namespace UnboundLib
 
                 ModOptions.Instance.CreateModOptions(firstTime);
                 Credits.Instance.CreateCreditsMenu(firstTime);
-
+                
                 var time = firstTime;
                 this.ExecuteAfterSeconds(firstTime ? 0.5f : 0, () =>
                 {
@@ -139,16 +139,6 @@ namespace UnboundLib
                     {
                         optionsMenu.transform.Find("Group").gameObject.SetActive(true);
                         UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject.SetActive(false);
-                    }));
-                    
-                    // Create toggleLevelButton in escapeMenu
-                    var toggleLevelsButton =  Instantiate(resumeButton, UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group"));
-                    toggleLevelsButton.transform.SetSiblingIndex(3);
-                    toggleLevelsButton.GetComponentInChildren<TextMeshProUGUI>().text = "TOGGLE LEVELS";
-                    toggleLevelsButton.GetComponent<Button>().onClick = new Button.ButtonClickedEvent();
-                    toggleLevelsButton.GetComponent<Button>().onClick.AddListener((() =>
-                    {
-                        ToggleLevelMenuHandler.instance.SetActive(true);
                     }));
 
                     if (time)
@@ -191,6 +181,7 @@ namespace UnboundLib
                 yield break;
             }
             GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsAndLevelsOnStart);
+            GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.disableSyncModUI(SyncModClients.uiParent));
             
             // Load toggleUI asset bundle
             toggleUI = AssetUtils.LoadAssetBundleFromResources("toggle ui", typeof(ToggleLevelMenuHandler).Assembly);
@@ -285,15 +276,23 @@ namespace UnboundLib
             if (Input.GetKeyDown(KeyCode.F1) && !ModOptions.noDeprecatedMods)
             {
                 ModOptions.showModUi = !ModOptions.showModUi;
-            } 
-            
-            
-            GameManager.lockInput = ModOptions.showModUi || DevConsole.isTyping ||
-                                    ToggleLevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy || 
+            }
+
+
+            GameManager.lockInput = ModOptions.showModUi ||
+                                    DevConsole.isTyping ||
+                                    ToggleLevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy ||
+                                    
                                     (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group") &&
-                                    UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group").gameObject.activeInHierarchy) ||
-                                    (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group") && 
-                                    UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject.activeInHierarchy);
+                                     UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group")
+                                         .gameObject.activeInHierarchy) ||
+
+                                    (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group") &&
+                                     UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject
+                                         .activeInHierarchy) ||
+
+                                    ModOptions.showingModOptions ||
+                                    ToggleCardsMenuHandler.menuOpenFromOutside;
         }
 
         private void OnGUI()
@@ -358,10 +357,7 @@ namespace UnboundLib
             // send available card pool to the master client
             if (!PhotonNetwork.IsMasterClient)
             {
-                var cardSelection = new List<CardInfo>();
-                cardSelection.AddRange(CardManager.activeCards);
-                cardSelection.AddRange(CardManager.inactiveCards);
-                NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_CardHandshake), (object)cardSelection.Select(c => c.cardName).ToArray());
+                NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_CardHandshake), (object)CardManager.allCards.Select(c => c.cardName).ToArray());
             }
 
 
@@ -382,20 +378,15 @@ namespace UnboundLib
             if (!PhotonNetwork.IsMasterClient) return;
 
             // disable any cards which aren't shared by other players
-
-            foreach (var card in CardManager.cards)
+            foreach (var card in CardManager.allCards)
             {
-                if (cards.Contains(card.Key) && card.Value.enabled)
+                if (!cards.Contains(card.cardName))
                 {
-                    CardManager.EnableCard(card.Value.cardInfo);
-                }
-                else
-                {
-                    CardManager.DisableCard(card.Value.cardInfo);
+                    CardManager.DisableCard(card);
                 }
             }
             
-            foreach (var obj in ToggleCardsMenuHandler.cardObjs)
+            foreach (var obj in ToggleCardsMenuHandler.cardObjs.Keys)
             {
                 ToggleCardsMenuHandler.UpdateVisualsCardObj(obj, CardManager.IsCardActive(CardManager.GetCardInfoWithName(obj.name)));
             }
@@ -407,21 +398,21 @@ namespace UnboundLib
         [UnboundRPC]
         private static void RPC_HostCardHandshakeResponse(string[] cards)
         {
-            // enable only cards that the host has specified are allowed
+            // enable and disable only cards that the host has specified are allowed
 
-            foreach (var card in CardManager.cards)
+            foreach (var card in CardManager.allCards)
             {
-                if (cards.Contains(card.Key))
+                if (cards.Contains(card.cardName))
                 {
-                    CardManager.EnableCard(card.Value.cardInfo);
+                    CardManager.EnableCard(card);
                 }
                 else
                 {
-                    CardManager.DisableCard(card.Value.cardInfo);
+                    CardManager.DisableCard(card);
                 }
             }
             
-            foreach (var obj in ToggleCardsMenuHandler.cardObjs)
+            foreach (var obj in ToggleCardsMenuHandler.cardObjs.Keys)
             {
                 ToggleCardsMenuHandler.UpdateVisualsCardObj(obj, CardManager.IsCardActive(CardManager.GetCardInfoWithName(obj.name)));
             }
@@ -455,6 +446,12 @@ namespace UnboundLib
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
         {
             ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent);
+        }
+        
+        // ReSharper disable once MethodOverloadWithOptionalParameter
+        public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null, bool showInPauseMenu = false)
+        {
+            ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent, showInPauseMenu);
         }
 
         public static void RegisterGUI(string modName, Action guiAction)
@@ -496,7 +493,7 @@ namespace UnboundLib
         [ObsoleteAttribute("This method is obsolete. Use LevelManager.RegisterMaps() instead.", false)]
         public static void RegisterMaps(IEnumerable<string> paths)
         {
-            Unbound.RegisterMaps(paths, "Modded");
+            RegisterMaps(paths, "Modded");
         }
 
         [ObsoleteAttribute("This method is obsolete. Use LevelManager.RegisterMaps() instead.", false)]

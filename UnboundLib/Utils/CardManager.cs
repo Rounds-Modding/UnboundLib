@@ -11,6 +11,19 @@ namespace UnboundLib.Utils
     {
         public CardManager instance;
         
+        // A string array of all cards
+        internal static CardInfo[] allCards
+        {
+            get
+            {
+                List<CardInfo> _allCards = new List<CardInfo>();
+                _allCards.AddRange(activeCards);
+                _allCards.AddRange(inactiveCards);
+                _allCards.Sort((x, y) => string.CompareOrdinal(x.cardName, y.cardName));
+                return _allCards.ToArray();
+            }
+        }
+        
         internal static CardInfo[] defaultCards;
         internal static ObservableCollection<CardInfo> activeCards;
         internal static List<CardInfo> inactiveCards = new List<CardInfo>();
@@ -85,6 +98,7 @@ namespace UnboundLib.Utils
 
         public static void EnableCard(CardInfo card, bool saved = true)
         {
+            if (activeCards.Contains(card)) return;
             if (!activeCards.Contains(card))
             {
                 activeCards.Add(card);
