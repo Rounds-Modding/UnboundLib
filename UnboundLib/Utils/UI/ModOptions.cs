@@ -16,6 +16,7 @@ namespace UnboundLib.Utils.UI
 
         internal static bool showModUi;
         internal static bool showingModOptions;
+        internal static bool inPauseMenu;
         internal static bool noDeprecatedMods;
 
         public static ModOptions Instance = new ModOptions();
@@ -56,38 +57,50 @@ namespace UnboundLib.Utils.UI
         private void CreatModOptionsMenu(GameObject parent, GameObject parentForMenu, bool pauseMenu)
         {
             // Create mod options menu
-            modOptionsMenu = MenuHandler.CreateMenu("MOD OPTIONS", () => { showingModOptions = true;}, parent
+            modOptionsMenu = MenuHandler.CreateMenu("MOD OPTIONS", () => {showingModOptions = true;
+                    inPauseMenu = pauseMenu;
+                }, parent
                 , 60, true, false, parentForMenu,
                 true, pauseMenu ? 2 : 4);
             
             // Create back actions 
-            modOptionsMenu.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(() => {showingModOptions = false;});
+            if (!pauseMenu)
+            {
+                modOptionsMenu.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(() => {showingModOptions = false;});
+            }
+            else
+            {
+                GameObject.Destroy(modOptionsMenu.GetComponentInChildren<GoBack>(true));
+            }
             modOptionsMenu.transform.Find("Group/Back").gameObject.GetComponent<Button>().onClick.AddListener(() => {showingModOptions = false;});
 
-            // Fix main menu layout
-            void fixMainMenuLayout()
+            if (!pauseMenu)
             {
-                var mainMenu = MainMenuHandler.instance.transform.Find("Canvas/ListSelector");
-                var logo = mainMenu.Find("Main/Group/Rounds_Logo2_White").gameObject.AddComponent<LayoutElement>();
-                logo.GetComponent<RectTransform>().sizeDelta =
-                    new Vector2(logo.GetComponent<RectTransform>().sizeDelta.x, 80);
-                mainMenu.Find("Main").transform.position =
-                    new Vector3(0, 1.7f, mainMenu.Find("Main").transform.position.z);
-                mainMenu.Find("Main/Group").GetComponent<VerticalLayoutGroup>().spacing = 10;
-            }
+                // Fix main menu layout
+                void fixMainMenuLayout()
+                {
+                    var mainMenu = MainMenuHandler.instance.transform.Find("Canvas/ListSelector");
+                    var logo = mainMenu.Find("Main/Group/Rounds_Logo2_White").gameObject.AddComponent<LayoutElement>();
+                    logo.GetComponent<RectTransform>().sizeDelta =
+                        new Vector2(logo.GetComponent<RectTransform>().sizeDelta.x, 80);
+                    mainMenu.Find("Main").transform.position =
+                        new Vector3(0, 1.7f, mainMenu.Find("Main").transform.position.z);
+                    mainMenu.Find("Main/Group").GetComponent<VerticalLayoutGroup>().spacing = 10;
+                }
 
-            var visibleObj = new GameObject("visible");
-            var visible = visibleObj.AddComponent<ActionOnBecameVisible>();
-            visibleObj.AddComponent<SpriteRenderer>();
-            visible.visibleAction += fixMainMenuLayout;
-            visibleObj.transform.parent = parent.transform;
+                var visibleObj = new GameObject("visible");
+                var visible = visibleObj.AddComponent<ActionOnBecameVisible>();
+                visibleObj.AddComponent<SpriteRenderer>();
+                visible.visibleAction += fixMainMenuLayout;
+                visibleObj.transform.parent = parent.transform;
+            }
 
             // Create toggle cards button
             MenuHandler.CreateButton("Toggle Cards", modOptionsMenu,
                 () =>
                 {
                     ToggleCardsMenuHandler.SetActive(
-                        ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu"), true);
+                        ToggleCardsMenuHandler.toggleCardsCanvas.transform, true);
                 });
 
             // Create toggle levels button
