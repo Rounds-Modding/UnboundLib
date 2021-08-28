@@ -87,7 +87,7 @@ namespace UnboundLib.Utils.UI
                 () =>
                 {
                     ToggleCardsMenuHandler.SetActive(
-                        ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu"), true);
+                        ToggleCardsMenuHandler.toggleCardsCanvas.transform, true);
                 });
 
             // Create toggle levels button

@@ -42,7 +42,7 @@ namespace UnboundLib.Utils.UI
             {
                 foreach (var scroll in scrollViews)
                 {
-                    if (IsActive(scroll.Value))
+                    if (scroll.Value.gameObject.activeInHierarchy)
                     {
                         return scroll.Key;
                     }
@@ -66,8 +66,7 @@ namespace UnboundLib.Utils.UI
             toggleCardsCanvas = Instantiate(_toggleCardsCanvas);
             DontDestroyOnLoad(toggleCardsCanvas);
             toggleCardsCanvas.GetComponent<Canvas>().worldCamera = Camera.current;
-            toggleCardsCanvas.SetActive(true);
-            toggleCardsCanvas.transform.Find("CardMenu").localScale = new Vector3(0.0001f, 0.0001f, 0.0001f);
+            toggleCardsCanvas.SetActive(false);
 
             scrollViewTrans = toggleCardsCanvas.transform.Find("CardMenu/ScrollViews");
             categoryContent = toggleCardsCanvas.transform.Find("CardMenu/Top/Categories/ButtonsScroll/Viewport/Content");
@@ -145,7 +144,7 @@ namespace UnboundLib.Utils.UI
 
             this.ExecuteAfterSeconds(0.5f, () =>
             {
-
+                toggleCardsCanvas.SetActive(true);
                 // Create category scrollViews
                 foreach (var category in CardManager.categories)
                 {
@@ -276,7 +275,7 @@ namespace UnboundLib.Utils.UI
             
                     UpdateCategoryVisuals(CardManager.IsCategoryActive(category));
                 }
-                
+                toggleCardsCanvas.SetActive(false);
             });
         }
         
@@ -303,11 +302,12 @@ namespace UnboundLib.Utils.UI
         /// <summary> This is used for opening and closing menus </summary>
         public static void SetActive(Transform trans, bool active)
         {
-            trans.localScale = active ? Vector3.one : new Vector3(0.0001f, 0.0001f, 0.0001f);
-            if (trans.GetComponent<LayoutElement>())
-            {
-                trans.GetComponent<LayoutElement>().ignoreLayout = false;
-            }
+            trans.gameObject.SetActive(active);
+            // trans.localScale = active ? Vector3.one : new Vector3(0.0001f, 0.0001f, 0.0001f);
+            // if (trans.GetComponent<LayoutElement>())
+            // {
+            //     trans.GetComponent<LayoutElement>().ignoreLayout = false;
+            // }
         }
 
         /// <summary>This method allows you to opens the menu with settings from outside unbound</summary>
@@ -382,11 +382,6 @@ namespace UnboundLib.Utils.UI
             }
         }
 
-        public static bool IsActive(Transform trans)
-        {
-            return trans.localScale == Vector3.one;
-        }
-        
         public static GameObject[] GetCardObjs(string[] cardNames)
         {
             List<GameObject> gameObjects = new List<GameObject>();
