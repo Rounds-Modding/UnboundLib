@@ -34,12 +34,17 @@ namespace UnboundLib.Patches
                     return false;
                 }
                 
-                if (!ToggleCardsMenuHandler.disableEscapeButton && ToggleCardsMenuHandler.IsActive(ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu")))
+                if (!ToggleCardsMenuHandler.disableEscapeButton && ToggleCardsMenuHandler.toggleCardsCanvas.activeInHierarchy)
                 {
-                    ToggleCardsMenuHandler.SetActive(ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu"), false);
+                    ToggleCardsMenuHandler.SetActive(ToggleCardsMenuHandler.toggleCardsCanvas.transform, false);
                     if(ToggleCardsMenuHandler.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
                     return false;
                 }
+            }
+
+            if (ModOptions.inPauseMenu)
+            {
+                return false;
             }
             
 
