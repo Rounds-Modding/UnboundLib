@@ -353,6 +353,7 @@ namespace UnboundLib.Utils.UI
                     var obj = GetCardObj(card);
                     if (obj == null) throw new ArgumentNullException("obj", '"' +card+'"' + " is not a valid card name");
                     obj.GetComponent<Button>().interactable = false;
+                    obj.transform.Find("Darken/Darken").gameObject.SetActive(true);
                 }
             }
         }
