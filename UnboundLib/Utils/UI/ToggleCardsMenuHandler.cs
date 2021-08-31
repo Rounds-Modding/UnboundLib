@@ -318,7 +318,7 @@ namespace UnboundLib.Utils.UI
         public static void Open(bool escape,bool toggleAll, Action[] buttonActions = null, string[] interactionDisabledCards = null)
         {
             menuOpenFromOutside = true;
-            SetActive(toggleCardsCanvas.transform.Find("CardMenu"), true);
+            SetActive(toggleCardsCanvas.transform, true);
             disableEscapeButton = escape;
             disableButtons = false;
             toggleCardsCanvas.transform.Find("CardMenu/Top/Help")?.gameObject.SetActive(false);
@@ -360,7 +360,7 @@ namespace UnboundLib.Utils.UI
         public static void Close()
         {
             menuOpenFromOutside = false;
-            SetActive(toggleCardsCanvas.transform.Find("CardMenu"), false);
+            SetActive(toggleCardsCanvas.transform, false);
             disableEscapeButton = false;
             disableButtons = true;
             toggleCardsCanvas.transform.Find("CardMenu/Top/Help").gameObject.SetActive(true);
