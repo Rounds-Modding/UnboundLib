@@ -365,9 +365,23 @@ namespace UnboundLib.Utils
                 {
                     MapManager.instance.LoadLevelFromID(levelId, false, true);
                 }
+                else
+                {
+                    Unbound.BuildModal()
+                        .Title("Error Loading Level")
+                        .Message($"No map found named:\n{message}")
+                        // .CancelButton("Copy", () =>
+                        // {
+                        //     Unbound.BuildInfoPopup("Copied Message!");
+                        //     //GUIUtility.systemCopyBuffer = e.ToString();
+                        // })
+                        .CancelButton("Cancel", () => { })
+                        .Show();
+                }
             }
             catch (Exception e)
             {
+                UnityEngine.Debug.LogWarning("No map found");
                 Unbound.BuildModal()
                     .Title("Error Loading Level")
                     .Message($"No map found named:\n{message}\n\nError:\n{e}")
