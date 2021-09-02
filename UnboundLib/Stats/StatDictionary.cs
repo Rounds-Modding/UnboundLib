@@ -19,8 +19,11 @@ namespace UnboundLib.Stats
 
         public static void AddStat(string statName, StatInfo statInfo)
         {
+            UnityEngine.Debug.Log("Attempting to add " + statName + " to the dictionary.");
             if (data.TryGetValue(statName, out StatInfo statdata))
             {
+                UnityEngine.Debug.Log(statName + " already exists.");
+
                 // Throw error, show pre-existing data in log.
             }
             else
@@ -43,70 +46,79 @@ namespace UnboundLib.Stats
         {
             Dictionary<string, List<StatOperation>> customStatChanges = new Dictionary<string, List<StatOperation>>();
             StatOperation value;
-            foreach (var key in copyFromGun.GetAdditionalData().customStats)
+            if (copyFromGun)
             {
-                if (key.Value.GetType() == typeof(StatOperation))
+                foreach (var key in copyFromGun.GetAdditionalData().customStats)
                 {
-                    value = key.Value;
-                    if (!value.reroute)
+                    if (key.Value.GetType() == typeof(StatOperation))
                     {
-                        value.reroute = true;
-                        value.destination = StatOperation.Destination.Gun;
-                    }
-                    if (customStatChanges.TryGetValue(key.Key, out List<StatOperation> list))
-                    {
-                        list.Add(value);
-                    }
-                    else
-                    {
-                        customStatChanges.Add(key.Key, new List<StatOperation>() { value });
+                        value = (StatOperation) key.Value;
+                        if (!value.reroute)
+                        {
+                            value.reroute = true;
+                            value.destination = StatOperation.Destination.Gun;
+                        }
+                        if (customStatChanges.TryGetValue(key.Key, out List<StatOperation> list))
+                        {
+                            list.Add(value);
+                        }
+                        else
+                        {
+                            customStatChanges.Add(key.Key, new List<StatOperation>() { value });
+                        }
                     }
                 }
             }
-            foreach (var key in copyFromBlock.GetAdditionalData().customStats)
+            if (copyFromBlock)
             {
-                if (key.Value.GetType() == typeof(StatOperation))
+                foreach (var key in copyFromBlock.GetAdditionalData().customStats)
                 {
-                    value = key.Value;
-                    if (!value.reroute)
+                    if (key.Value.GetType() == typeof(StatOperation))
                     {
-                        value.reroute = true;
-                        value.destination = StatOperation.Destination.Block;
-                    }
-                    if (customStatChanges.TryGetValue(key.Key, out List<StatOperation> list))
-                    {
-                        list.Add(value);
-                    }
-                    else
-                    {
-                        customStatChanges.Add(key.Key, new List<StatOperation>() { value });
+                        value = (StatOperation) key.Value;
+                        if (!value.reroute)
+                        {
+                            value.reroute = true;
+                            value.destination = StatOperation.Destination.Block;
+                        }
+                        if (customStatChanges.TryGetValue(key.Key, out List<StatOperation> list))
+                        {
+                            list.Add(value);
+                        }
+                        else
+                        {
+                            customStatChanges.Add(key.Key, new List<StatOperation>() { value });
+                        }
                     }
                 }
             }
-            foreach (var key in copyFromCSM.GetAdditionalData().customStats)
+            if (copyFromCSM)
             {
-                if (key.Value.GetType() == typeof(StatOperation))
+                foreach (var key in copyFromCSM.GetAdditionalData().customStats)
                 {
-                    value = key.Value;
-                    if (!value.reroute)
+                    if (key.Value.GetType() == typeof(StatOperation))
                     {
-                        value.reroute = true;
-                        value.destination = StatOperation.Destination.CharacterStatModifier;
-                    }
-                    if (customStatChanges.TryGetValue(key.Key, out List<StatOperation> list))
-                    {
-                        list.Add(value);
-                    }
-                    else
-                    {
-                        customStatChanges.Add(key.Key, new List<StatOperation>() { value });
+                        value = (StatOperation) key.Value;
+                        if (!value.reroute)
+                        {
+                            value.reroute = true;
+                            value.destination = StatOperation.Destination.CharacterStatModifier;
+                        }
+                        if (customStatChanges.TryGetValue(key.Key, out List<StatOperation> list))
+                        {
+                            list.Add(value);
+                        }
+                        else
+                        {
+                            customStatChanges.Add(key.Key, new List<StatOperation>() { value });
+                        }
                     }
                 }
             }
 
             foreach (var key in customStatChanges)
-            { 
-                foreach(var operation in key.Value)
+            {
+                foreach (var operation in key.Value)
                 {
                     switch (operation.destination)
                     {
