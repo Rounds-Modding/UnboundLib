@@ -176,14 +176,14 @@ namespace UnboundLib.Utils.UI
                         if (card.Value.enabled)
                         {
                             CardManager.DisableCard(card.Value.cardInfo);
-                            card.Value.enabled = false;
-                            UpdateVisualsCardObj(crdObj, card.Value.enabled);
+                            //card.Value.enabled = false;
+                            UpdateVisualsCardObj(crdObj, false);
                         }
                         else
                         {
                             CardManager.EnableCard(card.Value.cardInfo);
-                            card.Value.enabled = true;
-                            UpdateVisualsCardObj(crdObj, card.Value.enabled);
+                            //card.Value.enabled = true;
+                            UpdateVisualsCardObj(crdObj, true);
                         }
                     }
                     
@@ -207,7 +207,11 @@ namespace UnboundLib.Utils.UI
                     {
                         CardManager.DisableCard(card.Value.cardInfo);
                     }
-                    UpdateVisualsCardObj(crdObj, card.Value.enabled);
+                    else
+                    {
+                        CardManager.EnableCard(card.Value.cardInfo);
+                    }
+                    UpdateVisualsCardObj(crdObj, card.Value.enabledWithoutSaving);
                 }
                 
                 // Create category buttons
@@ -289,14 +293,6 @@ namespace UnboundLib.Utils.UI
             {
                 cardObj.transform.Find("Darken/Darken").gameObject.SetActive(true);
             }
-
-            foreach (var category in CardManager.categories)
-            {
-                if (CardManager.GetCardsInCategory(category).All(card => !CardManager.IsCardActive(CardManager.GetCardInfoWithName(card))))
-                {
-                    CardManager.DisableCategory(category);
-                }
-            }
         }
 
         /// <summary> This is used for opening and closing menus </summary>
@@ -320,7 +316,7 @@ namespace UnboundLib.Utils.UI
             menuOpenFromOutside = true;
             SetActive(toggleCardsCanvas.transform, true);
             disableEscapeButton = escape;
-            disableButtons = false;
+            enableButtonsMethod();
             toggleCardsCanvas.transform.Find("CardMenu/Top/Help")?.gameObject.SetActive(false);
             
             if (toggleAll) toggleCardsCanvas.transform.Find("CardMenu/Top/Toggle all").gameObject.SetActive(false);
@@ -363,7 +359,7 @@ namespace UnboundLib.Utils.UI
             menuOpenFromOutside = false;
             SetActive(toggleCardsCanvas.transform, false);
             disableEscapeButton = false;
-            disableButtons = true;
+            disableButtonsMethod();
             toggleCardsCanvas.transform.Find("CardMenu/Top/Help").gameObject.SetActive(true);
             toggleCardsCanvas.transform.Find("CardMenu/Top/Toggle all").gameObject.SetActive(true);
             ResetCardActions();
@@ -374,7 +370,7 @@ namespace UnboundLib.Utils.UI
             }
             foreach (var card in cardObjs)
             {
-                UpdateVisualsCardObj(card.Key, CardManager.cards[card.Key.name].enabled);
+                UpdateVisualsCardObj(card.Key, CardManager.cards[card.Key.name].enabledWithoutSaving);
             }
             foreach (Transform trans in toggleCardsCanvas.transform.Find(
                 "CardMenu/ScrollViews"))
@@ -465,13 +461,17 @@ namespace UnboundLib.Utils.UI
             //     SetActive(toggleCardsCanvas.transform.Find("CardMenu"),!IsActive(toggleCardsCanvas.transform.Find("CardMenu")));
             // }
 
-            if (disableButtons&&GameManager.instance.isPlaying && !disabled)
+            if (!menuOpenFromOutside)
             {
-                disableButtonsMethod();
-            }
-            if (disableButtons&&!GameManager.instance.isPlaying && disabled)
-            {
-                enableButtonsMethod();
+                if (GameManager.instance.isPlaying && !disabled)
+                {
+                    disableButtonsMethod();
+                    UnityEngine.Debug.LogWarning("Disabled with game manager");
+                } else if (!GameManager.instance.isPlaying && disabled)
+                {
+                    enableButtonsMethod();
+                    UnityEngine.Debug.LogWarning("enabled with game manager");
+                }
             }
 
             for (int i = 0; i < cardObjs.Keys.Count; i++)
