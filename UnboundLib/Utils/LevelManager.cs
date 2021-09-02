@@ -311,16 +311,7 @@ namespace UnboundLib.Utils
                 }
                 else
                 {
-                    Unbound.BuildModal()
-                        .Title("Error Loading Level")
-                        .Message($"No map found named:\n{message}")
-                        // .CancelButton("Copy", () =>
-                        // {
-                        //     Unbound.BuildInfoPopup("Copied Message!");
-                        //     //GUIUtility.systemCopyBuffer = e.ToString();
-                        // })
-                        .CancelButton("Cancel", () => { })
-                        .Show();
+                    Unbound.BuildInfoPopup("Can't find level: " + formattedMessage);
                 }
             }
             catch (Exception e)
