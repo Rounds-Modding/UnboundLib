@@ -316,7 +316,6 @@ namespace UnboundLib.Utils
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogWarning("No map found");
                 Unbound.BuildModal()
                     .Title("Error Loading Level")
                     .Message($"No map found named:\n{message}\n\nError:\n{e}")

@@ -306,7 +306,6 @@ namespace UnboundLib.Utils
                 else
                 {
                     DisableCardTemp(card);
-                    UnityEngine.Debug.LogWarning("Disabling: " + card.cardName);
                     foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                     {
                         ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, false);

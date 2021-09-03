@@ -466,11 +466,9 @@ namespace UnboundLib.Utils.UI
                 if (GameManager.instance.isPlaying && !disabled)
                 {
                     disableButtonsMethod();
-                    UnityEngine.Debug.LogWarning("Disabled with game manager");
                 } else if (!GameManager.instance.isPlaying && disabled)
                 {
                     enableButtonsMethod();
-                    UnityEngine.Debug.LogWarning("enabled with game manager");
                 }
             }
 
