@@ -77,6 +77,8 @@ namespace UnboundLib
 
         internal static List<Action> handShakeActions = new List<Action>();
 
+        public static readonly Dictionary<string, bool> lockInputBools = new Dictionary<string, bool>();
+
         internal static AssetBundle UIAssets;
         public static AssetBundle toggleUI;
         private static GameObject modalPrefab;
@@ -295,7 +297,8 @@ namespace UnboundLib
                                          .activeInHierarchy) ||
 
                                     ModOptions.showingModOptions ||
-                                    ToggleCardsMenuHandler.menuOpenFromOutside;
+                                    ToggleCardsMenuHandler.menuOpenFromOutside ||
+                                    lockInputBools.Values.Any(b => b);
         }
 
         private void OnGUI()
