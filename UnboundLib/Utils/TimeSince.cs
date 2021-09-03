@@ -7,11 +7,11 @@ namespace UnboundLib.Utils
     {
         private float time;
 
-        public static implicit operator float(TimeSince ts) => Time.timeSinceLevelLoad - ts.time;
+        public static implicit operator float(TimeSince ts) => Time.realtimeSinceStartup - ts.time;
 
         public static implicit operator TimeSince(float ts) => new TimeSince()
         {
-            time = Time.timeSinceLevelLoad - ts
+            time = Time.realtimeSinceStartup - ts
         };
 
         public float Absolute => this.time;
