@@ -25,7 +25,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.6.2";
+        public const string Version = "2.7.0";
 
         internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
@@ -76,6 +76,8 @@ namespace UnboundLib
         internal static List<string> loadedVersions = new List<string>();
 
         internal static List<Action> handShakeActions = new List<Action>();
+
+        public static readonly Dictionary<string, bool> lockInputBools = new Dictionary<string, bool>();
 
         internal static AssetBundle UIAssets;
         public static AssetBundle toggleUI;
@@ -265,7 +267,10 @@ namespace UnboundLib
             var networkEvents = gameObject.AddComponent<NetworkEventCallbacks>();
             networkEvents.OnJoinedRoomEvent += OnJoinedRoomAction;
             networkEvents.OnJoinedRoomEvent += LevelManager.OnJoinedRoomAction;
+            networkEvents.OnJoinedRoomEvent += CardManager.OnJoinedRoomAction;
             networkEvents.OnLeftRoomEvent += OnLeftRoomAction;
+            networkEvents.OnLeftRoomEvent += CardManager.OnLeftRoomAction;
+            networkEvents.OnLeftRoomEvent += LevelManager.OnLeftRoomAction;
 
             // sync modded clients
             networkEvents.OnJoinedRoomEvent += SyncModClients.RequestSync;
@@ -292,7 +297,8 @@ namespace UnboundLib
                                          .activeInHierarchy) ||
 
                                     ModOptions.showingModOptions ||
-                                    ToggleCardsMenuHandler.menuOpenFromOutside;
+                                    ToggleCardsMenuHandler.menuOpenFromOutside ||
+                                    lockInputBools.Values.Any(b => b);
         }
 
         private void OnGUI()
@@ -354,13 +360,6 @@ namespace UnboundLib
                 CardChoice.instance.cards = CardManager.defaultCards;
             NetworkingManager.RaiseEventOthers(NetworkEventType.StartHandshake);
 
-            // send available card pool to the master client
-            if (!PhotonNetwork.IsMasterClient)
-            {
-                NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_CardHandshake), (object)CardManager.allCards.Select(c => c.cardName).ToArray());
-            }
-
-
             OnJoinedRoom?.Invoke();
             foreach (var handshake in handShakeActions)
             {
@@ -370,52 +369,6 @@ namespace UnboundLib
         private void OnLeftRoomAction()
         {
             OnLeftRoom?.Invoke();
-        }
-        
-        [UnboundRPC]
-        private static void RPC_CardHandshake(string[] cards)
-        {
-            if (!PhotonNetwork.IsMasterClient) return;
-
-            // disable any cards which aren't shared by other players
-            foreach (var card in CardManager.allCards)
-            {
-                if (!cards.Contains(card.cardName))
-                {
-                    CardManager.DisableCard(card);
-                }
-            }
-            
-            foreach (var obj in ToggleCardsMenuHandler.cardObjs.Keys)
-            {
-                ToggleCardsMenuHandler.UpdateVisualsCardObj(obj, CardManager.IsCardActive(CardManager.GetCardInfoWithName(obj.name)));
-            }
-
-            // reply to all users with new list of valid cards
-            NetworkingManager.RPC_Others(typeof(Unbound), nameof(RPC_HostCardHandshakeResponse), (object)CardManager.activeCards.Select(c => c.cardName).ToArray());
-        }
-
-        [UnboundRPC]
-        private static void RPC_HostCardHandshakeResponse(string[] cards)
-        {
-            // enable and disable only cards that the host has specified are allowed
-
-            foreach (var card in CardManager.allCards)
-            {
-                if (cards.Contains(card.cardName))
-                {
-                    CardManager.EnableCard(card);
-                }
-                else
-                {
-                    CardManager.DisableCard(card);
-                }
-            }
-            
-            foreach (var obj in ToggleCardsMenuHandler.cardObjs.Keys)
-            {
-                ToggleCardsMenuHandler.UpdateVisualsCardObj(obj, CardManager.IsCardActive(CardManager.GetCardInfoWithName(obj.name)));
-            }
         }
 
         [UnboundRPC]

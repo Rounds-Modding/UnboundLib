@@ -367,15 +367,6 @@ namespace UnboundLib.Utils.UI
             {
                 lvlObj.transform.Find("Glow").gameObject.SetActive(false);
             }
-            
-
-            foreach (var category in LevelManager.categories)
-            {
-                if (LevelManager.GetLevelsInCategory(category).All(level => !LevelManager.IsLevelActive(level)))
-                {
-                    LevelManager.DisableCategory(category);
-                }
-            }
         }
 
         // Update the image of a lvlObj

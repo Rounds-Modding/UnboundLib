@@ -37,6 +37,8 @@ namespace UnboundLib.Utils
         private static string[] defaultLevels;
         internal static ObservableCollection<string> activeLevels;
         internal static readonly List<string> inactiveLevels = new List<string>();
+        internal static ObservableCollection<string> previousActiveLevels = new ObservableCollection<string>();
+        internal static readonly List<string> previousInactiveLevels = new List<string>();
 
         // List of all categories
         internal static readonly List<string> categories = new List<string>();
@@ -119,64 +121,6 @@ namespace UnboundLib.Utils
             }
         }
 
-        // Do the map handshake on joined room
-        public static void OnJoinedRoomAction()
-        {
-            // send available map pool to the master client
-            if (!PhotonNetwork.IsMasterClient)
-            {
-                NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_MapHandshake), (object)allLevels.Select(c => c).ToArray());
-            }
-        }
-        
-        [UnboundRPC]
-        private static void RPC_MapHandshake(string[] levels)
-        {
-            if (!PhotonNetwork.IsMasterClient) return;
-            // disable any levels which aren't shared by other players
-            foreach (var c in allLevels)
-            {
-                if (!levels.Contains(c))
-                {
-                    DisableLevel(c);
-                }
-                //c.SetValue(levels.Contains(c.info.cardName) && c.isEnabled.Value);
-            }
-            
-            foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs)
-            {
-                ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
-            }
-
-            // reply to all users with new list of valid levels
-            NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_HostMapHandshakeResponse), (object)activeLevels.Select(c => c).ToArray());
-        }
-        
-        
-        [UnboundRPC]
-        private static void RPC_HostMapHandshakeResponse(string[] levels)
-        {
-            // enable and disable only levels that the host has specified are allowed
-            foreach (var c in allLevels)
-            {
-                //c.SetValue(cards.Contains(c.info.cardName));
-                if (levels.Contains(c))
-                {
-                    EnableLevel(c);
-                } 
-                else
-                {
-                    DisableLevel(c);
-                }
-            }
-            
-            foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs)
-            {
-                ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
-            }
-        }
-
-        
         public static void EnableLevels(string[] levelNames, bool saved = true)
         {
             foreach (var levelName in levelNames)
@@ -367,21 +311,11 @@ namespace UnboundLib.Utils
                 }
                 else
                 {
-                    Unbound.BuildModal()
-                        .Title("Error Loading Level")
-                        .Message($"No map found named:\n{message}")
-                        // .CancelButton("Copy", () =>
-                        // {
-                        //     Unbound.BuildInfoPopup("Copied Message!");
-                        //     //GUIUtility.systemCopyBuffer = e.ToString();
-                        // })
-                        .CancelButton("Cancel", () => { })
-                        .Show();
+                    Unbound.BuildInfoPopup("Can't find level: " + formattedMessage);
                 }
             }
             catch (Exception e)
             {
-                UnityEngine.Debug.LogWarning("No map found");
                 Unbound.BuildModal()
                     .Title("Error Loading Level")
                     .Message($"No map found named:\n{message}\n\nError:\n{e}")
@@ -394,6 +328,112 @@ namespace UnboundLib.Utils
                     .Show();
             }
         }
+
+        #region Syncing
+        
+        public static void OnLeftRoomAction()
+        {
+            foreach (var level in previousActiveLevels)
+            {
+                EnableLevel(level);
+                foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(c => c.name == level))
+                {
+                    ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
+                }
+            }
+            foreach (var level in previousInactiveLevels)
+            {
+                DisableLevel(level);
+                foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(c => c.name == level))
+                {
+                    ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
+                }
+            }
+        }
+
+        // Do the map handshake on joined room
+        public static void OnJoinedRoomAction()
+        {
+            foreach (var level in activeLevels)
+            {
+                previousActiveLevels.Add(level);
+            }
+            previousInactiveLevels.AddRange(inactiveLevels);
+            // send available map pool to the master client
+            if (!PhotonNetwork.IsMasterClient)
+            {
+                NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_MapHandshake), (object)allLevels.Select(c => c).ToArray());
+            }
+        }
+        
+        [UnboundRPC]
+        private static void RPC_MapHandshake(string[] levels)
+        {
+            if (!PhotonNetwork.IsMasterClient) return;
+            
+            List<string> disabledLevels = new List<string>();
+            
+            // disable any levels which aren't shared by other players
+            foreach (var c in allLevels)
+            {
+                if (!levels.Contains(c))
+                {
+                    DisableLevel(c, false);
+                    disabledLevels.Add(c);
+                    foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == c))
+                    {
+                        ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
+                    }
+                }
+                //c.SetValue(levels.Contains(c.info.cardName) && c.isEnabled.Value);
+            }
+            
+            if (disabledLevels.Count != 0)
+            {
+                Unbound.BuildModal()
+                    .Title("These levels have been disabled because someone didn't have them")
+                    .Message(String.Join(", ", disabledLevels.ToArray()))
+                    .CancelButton("Copy", () =>
+                    {
+                        Unbound.BuildInfoPopup("Copied Message!");
+                        GUIUtility.systemCopyBuffer = String.Join(", ", disabledLevels.ToArray());
+                    })
+                    .CancelButton("Cancel", () => { })
+                    .Show();
+            }
+
+            // reply to all users with new list of valid levels
+            NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_HostMapHandshakeResponse), (object)activeLevels.Select(c => c).ToArray());
+        }
+        
+        
+        [UnboundRPC]
+        private static void RPC_HostMapHandshakeResponse(string[] levels)
+        {
+            // enable and disable only levels that the host has specified are allowed
+            foreach (var c in allLevels)
+            {
+                //c.SetValue(cards.Contains(c.info.cardName));
+                if (levels.Contains(c))
+                {
+                    EnableLevel(c);
+                    foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == c))
+                    {
+                        ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
+                    }
+                } 
+                else
+                {
+                    DisableLevel(c);
+                    foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == c))
+                    {
+                        ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
+                    }
+                }
+            }
+        }
+
+        #endregion
     }
 
     public class Level
