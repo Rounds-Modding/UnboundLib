@@ -126,21 +126,7 @@ namespace UnboundLib.Utils
                 cards[card.cardName].enabledWithoutSaving = true;
             }
         }
-        
-        public static void EnableCardTemp(CardInfo card)
-        {
-            if (!activeCards.Contains(card))
-            {
-                activeCards.Add(card);
-                activeCards = new ObservableCollection<CardInfo>(activeCards.OrderBy(i => i.cardName));
-                activeCards.CollectionChanged += CardsChanged;
-            }
-            if (inactiveCards.Contains(card))
-            {
-                inactiveCards.Remove(card);
-            }
-        }
-        
+
         public static void DisableCards(CardInfo[] cards, bool saved = true)
         {
             foreach (var card in cards)
@@ -173,19 +159,6 @@ namespace UnboundLib.Utils
             }
         }
 
-        public static void DisableCardTemp(CardInfo card)
-        {
-            if (activeCards.Contains(card))
-            {
-                activeCards.Remove(card);
-            }
-            if (!inactiveCards.Contains(card))
-            {
-                inactiveCards.Add(card);
-                inactiveCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
-            }
-        }
-        
         public static void EnableCategory(string categoryName)
         {
             if(categoryBools.ContainsKey(categoryName)) categoryBools[categoryName].Value = true;
@@ -216,7 +189,7 @@ namespace UnboundLib.Utils
         {
             foreach (var card in previousActiveCards)
             {
-                EnableCardTemp(card);
+                EnableCard(card, false);
                 foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                 {
                     ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, cards[card.cardName].enabledWithoutSaving);
@@ -224,7 +197,7 @@ namespace UnboundLib.Utils
             }
             foreach (var card in previousInactiveCards)
             {
-                DisableCardTemp(card);
+                DisableCard(card, false);
                 foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                 {
                     ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, cards[card.cardName].enabledWithoutSaving);
@@ -259,7 +232,7 @@ namespace UnboundLib.Utils
             {
                 if (!cardsArray.Contains(card.cardName))
                 {
-                    DisableCardTemp(card);
+                    DisableCard(card, false);
                     disabledCards.Add(card.cardName);
                     foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                     {
@@ -297,7 +270,7 @@ namespace UnboundLib.Utils
             {
                 if (cardsArray.Contains(card.cardName))
                 {
-                    EnableCardTemp(card);
+                    EnableCard(card, false);
                     foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                     {
                         ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, true);
@@ -305,7 +278,7 @@ namespace UnboundLib.Utils
                 }
                 else
                 {
-                    DisableCardTemp(card);
+                    DisableCard(card, false);
                     foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                     {
                         ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, false);
