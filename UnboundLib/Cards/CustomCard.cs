@@ -17,6 +17,7 @@ namespace UnboundLib.Cards
         public Gun gun;
         public ApplyCardStats cardStats;
         public CharacterStatModifiers statModifiers;
+        public Block block;
         private bool isPrefab = false;
 
         void Awake()
@@ -25,7 +26,9 @@ namespace UnboundLib.Cards
             gun = GetComponent<Gun>();
             cardStats = GetComponent<ApplyCardStats>();
             statModifiers = GetComponent<CharacterStatModifiers>();
+            block = GetComponent<Block>();
             SetupCard(cardInfo, gun, cardStats, statModifiers);
+            SetupCard(cardInfo, gun, cardStats, statModifiers, block);
         }
 
         void Start()
@@ -42,7 +45,14 @@ namespace UnboundLib.Cards
         protected abstract CardInfo.Rarity GetRarity();
         protected abstract GameObject GetCardArt();
         protected abstract CardThemeColor.CardThemeColorType GetTheme();
-        public abstract void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers);
+        public virtual void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers)
+        {
+
+        }
+        public virtual void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
+        {
+
+        }
         public abstract void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats);
         public abstract void OnRemoveCard();
         public virtual bool GetEnabled()

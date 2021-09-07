@@ -37,7 +37,7 @@ namespace UnboundLib.Patches
             var gunAmmo = gun.GetComponentInChildren<GunAmmo>();
             var characterStatModifiers = player.GetComponent<CharacterStatModifiers>();
 
-            StatDictionary.CopyCustomStats(player, gun, characterData, healthHandler, gravity, block, gunAmmo, characterStatModifiers, ___myGunStats, ___myPlayerStats, ___myBlock);
+            //StatDictionary.CopyCustomStats(player, gun, characterData, healthHandler, gravity, block, gunAmmo, characterStatModifiers, ___myGunStats, ___myPlayerStats, ___myBlock);
         }
     }
 }
