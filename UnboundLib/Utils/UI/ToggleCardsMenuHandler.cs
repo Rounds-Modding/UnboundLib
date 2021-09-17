@@ -402,6 +402,13 @@ namespace UnboundLib.Utils.UI
                 var obj = cardObjs.ElementAt(i).Key;
                 cardObjs[obj] = actions[i];
             }
+            for (int i = 0; i < cardObjs.Keys.Count; i++)
+            {
+                var buttonEvent = new Button.ButtonClickedEvent();
+                var unityAction = new UnityAction(cardObjs.ElementAt(i).Value);
+                buttonEvent.AddListener(unityAction);
+                cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
+            }
         }
 
         public static void ResetCardActions()
@@ -410,6 +417,13 @@ namespace UnboundLib.Utils.UI
             {
                 var obj = cardObjs.ElementAt(i).Key;
                 cardObjs[obj] = defaultCardActions[i];
+            }
+            for (int i = 0; i < cardObjs.Keys.Count; i++)
+            {
+                var buttonEvent = new Button.ButtonClickedEvent();
+                var unityAction = new UnityAction(cardObjs.ElementAt(i).Value);
+                buttonEvent.AddListener(unityAction);
+                cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
             }
         }
 
@@ -470,14 +484,6 @@ namespace UnboundLib.Utils.UI
                 {
                     enableButtonsMethod();
                 }
-            }
-
-            for (int i = 0; i < cardObjs.Keys.Count; i++)
-            {
-                var buttonEvent = new Button.ButtonClickedEvent();
-                var unityAction = new UnityAction(cardObjs.ElementAt(i).Value);
-                buttonEvent.AddListener(unityAction);
-                cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
             }
         }
     }
