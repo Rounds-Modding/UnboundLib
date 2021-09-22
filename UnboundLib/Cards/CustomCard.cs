@@ -44,7 +44,10 @@ namespace UnboundLib.Cards
         protected abstract CardInfo.Rarity GetRarity();
         protected abstract GameObject GetCardArt();
         protected abstract CardThemeColor.CardThemeColorType GetTheme();
-        public abstract void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers);
+        public virtual void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers)
+        {
+
+        }
         public virtual void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             SetupCard(cardInfo, gun, cardStats, statModifiers);
