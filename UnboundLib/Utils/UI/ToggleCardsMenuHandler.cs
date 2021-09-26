@@ -279,6 +279,13 @@ namespace UnboundLib.Utils.UI
             
                     UpdateCategoryVisuals(CardManager.IsCategoryActive(category));
                 }
+                for (var i = 0; i < cardObjs.Keys.Count; i++)
+                {
+                    var buttonEvent = new Button.ButtonClickedEvent();
+                    var unityAction = new UnityAction(cardObjs.ElementAt(i).Value);
+                    buttonEvent.AddListener(unityAction);
+                    cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
+                }
                 toggleCardsCanvas.SetActive(false);
             });
         }
@@ -352,6 +359,14 @@ namespace UnboundLib.Utils.UI
                     obj.transform.Find("Darken/Darken").gameObject.SetActive(true);
                 }
             }
+            
+            for (int i = 0; i < cardObjs.Keys.Count; i++)
+            {
+                var buttonEvent = new Button.ButtonClickedEvent();
+                var unityAction = new UnityAction(cardObjs.ElementAt(i).Value);
+                buttonEvent.AddListener(unityAction);
+                cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
+            }
         }
 
         public static void Close()
@@ -376,6 +391,14 @@ namespace UnboundLib.Utils.UI
                 "CardMenu/ScrollViews"))
             {
                 trans.Find("Darken").gameObject.SetActive(!CardManager.categoryBools[trans.name].Value);
+            }
+            
+            for (int i = 0; i < cardObjs.Keys.Count; i++)
+            {
+                var buttonEvent = new Button.ButtonClickedEvent();
+                var unityAction = new UnityAction(cardObjs.ElementAt(i).Value);
+                buttonEvent.AddListener(unityAction);
+                cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
             }
         }
 
@@ -470,14 +493,6 @@ namespace UnboundLib.Utils.UI
                 {
                     enableButtonsMethod();
                 }
-            }
-
-            for (int i = 0; i < cardObjs.Keys.Count; i++)
-            {
-                var buttonEvent = new Button.ButtonClickedEvent();
-                var unityAction = new UnityAction(cardObjs.ElementAt(i).Value);
-                buttonEvent.AddListener(unityAction);
-                cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
             }
         }
     }
