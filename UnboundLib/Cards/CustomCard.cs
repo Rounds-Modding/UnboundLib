@@ -83,7 +83,7 @@ namespace UnboundLib.Cards
                 newCardInfo.rarity = customCard.GetRarity();
                 newCardInfo.colorTheme = customCard.GetTheme();
                 newCardInfo.allowMultiple = true;
-                newCardInfo.cardArt = customCard.GetCardArt() ?? new GameObject();
+                newCardInfo.cardArt = customCard.GetCardArt();
 
                 // add mod name text
                 // create blank object for text, and attach it to the canvas
