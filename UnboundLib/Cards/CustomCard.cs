@@ -44,7 +44,12 @@ namespace UnboundLib.Cards
         protected abstract CardThemeColor.CardThemeColorType GetTheme();
         public abstract void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers);
         public abstract void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats);
-        public abstract void OnRemoveCard();
+        public virtual void OnRemoveCard()
+        { }
+        public virtual void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
+        {
+            OnRemoveCard();
+        }
         public virtual bool GetEnabled()
         {
             return true;
