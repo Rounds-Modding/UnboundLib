@@ -175,14 +175,14 @@ namespace UnboundLib
             };
 
 
-            // apply cards and levels on game start
-            IEnumerator ResetCardsAndLevelsOnStart(IGameModeHandler gm)
-            {
-                CardChoice.instance.cards = CardManager.activeCards.ToArray();
-                MapManager.instance.levels = LevelManager.activeLevels.ToArray();
-                yield break;
-            }
-            GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsAndLevelsOnStart);
+            // // apply cards and levels on game start
+            // IEnumerator ResetCardsAndLevelsOnStart(IGameModeHandler gm)
+            // {
+            //     CardChoice.instance.cards = CardManager.activeCards.ToArray();
+            //     MapManager.instance.levels = LevelManager.activeLevels.ToArray();
+            //     yield break;
+            // }
+            // GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsAndLevelsOnStart);
             GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.disableSyncModUI(SyncModClients.uiParent));
             
             // Load toggleUI asset bundle
