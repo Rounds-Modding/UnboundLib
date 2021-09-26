@@ -25,9 +25,9 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.7.1";
+        public const string Version = "2.7.2";
 
-        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
+        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)","willuwontu (Custom cards)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
         public static Unbound Instance { get; private set; }
         
@@ -175,14 +175,14 @@ namespace UnboundLib
             };
 
 
-            // apply cards and levels on game start
-            IEnumerator ResetCardsAndLevelsOnStart(IGameModeHandler gm)
-            {
-                CardChoice.instance.cards = CardManager.activeCards.ToArray();
-                MapManager.instance.levels = LevelManager.activeLevels.ToArray();
-                yield break;
-            }
-            GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsAndLevelsOnStart);
+            // // apply cards and levels on game start
+            // IEnumerator ResetCardsAndLevelsOnStart(IGameModeHandler gm)
+            // {
+            //     CardChoice.instance.cards = CardManager.activeCards.ToArray();
+            //     MapManager.instance.levels = LevelManager.activeLevels.ToArray();
+            //     yield break;
+            // }
+            // GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsAndLevelsOnStart);
             GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.disableSyncModUI(SyncModClients.uiParent));
             
             // Load toggleUI asset bundle

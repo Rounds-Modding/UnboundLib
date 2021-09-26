@@ -27,7 +27,6 @@ namespace UnboundLib.Cards
             cardStats = GetComponent<ApplyCardStats>();
             statModifiers = GetComponent<CharacterStatModifiers>();
             block = GetComponent<Block>();
-            SetupCard(cardInfo, gun, cardStats, statModifiers);
             SetupCard(cardInfo, gun, cardStats, statModifiers, block);
         }
 
@@ -51,10 +50,15 @@ namespace UnboundLib.Cards
         }
         public virtual void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
-
+            SetupCard(cardInfo, gun, cardStats, statModifiers);
         }
         public abstract void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats);
-        public abstract void OnRemoveCard();
+        public virtual void OnRemoveCard()
+        { }
+        public virtual void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
+        {
+            OnRemoveCard();
+        }
         public virtual bool GetEnabled()
         {
             return true;
@@ -93,7 +97,7 @@ namespace UnboundLib.Cards
                 newCardInfo.rarity = customCard.GetRarity();
                 newCardInfo.colorTheme = customCard.GetTheme();
                 newCardInfo.allowMultiple = true;
-                newCardInfo.cardArt = customCard.GetCardArt() ?? new GameObject();
+                newCardInfo.cardArt = customCard.GetCardArt();
 
                 // add mod name text
                 // create blank object for text, and attach it to the canvas
