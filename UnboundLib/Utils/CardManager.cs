@@ -189,7 +189,7 @@ namespace UnboundLib.Utils
         {
             foreach (var card in previousActiveCards)
             {
-                EnableCard(card, false);
+                EnableCard(card);
                 foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                 {
                     ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, cards[card.cardName].enabledWithoutSaving);
@@ -197,12 +197,14 @@ namespace UnboundLib.Utils
             }
             foreach (var card in previousInactiveCards)
             {
-                DisableCard(card, false);
+                DisableCard(card);
                 foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                 {
                     ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, cards[card.cardName].enabledWithoutSaving);
                 }
             }
+            previousActiveCards.Clear();
+            previousInactiveCards.Clear();
         }
 
         public static void OnJoinedRoomAction()
@@ -212,11 +214,17 @@ namespace UnboundLib.Utils
                 previousActiveCards.Add(card);
             }
             previousInactiveCards.AddRange(inactiveCards);
-            // send available card pool to the master client
-            if (!PhotonNetwork.IsMasterClient)
+            Unbound.Instance.ExecuteAfterSeconds(1.5f, () =>
             {
-                NetworkingManager.RPC_Others(typeof(CardManager), nameof(RPC_CardHandshake), (object)cards.Keys.ToArray());
-            }
+                // send available card pool to the master client
+                for (int i = 0; i < 2; i++)
+                {
+                    if (!PhotonNetwork.IsMasterClient)
+                    {
+                        NetworkingManager.RPC_Others(typeof(CardManager), nameof(RPC_CardHandshake), (object)cards.Keys.ToArray());
+                    }
+                }
+            });
         }
         
         // This gets executed only on master client
@@ -232,7 +240,7 @@ namespace UnboundLib.Utils
             {
                 if (!cardsArray.Contains(card.cardName))
                 {
-                    DisableCard(card, false);
+                    DisableCard(card);
                     disabledCards.Add(card.cardName);
                     foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                     {
@@ -270,7 +278,7 @@ namespace UnboundLib.Utils
             {
                 if (cardsArray.Contains(card.cardName))
                 {
-                    EnableCard(card, false);
+                    EnableCard(card);
                     foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                     {
                         ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, true);
@@ -278,7 +286,7 @@ namespace UnboundLib.Utils
                 }
                 else
                 {
-                    DisableCard(card, false);
+                    DisableCard(card);
                     foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                     {
                         ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, false);
