@@ -26,7 +26,7 @@ namespace UnboundLib.Cards
             gun = GetComponent<Gun>();
             cardStats = GetComponent<ApplyCardStats>();
             statModifiers = GetComponent<CharacterStatModifiers>();
-            block = GetComponent<Block>();
+            block = gameObject.GetOrAddComponent<Block>();
             SetupCard(cardInfo, gun, cardStats, statModifiers, block);
         }
 
