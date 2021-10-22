@@ -41,6 +41,8 @@ namespace UnboundLib.Utils
         
         public static Dictionary<string, Card> cards = new Dictionary<string, Card>();
 
+        private static List<Action<CardInfo[]>> firstStartCallbacks = new List<Action<CardInfo[]>>() { };
+
         public void Start()
         {
             instance = this;
@@ -74,6 +76,17 @@ namespace UnboundLib.Utils
             {
                 categoryBools.Add(category, Unbound.config.Bind("Card categories", category, true));
             }
+
+            foreach (Action<CardInfo[]> callback in firstStartCallbacks)
+            {
+                callback(allCards);
+            }
+
+        }
+
+        public static void AddAllCardsCallback(Action<CardInfo[]> callback)
+        {
+            firstStartCallbacks.Add(callback);
         }
         
         internal static void CardsChanged(object sender, NotifyCollectionChangedEventArgs args)
