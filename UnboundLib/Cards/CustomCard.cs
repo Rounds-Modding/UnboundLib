@@ -6,6 +6,7 @@ using Photon.Pun;
 using TMPro;
 using System.Linq;
 using UnboundLib.Utils;
+using UnityEngine.UI;
 
 namespace UnboundLib.Cards
 {
@@ -151,6 +152,11 @@ namespace UnboundLib.Cards
                     var artContainer = newCard.transform.Find("CardBase(Clone)(Clone)/Canvas/Front/Background/Art");
                     if (artContainer != null && artContainer.childCount > 1)
                         Destroy(artContainer.GetChild(0).gameObject);
+
+                    if (customCard.GetCardArt() == null)
+                    {
+                        newCard.gameObject.transform.Find("CardBase(Clone)(Clone)/Canvas/Front/Icon").gameObject.SetActive(true);
+                    }    
 
                     // Disable "prefab"
                     newCard.SetActive(false);
