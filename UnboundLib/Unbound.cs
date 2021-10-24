@@ -287,7 +287,7 @@ namespace UnboundLib
             GameManager.lockInput = ModOptions.showModUi ||
                                     DevConsole.isTyping ||
                                     ToggleLevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy ||
-                                    
+
                                     (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group") &&
                                      UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group")
                                          .gameObject.activeInHierarchy) ||
@@ -296,7 +296,9 @@ namespace UnboundLib
                                      UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject
                                          .activeInHierarchy) ||
 
-                                    ModOptions.showingModOptions ||
+                                    (
+                                    UIHandler.instance.transform.Find("Canvas/EscapeMenu/MOD OPTIONS/Group") &&
+                                    UIHandler.instance.transform.Find("Canvas/EscapeMenu/MOD OPTIONS/Group").gameObject.activeInHierarchy) ||
                                     ToggleCardsMenuHandler.menuOpenFromOutside ||
                                     lockInputBools.Values.Any(b => b);
         }
