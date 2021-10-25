@@ -421,6 +421,10 @@ namespace UnboundLib
         {
             SyncModClients.RegisterClientSideMod(GUID);
         }
+        public static void AddAllCardsCallback(Action<CardInfo[]> callback)
+        {
+            CardManager.AddAllCardsCallback(callback);
+        }
 
         public static void RegisterHandshake(string modId, Action callback)
         {
