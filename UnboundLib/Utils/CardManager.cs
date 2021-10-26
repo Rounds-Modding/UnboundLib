@@ -72,7 +72,7 @@ namespace UnboundLib.Utils
             // Populate the categoryBools dictionary
             foreach (var category in categories)
             {
-                categoryBools.Add(category, Unbound.config.Bind("Card categories", category, true));
+                categoryBools[category] = Unbound.config.Bind("Card categories", category, true);
             }
         }
         
@@ -189,31 +189,39 @@ namespace UnboundLib.Utils
         {
             foreach (var card in previousActiveCards)
             {
+                UnityEngine.Debug.Log("LEFT; ADD CARD TO PREVIOUSLY ACTIVE: " + card);
                 EnableCard(card);
                 foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                 {
-                    ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, cards[card.cardName].enabledWithoutSaving);
+                    ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, cards[card.cardName].enabled);
                 }
             }
             foreach (var card in previousInactiveCards)
             {
+                UnityEngine.Debug.Log("LEFT; ADD CARD TO PREVIOUSLY INACTIVE: " + card);
                 DisableCard(card);
                 foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                 {
-                    ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, cards[card.cardName].enabledWithoutSaving);
+                    ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, cards[card.cardName].enabled);
                 }
             }
-            previousActiveCards.Clear();
-            previousInactiveCards.Clear();
         }
 
         public static void OnJoinedRoomAction()
         {
+
+            previousActiveCards.Clear();
+            previousInactiveCards.Clear();
             foreach (var card in activeCards)
             {
                 previousActiveCards.Add(card);
+                UnityEngine.Debug.Log("JOINED AND ADD TO ACTIVE: " + card);
             }
             previousInactiveCards.AddRange(inactiveCards);
+            foreach (var card in inactiveCards)
+            {
+            UnityEngine.Debug.Log("JOINED AND ADD TO INACTIVE: " + card);
+            }
             Unbound.Instance.ExecuteAfterSeconds(1.5f, () =>
             {
                 // send available card pool to the master client
@@ -225,6 +233,8 @@ namespace UnboundLib.Utils
                     }
                 }
             });
+
+
         }
         
         // This gets executed only on master client
