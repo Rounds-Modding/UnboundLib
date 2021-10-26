@@ -51,6 +51,23 @@ namespace UnboundLib.Utils.UI
             {
                 CreatModOptionsMenu(MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, null, false);
                 CreatModOptionsMenu(UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main").gameObject, UIHandler.instance.transform.Find("Canvas/EscapeMenu").gameObject, true);
+                // assign components and set color for menu highlighting
+
+                var modOpsBar = UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group/MOD OPTIONS").gameObject.GetOrAddComponent<UnityEngine.UI.ProceduralImage.ProceduralImage>();
+
+                var modOpsButton = GameObject.Find("Game/UI/UI_Game/Canvas/EscapeMenu/Main/Group/MOD OPTIONS").gameObject.GetOrAddComponent<UnityEngine.UI.Button>();
+
+                UnityEngine.UI.ColorBlock modOpsButtonColor = GameObject.Find("Game/UI/UI_Game/Canvas/EscapeMenu/Main/Group/MOD OPTIONS").gameObject.GetOrAddComponent<UnityEngine.UI.Button>().colors;
+                modOpsButton.transition = UnityEngine.UI.Selectable.Transition.ColorTint;
+
+                modOpsButton.colors = UnityEngine.UI.ColorBlock.defaultColorBlock;
+                Color defColor = new Color(1f, 0.2f, 0.2f, 0f);
+                Color defColor2 = new Color(1f, 0.2f, 0.2f, 0.84f);
+                new WaitForSecondsRealtime(.5f);
+                modOpsButtonColor.normalColor = defColor;
+                new WaitForSecondsRealtime(.5f);
+                modOpsButtonColor.highlightedColor = defColor2;
+                modOpsButtonColor.pressedColor = defColor2 * 1.05f;
             });
         }
 
