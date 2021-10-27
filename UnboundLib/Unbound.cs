@@ -81,6 +81,7 @@ namespace UnboundLib
 
         internal static AssetBundle UIAssets;
         public static AssetBundle toggleUI;
+        internal static AssetBundle linkAssets;
         private static GameObject modalPrefab;
 
         public Unbound()
@@ -114,11 +115,13 @@ namespace UnboundLib
                     text.transform.SetAsFirstSibling();
                     text.rectTransform.localScale = Vector3.one;
                     text.rectTransform.localPosition = new Vector3(0, 350, text.rectTransform.localPosition.z);
+
                 });
 
                 ModOptions.Instance.CreateModOptions(firstTime);
                 Credits.Instance.CreateCreditsMenu(firstTime);
-                
+                MainMenuLinks.AddLinks(firstTime);
+
                 var time = firstTime;
                 this.ExecuteAfterSeconds(firstTime ? 0.5f : 0, () =>
                 {
@@ -184,9 +187,12 @@ namespace UnboundLib
             // }
             // GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsAndLevelsOnStart);
             GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.disableSyncModUI(SyncModClients.uiParent));
-            
+
             // Load toggleUI asset bundle
             toggleUI = AssetUtils.LoadAssetBundleFromResources("toggle ui", typeof(ToggleLevelMenuHandler).Assembly);
+            
+            // Load toggleUI asset bundle
+            linkAssets = AssetUtils.LoadAssetBundleFromResources("unboundlinks", typeof(Unbound).Assembly);
 
             // Add managers
             gameObject.AddComponent<LevelManager>();
