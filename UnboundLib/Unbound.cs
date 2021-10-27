@@ -257,7 +257,7 @@ namespace UnboundLib
 
             // fetch card to use as a template for all custom cards
             templateCard = (from c in CardChoice.instance.cards
-                            where c.cardName.ToLower() == "huge"
+                            where c.cardName.ToLower() == "bouncy"
                             select c).FirstOrDefault();
             CardManager.defaultCards = CardChoice.instance.cards;
 
