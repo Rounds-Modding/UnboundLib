@@ -123,8 +123,11 @@ namespace UnboundLib.Cards
 
                 // Reset stats
                 newCard.GetComponent<Gun>().reflects = 0;
+                newCard.GetComponent<Gun>().overheatMultiplier = 0f;
+                newCard.GetComponent<Gun>().dragMinSpeed = 0f;
                 newCard.GetComponent<Gun>().reloadTimeAdd = 0f;
                 newCard.GetComponent<Gun>().damage = 1f;
+                newCard.GetComponent<Gun>().objectsToSpawn = new ObjectsToSpawn[0];
 
 
                 // Finish initializing
@@ -185,7 +188,7 @@ namespace UnboundLib.Cards
             gun.reloadTimeAdd = 0f;
             gun.recoilMuiltiplier = 1f;
             gun.knockback = 1f;
-            gun.attackSpeed = 0.3f;
+            gun.attackSpeed = 1f;
             gun.projectileSpeed = 1f;
             gun.projectielSimulatonSpeed = 1f;
             gun.gravity = 1f;
@@ -261,6 +264,23 @@ namespace UnboundLib.Cards
             characterStatModifiers.tasteOfBloodSpeed = 1f;
             characterStatModifiers.rageSpeed = 1f;
             characterStatModifiers.attackSpeedMultiplier = 1f;
+        }
+
+        private static void ResetOnlyBlockStats(Block block)
+        {
+            block.objectsToSpawn = new List<GameObject>();
+            block.sinceBlock = 10f;
+            block.cooldown = 4f;
+            block.counter = 1000f;
+            block.cdMultiplier = 1f;
+            block.cdAdd = 0f;
+            block.forceToAdd = 0f;
+            block.forceToAddUp = 0f;
+            block.autoBlock = false;
+            block.blockedThisFrame = false;
+            block.additionalBlocks = 0;
+            block.healing = 0f;
+            block.delayOtherActions = false;
         }
 
         class SetLocalPos : MonoBehaviour
