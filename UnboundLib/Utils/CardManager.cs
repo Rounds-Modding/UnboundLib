@@ -33,7 +33,7 @@ namespace UnboundLib.Utils
         internal static ObservableCollection<CardInfo> previousActiveCards = new ObservableCollection<CardInfo>();
         internal static List<CardInfo> inactiveCards = new List<CardInfo>();
         internal static List<CardInfo> previousInactiveCards = new List<CardInfo>();
-        
+
         // List of all categories
         public static readonly List<string> categories = new List<string>();
         // Dictionary of category name against if it is enabled
@@ -48,7 +48,7 @@ namespace UnboundLib.Utils
             // store default cards
             defaultCards = (CardInfo[]) CardChoice.instance.cards.Clone();
             
-            // Make activeCardsCollection and add defaultCards to it
+            // Make activeCards Collection and add defaultCards to it
             activeCards = new ObservableCollection<CardInfo>(defaultCards);
             
             // Set activeCards CollectionChanged event
@@ -140,6 +140,8 @@ namespace UnboundLib.Utils
             if (activeCards.Contains(card))
             {
                 activeCards.Remove(card);
+                activeCards.CollectionChanged += CardsChanged;
+
             }
             if (!inactiveCards.Contains(card))
             {
@@ -189,8 +191,11 @@ namespace UnboundLib.Utils
         {
             foreach (var card in previousActiveCards)
             {
-                UnityEngine.Debug.Log("LEFT; ADD CARD TO PREVIOUSLY ACTIVE: " + card);
-                EnableCard(card);
+                if (Unbound.config.Bind("Cards: " + cards[card.cardName].category, card.cardName, true).Value == true)
+                {
+                    EnableCard(card);
+                }
+
                 foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                 {
                     ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, cards[card.cardName].enabled);
@@ -198,8 +203,10 @@ namespace UnboundLib.Utils
             }
             foreach (var card in previousInactiveCards)
             {
-                UnityEngine.Debug.Log("LEFT; ADD CARD TO PREVIOUSLY INACTIVE: " + card);
-                DisableCard(card);
+                if (Unbound.config.Bind("Cards: " + cards[card.cardName].category, card.cardName, true).Value == false)
+                {
+                    DisableCard(card);
+                }
                 foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
                 {
                     ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, cards[card.cardName].enabled);
@@ -209,18 +216,16 @@ namespace UnboundLib.Utils
 
         public static void OnJoinedRoomAction()
         {
-
             previousActiveCards.Clear();
             previousInactiveCards.Clear();
             foreach (var card in activeCards)
             {
+
                 previousActiveCards.Add(card);
-                UnityEngine.Debug.Log("JOINED AND ADD TO ACTIVE: " + card);
             }
-            previousInactiveCards.AddRange(inactiveCards);
             foreach (var card in inactiveCards)
             {
-            UnityEngine.Debug.Log("JOINED AND ADD TO INACTIVE: " + card);
+                previousInactiveCards.Add(card);
             }
             Unbound.Instance.ExecuteAfterSeconds(1.5f, () =>
             {
@@ -233,8 +238,6 @@ namespace UnboundLib.Utils
                     }
                 }
             });
-
-
         }
         
         // This gets executed only on master client
