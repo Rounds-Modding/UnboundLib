@@ -6,7 +6,6 @@ using Photon.Pun;
 using TMPro;
 using System.Linq;
 using UnboundLib.Utils;
-using UnityEngine.UI;
 
 namespace UnboundLib.Cards
 {
@@ -122,12 +121,7 @@ namespace UnboundLib.Cards
                 newCardInfo.cardBase.transform.position -= Camera.main.transform.forward * 0.5f;
 
                 // Reset stats
-                newCard.GetComponent<Gun>().reflects = 0;
-                newCard.GetComponent<Gun>().overheatMultiplier = 0f;
-                newCard.GetComponent<Gun>().dragMinSpeed = 0f;
-                newCard.GetComponent<Gun>().reloadTimeAdd = 0f;
-                newCard.GetComponent<Gun>().damage = 1f;
-                newCard.GetComponent<Gun>().objectsToSpawn = new ObjectsToSpawn[0];
+                newCard.GetComponent<CharacterStatModifiers>().health = 1;
 
 
                 // Finish initializing
@@ -157,12 +151,7 @@ namespace UnboundLib.Cards
                     // Destroy extra art object
                     var artContainer = newCard.transform.Find("CardBase(Clone)(Clone)/Canvas/Front/Background/Art");
                     if (artContainer != null && artContainer.childCount > 1)
-                        Destroy(artContainer.GetChild(0).gameObject);
-
-                    if (customCard.GetCardArt() == null)
-                    {
-                        newCard.gameObject.transform.Find("CardBase(Clone)(Clone)/Canvas/Front/Icon").gameObject.SetActive(true);
-                    }    
+                        Destroy(artContainer.GetChild(0).gameObject);  
 
                     // Disable "prefab"
                     newCard.SetActive(false);
