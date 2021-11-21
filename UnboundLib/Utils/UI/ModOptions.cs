@@ -57,7 +57,7 @@ namespace UnboundLib.Utils.UI
         private void CreatModOptionsMenu(GameObject parent, GameObject parentForMenu, bool pauseMenu)
         {
             // Create mod options menu
-            modOptionsMenu = MenuHandler.CreateMenu("MOD OPTIONS", () => {showingModOptions = true;
+            modOptionsMenu = MenuHandler.CreateMenu("MODS", () => {showingModOptions = true;
                     inPauseMenu = pauseMenu;
                 }, parent
                 , 60, true, false, parentForMenu,

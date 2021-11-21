@@ -25,7 +25,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.7.2";
+        public const string Version = "2.7.6";
 
         internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)","willuwontu (Custom cards)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
@@ -81,6 +81,7 @@ namespace UnboundLib
 
         internal static AssetBundle UIAssets;
         public static AssetBundle toggleUI;
+        internal static AssetBundle linkAssets;
         private static GameObject modalPrefab;
 
         public Unbound()
@@ -114,11 +115,13 @@ namespace UnboundLib
                     text.transform.SetAsFirstSibling();
                     text.rectTransform.localScale = Vector3.one;
                     text.rectTransform.localPosition = new Vector3(0, 350, text.rectTransform.localPosition.z);
+
                 });
 
                 ModOptions.Instance.CreateModOptions(firstTime);
                 Credits.Instance.CreateCreditsMenu(firstTime);
-                
+                MainMenuLinks.AddLinks(firstTime);
+
                 var time = firstTime;
                 this.ExecuteAfterSeconds(firstTime ? 0.5f : 0, () =>
                 {
@@ -184,9 +187,12 @@ namespace UnboundLib
             // }
             // GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsAndLevelsOnStart);
             GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.disableSyncModUI(SyncModClients.uiParent));
-            
+
             // Load toggleUI asset bundle
             toggleUI = AssetUtils.LoadAssetBundleFromResources("toggle ui", typeof(ToggleLevelMenuHandler).Assembly);
+            
+            // Load toggleUI asset bundle
+            linkAssets = AssetUtils.LoadAssetBundleFromResources("unboundlinks", typeof(Unbound).Assembly);
 
             // Add managers
             gameObject.AddComponent<LevelManager>();
@@ -287,7 +293,7 @@ namespace UnboundLib
             GameManager.lockInput = ModOptions.showModUi ||
                                     DevConsole.isTyping ||
                                     ToggleLevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy ||
-                                    
+
                                     (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group") &&
                                      UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group")
                                          .gameObject.activeInHierarchy) ||
@@ -296,7 +302,9 @@ namespace UnboundLib
                                      UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject
                                          .activeInHierarchy) ||
 
-                                    ModOptions.showingModOptions ||
+                                    (
+                                    UIHandler.instance.transform.Find("Canvas/EscapeMenu/MOD OPTIONS/Group") &&
+                                    UIHandler.instance.transform.Find("Canvas/EscapeMenu/MOD OPTIONS/Group").gameObject.activeInHierarchy) ||
                                     ToggleCardsMenuHandler.menuOpenFromOutside ||
                                     lockInputBools.Values.Any(b => b);
         }
@@ -420,6 +428,10 @@ namespace UnboundLib
         public static void RegisterClientSideMod(string GUID)
         {
             SyncModClients.RegisterClientSideMod(GUID);
+        }
+        public static void AddAllCardsCallback(Action<CardInfo[]> callback)
+        {
+            CardManager.AddAllCardsCallback(callback);
         }
 
         public static void RegisterHandshake(string modId, Action callback)

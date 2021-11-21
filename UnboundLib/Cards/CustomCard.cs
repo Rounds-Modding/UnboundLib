@@ -26,7 +26,7 @@ namespace UnboundLib.Cards
             gun = GetComponent<Gun>();
             cardStats = GetComponent<ApplyCardStats>();
             statModifiers = GetComponent<CharacterStatModifiers>();
-            block = GetComponent<Block>();
+            block = gameObject.GetOrAddComponent<Block>();
             SetupCard(cardInfo, gun, cardStats, statModifiers, block);
         }
 
@@ -123,6 +123,7 @@ namespace UnboundLib.Cards
                 // Reset stats
                 newCard.GetComponent<CharacterStatModifiers>().health = 1;
 
+
                 // Finish initializing
                 newCardInfo.SendMessage("Awake");
                 PhotonNetwork.PrefabPool.RegisterPrefab(newCard.gameObject.name, newCard);
@@ -150,7 +151,7 @@ namespace UnboundLib.Cards
                     // Destroy extra art object
                     var artContainer = newCard.transform.Find("CardBase(Clone)(Clone)/Canvas/Front/Background/Art");
                     if (artContainer != null && artContainer.childCount > 1)
-                        Destroy(artContainer.GetChild(0).gameObject);
+                        Destroy(artContainer.GetChild(0).gameObject);  
 
                     // Disable "prefab"
                     newCard.SetActive(false);
@@ -167,6 +168,108 @@ namespace UnboundLib.Cards
             {
                 DestroyImmediate(t.transform.GetChild(0).gameObject);
             }
+        }
+        private static void ResetOnlyGunStats(Gun gun)
+        {
+            gun.isReloading = false;
+            gun.damage = 1f;
+            gun.reloadTime = 1f;
+            gun.reloadTimeAdd = 0f;
+            gun.recoilMuiltiplier = 1f;
+            gun.knockback = 1f;
+            gun.attackSpeed = 1f;
+            gun.projectileSpeed = 1f;
+            gun.projectielSimulatonSpeed = 1f;
+            gun.gravity = 1f;
+            gun.damageAfterDistanceMultiplier = 1f;
+            gun.bulletDamageMultiplier = 1f;
+            gun.multiplySpread = 1f;
+            gun.shakeM = 1f;
+            gun.ammo = 0;
+            gun.ammoReg = 0f;
+            gun.size = 0f;
+            gun.overheatMultiplier = 0f;
+            gun.timeToReachFullMovementMultiplier = 0f;
+            gun.numberOfProjectiles = 1;
+            gun.bursts = 0;
+            gun.reflects = 0;
+            gun.smartBounce = 0;
+            gun.bulletPortal = 0;
+            gun.randomBounces = 0;
+            gun.timeBetweenBullets = 0f;
+            gun.projectileSize = 0f;
+            gun.speedMOnBounce = 1f;
+            gun.dmgMOnBounce = 1f;
+            gun.drag = 0f;
+            gun.dragMinSpeed = 1f;
+            gun.spread = 0f;
+            gun.evenSpread = 0f;
+            gun.percentageDamage = 0f;
+            gun.cos = 0f;
+            gun.slow = 0f;
+            gun.chargeNumberOfProjectilesTo = 0f;
+            gun.destroyBulletAfter = 0f;
+            gun.forceSpecificAttackSpeed = 0f;
+            gun.lockGunToDefault = false;
+            gun.unblockable = false;
+            gun.ignoreWalls = false;
+            gun.currentCharge = 0f;
+            gun.useCharge = false;
+            gun.waveMovement = false;
+            gun.teleport = false;
+            gun.spawnSkelletonSquare = false;
+            gun.explodeNearEnemyRange = 0f;
+            gun.explodeNearEnemyDamage = 0f;
+            gun.hitMovementMultiplier = 1f;
+            gun.isProjectileGun = false;
+            gun.defaultCooldown = 1f;
+            gun.attackSpeedMultiplier = 1f;
+            gun.objectsToSpawn = new ObjectsToSpawn[0];
+            gun.projectileColor = Color.black;
+        }
+
+        private static void ResetOnlyCharacterStatModifiersStats(CharacterStatModifiers characterStatModifiers)
+        {
+            for (int i = 0; i < characterStatModifiers.objectsAddedToPlayer.Count; i++)
+            {
+                GameObject.Destroy(characterStatModifiers.objectsAddedToPlayer[i]);
+            }
+            characterStatModifiers.objectsAddedToPlayer.Clear();
+            characterStatModifiers.sizeMultiplier = 1f;
+            characterStatModifiers.health = 1f;
+            characterStatModifiers.movementSpeed = 1f;
+            characterStatModifiers.jump = 1f;
+            characterStatModifiers.gravity = 1f;
+            characterStatModifiers.slow = 0f;
+            characterStatModifiers.slowSlow = 0f;
+            characterStatModifiers.fastSlow = 0f;
+            characterStatModifiers.secondsToTakeDamageOver = 0f;
+            characterStatModifiers.numberOfJumps = 0;
+            characterStatModifiers.regen = 0f;
+            characterStatModifiers.lifeSteal = 0f;
+            characterStatModifiers.respawns = 0;
+            characterStatModifiers.refreshOnDamage = false;
+            characterStatModifiers.automaticReload = true;
+            characterStatModifiers.tasteOfBloodSpeed = 1f;
+            characterStatModifiers.rageSpeed = 1f;
+            characterStatModifiers.attackSpeedMultiplier = 1f;
+        }
+
+        private static void ResetOnlyBlockStats(Block block)
+        {
+            block.objectsToSpawn = new List<GameObject>();
+            block.sinceBlock = 10f;
+            block.cooldown = 4f;
+            block.counter = 1000f;
+            block.cdMultiplier = 1f;
+            block.cdAdd = 0f;
+            block.forceToAdd = 0f;
+            block.forceToAddUp = 0f;
+            block.autoBlock = false;
+            block.blockedThisFrame = false;
+            block.additionalBlocks = 0;
+            block.healing = 0f;
+            block.delayOtherActions = false;
         }
 
         class SetLocalPos : MonoBehaviour
