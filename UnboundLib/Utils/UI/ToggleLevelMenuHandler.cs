@@ -207,7 +207,7 @@ namespace UnboundLib.Utils.UI
                     var _scrollView = Instantiate(scrollView, scrollViewTrans);
                     _scrollView.name = category;
                     scrollViews.Add(category, _scrollView.transform);
-                    if (category == "Default")
+                    if (category == "Vanilla")
                     {
                         _scrollView.SetActive(true);
                     }
