@@ -84,7 +84,7 @@ namespace UnboundLib.Utils
 
         }
 
-        internal static void RestoreCardToggles()
+        public static void RestoreCardToggles()
         {
             foreach (Card card in CardManager.cards.Values)
             {
