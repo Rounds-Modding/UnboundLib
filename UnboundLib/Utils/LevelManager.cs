@@ -443,7 +443,7 @@ namespace UnboundLib.Utils
         public bool selected;
         public string category;
 
-        public Level(string name, bool enabled, bool selected = false ,string category = "Default")
+        public Level(string name, bool enabled, bool selected = false ,string category = "Vanilla")
         {
             this.name = name;
             this.enabled = enabled;

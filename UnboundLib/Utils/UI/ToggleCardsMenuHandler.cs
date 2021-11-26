@@ -36,6 +36,12 @@ namespace UnboundLib.Utils.UI
 
         private static bool disabled;
 
+        private static bool sortedByName = true;
+
+        internal static Color commonColor = new Color(1f, 1f, 1f, 0.5f);
+        internal static Color uncommonColor = new Color(0.1745f, 0.6782f, 1f, 0.5f);
+        internal static Color rareColor = new Color(1f, 0.1765f, 0.7567f, 0.5f);
+
         private string currentCategory
         {
             get
@@ -103,7 +109,22 @@ namespace UnboundLib.Utils.UI
                     }
                 }
             });
-            
+
+            // create and set sort button (making use of the unused "Switch profile" button)
+            toggleCardsCanvas.transform.Find("CardMenu/Top/Switch profile").gameObject.SetActive(true);
+            toggleCardsCanvas.transform.Find("CardMenu/Top/Switch profile").GetComponentInChildren<TextMeshProUGUI>().text = "Sort by: " + (sortedByName ? "Name" : "Rarity");
+            var sortButton = toggleCardsCanvas.transform.Find("CardMenu/Top/Switch profile").GetComponent<Button>();
+            sortButton.transform.localPosition = new Vector3(245f, 19.33f, 0f);
+            sortButton.onClick.AddListener(() =>
+            {
+                sortedByName = !sortedByName;
+                toggleCardsCanvas.transform.Find("CardMenu/Top/Switch profile").GetComponentInChildren<TextMeshProUGUI>().text = "Sort by: " + (sortedByName ? "Name" : "Rarity");
+
+                SortCardMenus(sortedByName);
+
+            });
+
+
             // Create and set toggle all button
             var toggleAllButton = toggleCardsCanvas.transform.Find("CardMenu/Top/Toggle all").GetComponent<Button>();
             buttonsToDisable.Add(toggleAllButton);
@@ -153,13 +174,15 @@ namespace UnboundLib.Utils.UI
                     SetActive(_scrollView.transform, false);
                     _scrollView.name = category;
                     scrollViews.Add(category, _scrollView.transform);
-                    if (category == "Default")
+                    if (category == "Vanilla")
                     {
                         SetActive(_scrollView.transform, true);
                     }
 
                 }
-                
+
+
+
                 // Create cardObjs
                 foreach (var card in CardManager.cards)
                 {
@@ -167,9 +190,6 @@ namespace UnboundLib.Utils.UI
                     var crdObj = Instantiate(cardObjAsset, parentScroll);
 
                     crdObj.name = card.Key;
-
-                    cardObjs[crdObj] = cardAction;
-                    defaultCardActions.Add(cardAction);
 
                     void cardAction()
                     {
@@ -186,10 +206,40 @@ namespace UnboundLib.Utils.UI
                             UpdateVisualsCardObj(crdObj, true);
                         }
                     }
-                    
+
+                    cardObjs[crdObj] = cardAction;
+                    defaultCardActions.Add(cardAction);
+
                     buttonsToDisable.Add(crdObj.GetComponent<Button>());
                         
                     crdObj.transform.GetComponentInChildren<TextMeshProUGUI>().text = card.Key;
+
+                    // add rarity border
+                    GameObject background = crdObj.transform.GetComponentInChildren<TextMeshProUGUI>().transform.parent.gameObject;
+                    GameObject rarity = UnityEngine.GameObject.Instantiate(background, background.transform);
+                    UnityEngine.GameObject.DestroyImmediate(rarity.transform.GetChild(0).gameObject);
+                    background.AddComponent<Mask>();
+                    Image image = rarity.GetComponent<Image>();
+                    image.type = Image.Type.Filled;
+                    image.fillAmount = 0.5f;
+                    image.fillMethod = Image.FillMethod.Radial90;
+                    image.fillOrigin = 3;
+                    image.preserveAspect = true;
+                    rarity.transform.localPosition = new Vector3(-30f, -105f, 0f);
+                    switch (card.Value.cardInfo.rarity)
+                    {
+                        case CardInfo.Rarity.Common:
+                            image.color = commonColor;
+                            break;
+                        case CardInfo.Rarity.Uncommon:
+                            image.color = uncommonColor;
+                            break;
+                        case CardInfo.Rarity.Rare:
+                            image.color = rareColor;
+                            break;
+                        
+                    }
+
                     crdObj.transform.GetComponentsInChildren<TextMeshProUGUI>()[1].text = card.Value.cardInfo.cardDestription;
                     
                     var statsText = "";
@@ -203,19 +253,26 @@ namespace UnboundLib.Utils.UI
                     
                     crdObj.transform.GetComponentsInChildren<TextMeshProUGUI>()[2].text = statsText;
                     
-                    if (!Unbound.config.Bind("Cards: " + card.Value.category, card.Key, true).Value)
-                    {
-                        CardManager.DisableCard(card.Value.cardInfo);
-                    }
-                    else
+                    if (card.Value.config.Value)
                     {
                         CardManager.EnableCard(card.Value.cardInfo);
                     }
-                    UpdateVisualsCardObj(crdObj, card.Value.enabledWithoutSaving);
+                    else
+                    {
+                        CardManager.DisableCard(card.Value.cardInfo);
+                    }
+                    UpdateVisualsCardObj(crdObj, card.Value.config.Value);
                 }
-                
+
                 // Create category buttons
-                foreach (var category in CardManager.categories)
+                // sort categories
+                // always have Vanilla first, then sort most cards -> least cards, followed by "Modded" at the end (if it exists)
+                List<string> sortedCategories = (new string[] { "Vanilla" }).Concat(CardManager.categories.OrderByDescending(x => CardManager.GetCardsInCategory(x).Count()).ThenBy(x => x).Except(new string[] { "Vanilla", "Modded" })).ToList();
+                if (CardManager.categories.Contains("Modded"))
+                {
+                    sortedCategories.Add("Modded");
+                }
+                foreach (var category in sortedCategories)
                 {
                     var categoryObj = Instantiate(categoryButtonAsset, categoryContent);
                     categoryObj.SetActive(true);
@@ -238,14 +295,16 @@ namespace UnboundLib.Utils.UI
                         if (!value)
                         {
                             UpdateCategoryVisuals(false);
+                            CardManager.DisableCategory(category);
                         }
                         else
                         {
                             UpdateCategoryVisuals(true);
+                            CardManager.EnableCategory(category);
                         }
                     });
             
-                    void UpdateCategoryVisuals(bool enabled)
+                    void UpdateCategoryVisuals(bool enabled, bool firstTime = false)
                     {
                         foreach (var obj in scrollViews.Where(obj => obj.Key == category))
                         {
@@ -253,31 +312,41 @@ namespace UnboundLib.Utils.UI
                             if (enabled)
                             {
                                 CardManager.categoryBools[category].Value = true;
+                                if (firstTime) { continue; }
                                 foreach (Transform trs in obj.Value.Find("Viewport/Content"))
                                 {
                                     if (!trs.Find("Darken/Darken").gameObject.activeInHierarchy)
                                     {
-                                        CardManager.EnableCard(CardManager.GetCardInfoWithName(trs.name), false);
+                                        CardManager.EnableCard(CardManager.GetCardInfoWithName(trs.name), true);
                                     }
                                 }
                             }
                             else
                             {
                                 CardManager.categoryBools[category].Value = false;
+                                if (firstTime) { continue; }
                                 foreach (Transform trs in obj.Value.Find("Viewport/Content"))
                                 {
                                     if (!trs.Find("Darken/Darken").gameObject.activeInHierarchy)
                                     {
-                                        CardManager.DisableCard(CardManager.GetCardInfoWithName(trs.name), false);
+                                        CardManager.DisableCard(CardManager.GetCardInfoWithName(trs.name), true);
                                     }
                                 }
                             }
                         }
-            
+                        if (!firstTime)
+                        {
+                            string[] cardsInCategory = CardManager.GetCardsInCategory(category);
+                            foreach (GameObject cardObj in cardObjs.Keys.Where(o => cardsInCategory.Contains(o.name)))
+                            {
+                                UpdateVisualsCardObj(cardObj, enabled);
+                            }
+                        }
+
                         toggle.isOn = CardManager.IsCategoryActive(category);
                     }
             
-                    UpdateCategoryVisuals(CardManager.IsCategoryActive(category));
+                    UpdateCategoryVisuals(CardManager.IsCategoryActive(category), true);
                 }
                 for (var i = 0; i < cardObjs.Keys.Count; i++)
                 {
@@ -301,6 +370,42 @@ namespace UnboundLib.Utils.UI
                 cardObj.transform.Find("Darken/Darken").gameObject.SetActive(true);
             }
         }
+
+        internal void SortCardMenus(bool alph)
+        {
+            foreach (string category in CardManager.categories)
+            {
+                Transform categoryMenu = scrollViews[category].Find("Viewport/Content");
+
+                List<Transform> cardsInMenu = new List<Transform>() { };
+
+                foreach (Transform child in categoryMenu)
+                {
+                    cardsInMenu.Add(child);
+                }
+
+                List<Transform> sorted = new List<Transform>() { };
+
+                if (alph)
+                {
+                    sorted = cardsInMenu.OrderBy(t => t.name).ToList();
+                }
+                else
+                {
+                    sorted = cardsInMenu.OrderBy(t => CardManager.cards[t.name].cardInfo.rarity).ThenBy(t => t.name).ToList();
+                }
+
+                int i = 0;
+                foreach (Transform cardInMenu in sorted)
+                {
+                    cardInMenu.SetSiblingIndex(i);
+                    i++;
+                }
+
+
+            }
+        }
+
 
         /// <summary> This is used for opening and closing menus </summary>
         public static void SetActive(Transform trans, bool active)
@@ -385,7 +490,7 @@ namespace UnboundLib.Utils.UI
             }
             foreach (var card in cardObjs)
             {
-                UpdateVisualsCardObj(card.Key, CardManager.cards[card.Key.name].enabledWithoutSaving);
+                UpdateVisualsCardObj(card.Key, CardManager.cards[card.Key.name].enabled);
             }
             foreach (Transform trans in toggleCardsCanvas.transform.Find(
                 "CardMenu/ScrollViews"))
@@ -474,6 +579,14 @@ namespace UnboundLib.Utils.UI
                 toggle.interactable = false;
             }
             disabled = true;
+        }
+
+        internal static void RestoreCardToggleVisuals()
+        {
+            foreach (GameObject cardObj in cardObjs.Keys)
+            {
+                UpdateVisualsCardObj(cardObj, CardManager.cards[cardObj.name].config.Value);
+            }
         }
 
         private void Update()

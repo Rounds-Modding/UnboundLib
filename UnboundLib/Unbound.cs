@@ -97,7 +97,11 @@ namespace UnboundLib
                 this.ExecuteAfterSeconds(0.1f, () =>
                 {
                     MapManager.instance.levels = LevelManager.activeLevels.ToArray();
-                    CardChoice.instance.cards = CardManager.activeCards.ToArray();
+                    // THIS IS BROKEN
+                    //CardChoice.instance.cards = CardManager.activeCards.ToArray();
+                    CardManager.RestoreCardToggles();
+                    ToggleCardsMenuHandler.RestoreCardToggleVisuals();
+
                 });
 
 
@@ -238,14 +242,14 @@ namespace UnboundLib
                 {
                     NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake);
                 }
-                CardChoice.instance.cards = CardManager.defaultCards;
+                //CardChoice.instance.cards = CardManager.defaultCards;
             });
 
             // receive mod handshake
             NetworkingManager.RegisterEvent(NetworkEventType.FinishHandshake, (data) =>
             {
                 // attempt to syncronize levels and cards with other players
-                CardChoice.instance.cards = CardManager.activeCards.ToArray();
+                //CardChoice.instance.cards = CardManager.activeCards.ToArray();
                 MapManager.instance.levels = LevelManager.activeLevels.ToArray();
 
                 if (data.Length > 0)
@@ -266,7 +270,7 @@ namespace UnboundLib
             foreach (var card in CardManager.defaultCards)
             {
                 CardManager.cards.Add(card.cardName,
-                    new Card("Default", config.Bind("Cards: Default", card.cardName, true).Value, card));
+                    new Card("Vanilla", config.Bind("Cards: Vanilla", card.cardName, true), card));
             }
 
             // hook up Photon callbacks
@@ -364,8 +368,8 @@ namespace UnboundLib
 
         private void OnJoinedRoomAction()
         {
-            if (!PhotonNetwork.OfflineMode)
-                CardChoice.instance.cards = CardManager.defaultCards;
+            //if (!PhotonNetwork.OfflineMode)
+             //   CardChoice.instance.cards = CardManager.defaultCards;
             NetworkingManager.RaiseEventOthers(NetworkEventType.StartHandshake);
 
             OnJoinedRoom?.Invoke();

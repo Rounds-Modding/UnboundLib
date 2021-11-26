@@ -14,6 +14,22 @@ namespace UnboundLib
 {
     public static class ExtensionMethods
     {
+        #region string
+        public static string Sanitize(this string str, string[] invalidSubstrs = null)
+        {
+
+            invalidSubstrs = invalidSubstrs ?? new string[] { "\n", "\t", "\\", "\"", "\'", "[", "]" };
+
+            foreach (string invalidsubstr in invalidSubstrs)
+            {
+                str.Replace(invalidsubstr, string.Empty);
+            }
+
+            return str;
+            
+        }
+        #endregion
+
         #region GameObject
 
         public static T GetOrAddComponent<T>(this GameObject go, bool searchChildren = false) where T : Component
