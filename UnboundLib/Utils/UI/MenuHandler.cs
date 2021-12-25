@@ -78,6 +78,7 @@ namespace UnboundLib.Utils.UI
                 {
                     obj.GetComponent<ListMenuPage>().Open();
                     goBackObject.Close();
+                    obj.GetComponentInChildren<ScrollRect>().verticalNormalizedPosition = 1;
                 };
             }
             else
@@ -86,6 +87,7 @@ namespace UnboundLib.Utils.UI
                 {
                     obj.GetComponent<ListMenuPage>().Open();
                     goBackObject.Close();
+                    obj.GetComponentInChildren<ScrollRect>().verticalNormalizedPosition = 1;
                 };
             }
             button.GetComponent<Button>().onClick.AddListener(buttonAction);
