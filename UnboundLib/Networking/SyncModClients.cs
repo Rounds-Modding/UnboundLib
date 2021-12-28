@@ -36,6 +36,8 @@ namespace UnboundLib.Networking
         private static List<string> loadedModNames = new List<string>();
         private static List<string> loadedVersions = new List<string>();
 
+        public static bool OnlyClientSideModsLoaded => !BepInEx.Bootstrap.Chainloader.PluginInfos.Values.Select(v => v.Metadata.GUID).Except(clientSideGUIDs).Except(new string[] { Unbound.ModId }).Any();
+
         internal static void RequestSync()
         {
             if (PhotonNetwork.OfflineMode) return;
