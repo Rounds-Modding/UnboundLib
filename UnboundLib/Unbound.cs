@@ -23,7 +23,7 @@ namespace UnboundLib
     [BepInProcess("Rounds.exe")]
     public class Unbound : BaseUnityPlugin
     {
-        private const string ModId = "com.willis.rounds.unbound";
+        internal const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
         public const string Version = "2.8.2";
 

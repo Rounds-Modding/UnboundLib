@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using ExitGames.Client.Photon;
+using UnboundLib.Networking;
 
 namespace UnboundLib.GameModes
 {
@@ -14,6 +15,9 @@ namespace UnboundLib.GameModes
         private static Dictionary<string, Type> gameModes = new Dictionary<string, Type>();
         private static Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>> hooks = new Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>>();
         private static Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>> onceHooks = new Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>>();
+
+        private static GameObject quickMatch;
+        private static GameObject twitchMatch;
 
         public static Action<IGameModeHandler> OnGameModeChanged { get; set; }
 
@@ -47,11 +51,15 @@ namespace UnboundLib.GameModes
                     var versusGo = gameModeGo.transform.Find("Group").Find("Versus").gameObject;
                     var sandboxGo = gameModeGo.transform.Find("Group").Find("Test").gameObject;
                     var characterSelectGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/CharacterSelect");
-                    var qMatchRem = onlineGo.transform.Find("Quick").gameObject;
-                    var tMatchRem = onlineGo.transform.Find("Twitch").gameObject;
+                    quickMatch = onlineGo.transform.Find("Quick").gameObject;
+                    twitchMatch = onlineGo.transform.Find("Twitch").gameObject;
 
-                    GameObject.DestroyImmediate(qMatchRem);
-                    GameObject.DestroyImmediate(tMatchRem);
+                    quickMatch.gameObject.SetActive(false);
+                    twitchMatch.gameObject.SetActive(false);
+
+                    var disable = gameModeGo.GetOrAddComponent<DisableGamemodes>();
+                    disable.AddObject(quickMatch);
+                    disable.AddObject(twitchMatch);
 
                     GameObject.DestroyImmediate(versusGo.GetComponent<Button>());
                     var versusButton = versusGo.AddComponent<Button>();
@@ -236,6 +244,33 @@ namespace UnboundLib.GameModes
             go.SetActive(false);
             go.transform.SetParent(GameObject.Find("/Game/Code/Game Modes").transform);
             go.AddComponent(type);
+        }
+
+        class DisableGamemodes : MonoBehaviour
+        {
+            const float delay = 0.5f;
+            private float time = delay;
+            List<GameObject> objectsToDisable = new List<GameObject>();
+            void Update()
+            {
+                time -= Time.deltaTime;
+                if (time < 0f)
+                {
+                    time = delay;
+                    foreach (GameObject obj in objectsToDisable)
+                    {
+                        if (obj != null) { obj.SetActive(SyncModClients.OnlyClientSideModsLoaded); }
+                    }
+                }
+            }
+            public void AddObject(GameObject obj)
+            {
+                this.objectsToDisable.Add(obj);
+            }
+            public void RemoveObj(GameObject obj)
+            {
+                this.objectsToDisable.Remove(obj);
+            }
         }
     }
 }
