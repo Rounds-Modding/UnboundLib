@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using UnboundLib.GameModes;
 using UnityEngine;
+using UnboundLib.Extensions;
 
 namespace UnboundLib.Patches
 {
@@ -96,6 +97,10 @@ namespace UnboundLib.Patches
     {
         static IEnumerator Postfix(IEnumerator e)
         {
+            // rebuild the cardbar first
+
+            CardBarHandler.instance.Rebuild();
+
             yield return GameModeManager.TriggerHook(GameModeHooks.HookGameStart);
 
             // We need to iterate through yields like this to get the postfix in the correct place

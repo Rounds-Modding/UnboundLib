@@ -91,7 +91,7 @@ namespace UnboundLib.Cards
 
                 // Apply card data
                 newCardInfo.cardStats = customCard.GetStats() ?? new CardInfoStat[0];
-                newCard.gameObject.name = newCardInfo.cardName = customCard.GetTitle();
+                newCard.gameObject.name = newCardInfo.cardName = customCard.GetTitle().Sanitize();
                 newCardInfo.cardDestription = customCard.GetDescription();
                 newCardInfo.sourceCard = newCardInfo;
                 newCardInfo.rarity = customCard.GetRarity();
@@ -107,7 +107,7 @@ namespace UnboundLib.Cards
                 GameObject BottomLeftCorner = allChildrenRecursive.Where(obj => obj.gameObject.name == "EdgePart (2)").FirstOrDefault().gameObject;
                 modNameObj.gameObject.transform.SetParent(BottomLeftCorner.transform);
                 TextMeshProUGUI modText = modNameObj.gameObject.AddComponent<TextMeshProUGUI>();
-                modText.text = customCard.GetModName();
+                modText.text = customCard.GetModName().Sanitize();
                 modNameObj.transform.Rotate(new Vector3(0f, 0f, 1f), 45f);
                 modNameObj.transform.Rotate(new Vector3(0f, 1f, 0f), 180f);
                 modNameObj.transform.localScale = new Vector3(1f, 1f, 1f);
@@ -137,7 +137,7 @@ namespace UnboundLib.Cards
                     CardManager.activeCards.CollectionChanged += CardManager.CardsChanged;
                     // Register card with the toggle menu
                     CardManager.cards.Add(newCardInfo.cardName,
-                        new Card(customCard.GetModName(), Unbound.config.Bind("Cards: " + customCard.GetModName(), newCardInfo.cardName, true).Value, newCardInfo));
+                        new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), newCardInfo.cardName, true), newCardInfo));
                 }
 
                 

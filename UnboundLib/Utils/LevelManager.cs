@@ -46,7 +46,7 @@ namespace UnboundLib.Utils
         internal static readonly Dictionary<string, ConfigEntry<bool>> categoryBools = new Dictionary<string, ConfigEntry<bool>>();
 
         public static LevelManager instance;
-        
+
         private void Start()
         {
             // add default level to list
@@ -54,15 +54,15 @@ namespace UnboundLib.Utils
             // add default levels to active levels
             activeLevels = new ObservableCollection<string>(defaultLevels);
             activeLevels.CollectionChanged += LevelsChanged;
-            
+
             // Populate the levels dictionary
             foreach (var level in allLevels)
             {
                 levels[level] = new Level(level, IsLevelActive(level));
             }
-            
+
             instance = this;
-            
+
             // Sort some of the default levels to a separate category
             foreach (var level in levels.Values)
             {
@@ -107,7 +107,7 @@ namespace UnboundLib.Utils
                 foreach (string levelName in args.NewItems)
                 {
                     if (!levels.ContainsKey(levelName))
-                    { 
+                    {
                         levels[levelName] = new Level(levelName, IsLevelActive(levelName));
                     }
                 }
@@ -117,7 +117,7 @@ namespace UnboundLib.Utils
             // Sync levels over clients
             if (PhotonNetwork.IsMasterClient)
             {
-                NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_HostMapHandshakeResponse), (object)activeLevels.Select(c => c).ToArray());
+                NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_HostMapHandshakeResponse), (object) activeLevels.Select(c => c).ToArray());
             }
         }
 
@@ -128,7 +128,7 @@ namespace UnboundLib.Utils
                 EnableLevel(levelName, saved);
             }
         }
-        
+
         public static void EnableLevel(string levelName, bool saved = true)
         {
             if (activeLevels.Contains(levelName)) return;
@@ -143,15 +143,14 @@ namespace UnboundLib.Utils
                 inactiveLevels.Remove(levelName);
             }
 
-            
+
             if (saved)
             {
                 levels[levelName].enabled = true;
                 Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = true;
             }
         }
-        
-        
+
         public static void DisableLevels(string[] levelNames, bool saved = true)
         {
             foreach (var levelName in levelNames)
@@ -159,7 +158,7 @@ namespace UnboundLib.Utils
                 DisableLevel(levelName, saved);
             }
         }
-        
+
         public static void DisableLevel(string levelName, bool saved = true)
         {
             if (inactiveLevels.Contains(levelName)) return;
@@ -172,8 +171,8 @@ namespace UnboundLib.Utils
                 inactiveLevels.Add(levelName);
                 inactiveLevels.Sort((x, y) => string.CompareOrdinal(x, y));
             }
-            
-            
+
+
             if (saved)
             {
                 levels[levelName].enabled = false;
@@ -181,14 +180,41 @@ namespace UnboundLib.Utils
             }
         }
 
+
+        public static void RemoveLevels(string[] levelNames)
+        {
+            foreach (var levelName in levelNames)
+            {
+                RemoveLevel(levelName);
+            }
+        }
+
+        public static void RemoveLevel(string levelName)
+        {
+            if (inactiveLevels.Contains(levelName))
+            {
+                inactiveLevels.Remove(levelName);
+            }
+
+            if (activeLevels.Contains(levelName))
+            {
+                activeLevels.Remove(levelName);
+            }
+
+            if (levels.ContainsKey(levelName))
+            {
+                levels.Remove(levelName);
+            }
+        }
+
         public static void EnableCategory(string categoryName)
         {
-            if(categoryBools.ContainsKey(categoryName)) categoryBools[categoryName].Value = true;
+            if (categoryBools.ContainsKey(categoryName)) categoryBools[categoryName].Value = true;
         }
 
         public static void DisableCategory(string categoryName)
         {
-            if(categoryBools.ContainsKey(categoryName)) categoryBools[categoryName].Value = false;
+            if (categoryBools.ContainsKey(categoryName)) categoryBools[categoryName].Value = false;
         }
 
         public static bool IsLevelActive(string levelName)
@@ -223,7 +249,7 @@ namespace UnboundLib.Utils
         {
             return levelPaths[visualName];
         }
-        
+
         public static void RegisterMaps(AssetBundle assetBundle, string category = "Modded")
         {
             RegisterMaps(assetBundle.GetAllScenePaths(), category);
@@ -234,9 +260,9 @@ namespace UnboundLib.Utils
             foreach (var path in paths.Distinct())
             {
                 activeLevels.Add(path);
-                if(!levels.ContainsKey(path))
+                if (!levels.ContainsKey(path))
                 {
-                    levels[path] = new Level(path, true, false,category);
+                    levels[path] = new Level(path, true, false, category);
                 }
                 else
                 {
@@ -256,7 +282,7 @@ namespace UnboundLib.Utils
             // Sort activeLevels
             activeLevels = new ObservableCollection<string>(activeLevels.OrderBy(i => i));
             activeLevels.CollectionChanged += LevelsChanged;
-            
+
             activeLevels = new ObservableCollection<string>(activeLevels.Distinct().ToList());
             activeLevels.CollectionChanged += LevelsChanged;
             MapManager.instance.levels = activeLevels.ToArray();
@@ -330,7 +356,7 @@ namespace UnboundLib.Utils
         }
 
         #region Syncing
-        
+
         public static void OnLeftRoomAction()
         {
             foreach (var level in previousActiveLevels)
@@ -362,17 +388,17 @@ namespace UnboundLib.Utils
             // send available map pool to the master client
             if (!PhotonNetwork.IsMasterClient)
             {
-                NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_MapHandshake), (object)allLevels.Select(c => c).ToArray());
+                NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_MapHandshake), (object) allLevels.Select(c => c).ToArray());
             }
         }
-        
+
         [UnboundRPC]
         private static void RPC_MapHandshake(string[] levels)
         {
             if (!PhotonNetwork.IsMasterClient) return;
-            
+
             List<string> disabledLevels = new List<string>();
-            
+
             // disable any levels which aren't shared by other players
             foreach (var c in allLevels)
             {
@@ -387,7 +413,7 @@ namespace UnboundLib.Utils
                 }
                 //c.SetValue(levels.Contains(c.info.cardName) && c.isEnabled.Value);
             }
-            
+
             if (disabledLevels.Count != 0)
             {
                 Unbound.BuildModal()
@@ -403,10 +429,10 @@ namespace UnboundLib.Utils
             }
 
             // reply to all users with new list of valid levels
-            NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_HostMapHandshakeResponse), (object)activeLevels.Select(c => c).ToArray());
+            NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_HostMapHandshakeResponse), (object) activeLevels.Select(c => c).ToArray());
         }
-        
-        
+
+
         [UnboundRPC]
         private static void RPC_HostMapHandshakeResponse(string[] levels)
         {
@@ -421,7 +447,7 @@ namespace UnboundLib.Utils
                     {
                         ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
                     }
-                } 
+                }
                 else
                 {
                     DisableLevel(c);
@@ -443,7 +469,7 @@ namespace UnboundLib.Utils
         public bool selected;
         public string category;
 
-        public Level(string name, bool enabled, bool selected = false ,string category = "Default")
+        public Level(string name, bool enabled, bool selected = false, string category = "Vanilla")
         {
             this.name = name;
             this.enabled = enabled;

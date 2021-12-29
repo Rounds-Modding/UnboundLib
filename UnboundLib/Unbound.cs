@@ -25,12 +25,12 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.7.6";
+        public const string Version = "2.9.0";
 
-        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)","willuwontu (Custom cards)"}, "Github", "https://github.com/Rounds-Modding/UnboundLib");
+        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing, extra player colors)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)", "willuwontu (Custom cards)" }, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
         public static Unbound Instance { get; private set; }
-        
+
         public static readonly ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
 
         private Canvas _canvas;
@@ -97,7 +97,11 @@ namespace UnboundLib
                 this.ExecuteAfterSeconds(0.1f, () =>
                 {
                     MapManager.instance.levels = LevelManager.activeLevels.ToArray();
-                    CardChoice.instance.cards = CardManager.activeCards.ToArray();
+                    // THIS IS BROKEN
+                    //CardChoice.instance.cards = CardManager.activeCards.ToArray();
+                    CardManager.RestoreCardToggles();
+                    ToggleCardsMenuHandler.RestoreCardToggleVisuals();
+
                 });
 
 
@@ -127,7 +131,7 @@ namespace UnboundLib
                 {
                     var resumeButton = UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group/Resume").gameObject;
                     // Create options button in escapeMenu
-                    var optionsMenu = Instantiate(MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Options").gameObject,UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main"));
+                    var optionsMenu = Instantiate(MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Options").gameObject, UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main"));
                     var menuBut = optionsMenu.transform.Find("Group/Back").GetComponent<Button>();
                     menuBut.onClick = new Button.ButtonClickedEvent();
                     menuBut.onClick.AddListener(() =>
@@ -136,7 +140,7 @@ namespace UnboundLib
                         UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject.SetActive(true);
                     });
 
-                    var optionsButton =  Instantiate(resumeButton, UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group"));
+                    var optionsButton = Instantiate(resumeButton, UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group"));
                     optionsButton.transform.SetSiblingIndex(2);
                     optionsButton.GetComponentInChildren<TextMeshProUGUI>().text = "OPTIONS";
                     optionsButton.GetComponent<Button>().onClick = new Button.ButtonClickedEvent();
@@ -190,14 +194,14 @@ namespace UnboundLib
 
             // Load toggleUI asset bundle
             toggleUI = AssetUtils.LoadAssetBundleFromResources("toggle ui", typeof(ToggleLevelMenuHandler).Assembly);
-            
+
             // Load toggleUI asset bundle
             linkAssets = AssetUtils.LoadAssetBundleFromResources("unboundlinks", typeof(Unbound).Assembly);
 
             // Add managers
             gameObject.AddComponent<LevelManager>();
             gameObject.AddComponent<CardManager>();
-            
+
             // Add menu handlers
             gameObject.AddComponent<ToggleLevelMenuHandler>();
             gameObject.AddComponent<ToggleCardsMenuHandler>();
@@ -238,14 +242,14 @@ namespace UnboundLib
                 {
                     NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake);
                 }
-                CardChoice.instance.cards = CardManager.defaultCards;
+                //CardChoice.instance.cards = CardManager.defaultCards;
             });
 
             // receive mod handshake
             NetworkingManager.RegisterEvent(NetworkEventType.FinishHandshake, (data) =>
             {
                 // attempt to syncronize levels and cards with other players
-                CardChoice.instance.cards = CardManager.activeCards.ToArray();
+                //CardChoice.instance.cards = CardManager.activeCards.ToArray();
                 MapManager.instance.levels = LevelManager.activeLevels.ToArray();
 
                 if (data.Length > 0)
@@ -261,12 +265,12 @@ namespace UnboundLib
                             select c).FirstOrDefault();
             CardManager.defaultCards = CardChoice.instance.cards;
 
-            
+
             // register default cards with toggle menu
             foreach (var card in CardManager.defaultCards)
             {
                 CardManager.cards.Add(card.cardName,
-                    new Card("Default", config.Bind("Cards: Default", card.cardName, true).Value, card));
+                    new Card("Vanilla", config.Bind("Cards: Vanilla", card.cardName, true), card));
             }
 
             // hook up Photon callbacks
@@ -364,8 +368,8 @@ namespace UnboundLib
 
         private void OnJoinedRoomAction()
         {
-            if (!PhotonNetwork.OfflineMode)
-                CardChoice.instance.cards = CardManager.defaultCards;
+            //if (!PhotonNetwork.OfflineMode)
+            //   CardChoice.instance.cards = CardManager.defaultCards;
             NetworkingManager.RaiseEventOthers(NetworkEventType.StartHandshake);
 
             OnJoinedRoom?.Invoke();
@@ -408,7 +412,7 @@ namespace UnboundLib
         {
             ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent);
         }
-        
+
         // ReSharper disable once MethodOverloadWithOptionalParameter
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null, bool showInPauseMenu = false)
         {
