@@ -154,12 +154,12 @@ namespace UnboundLib.Networking
             //UnityEngine.Debug.Log("MAKING FLAGS...");
 
             // add a host flag for the host
-            NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { PhotonNetwork.LocalPlayer.ActorNumber, new string[] { "✓ " + PhotonNetwork.CurrentRoom.GetPlayer(PhotonNetwork.LocalPlayer.ActorNumber).NickName, "HOST" }, false });
+            NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { PhotonNetwork.LocalPlayer.ActorNumber, new string[] { "✓ " + PhotonNetwork.CurrentRoom.GetPlayer(PhotonNetwork.LocalPlayer.ActorNumber).NickName, "HOST"}, false });
 
             // detect unmodded clients
             foreach (int actorID in PhotonNetwork.CurrentRoom.Players.Values.Select(p => p.ActorNumber).Except(clientsServerSideGUIDs.Keys).Except(new int[] { PhotonNetwork.LocalPlayer.ActorNumber }).ToArray())
             {
-                NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { actorID, new string[] { "✗ " + PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName, "UNMODDED" }, true });
+                NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { actorID, new string[] { "✗ " + PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName, "UNMODDED" }, true });
             }
 
             foreach (int actorID in clientsServerSideGUIDs.Keys)
@@ -172,7 +172,7 @@ namespace UnboundLib.Networking
                     flags.Add("ALL MODS SYNCED");
                     //UnityEngine.Debug.Log(PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName + " is synced!");
 
-                    NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] {actorID, flags.ToArray(), false});
+                    NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] {actorID, flags.ToArray(), false});
                     continue;
                 }
                 else
@@ -191,7 +191,7 @@ namespace UnboundLib.Networking
                 {
                     flags.Add("EXTRA: " + ModIDFromGUID(actorID, extraGUID) + " (" + extraGUID + ") Version: " + VersionFromGUID(actorID, extraGUID));
                 }
-                NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { actorID, flags.ToArray(), true });
+                NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { actorID, flags.ToArray(), true });
             }
 
 
@@ -272,8 +272,14 @@ namespace UnboundLib.Networking
                 }
                 var text = MenuHandler.CreateText(nickName, playerObj, out var uGUI, 20, false, error ? Color.red : new Color(0.902f, 0.902f, 0.902f, 1f), null, null, TextAlignmentOptions.MidlineLeft );
                 text.name = nickName;
+                var textTMP = text.GetComponent<TextMeshProUGUI>();
+                var ping = text.AddComponent<PingUpdater>();
+                ping.text = textTMP.text;
+                ping.textBox = textTMP;
+                ping.actorId = actorID;
                 var hover = text.AddComponent<CheckHover>();
                 hover.texts = flags;
+                hover.actorId = actorID;
                 //var uGUIMargin = uGUI.margin;
                 //uGUIMargin.z = 1600;
                 //uGUI.margin = uGUIMargin;
@@ -332,6 +338,31 @@ namespace UnboundLib.Networking
         }
     }
 
+    internal class PingUpdater : MonoBehaviour
+    {
+        public string text;
+        public int actorId;
+        public TextMeshProUGUI textBox;
+
+        private void Start()
+        {
+            PingMonitor.instance.PingUpdateAction += OnPingUpdate;
+        }
+
+        private void OnPingUpdate(int updatedActorId, int ping)
+        {
+            if (updatedActorId == actorId)
+            {
+                textBox.text = $"{text} - {ping}ms";
+            }
+        }
+
+        private void OnDestroy()
+        {
+            PingMonitor.instance.PingUpdateAction -= OnPingUpdate;
+        }
+    }
+
     internal class DetectUnmodded : MonoBehaviour
     {
         private readonly float baseDelay = 1f;
@@ -373,8 +404,10 @@ namespace UnboundLib.Networking
     internal class CheckHover : MonoBehaviour
     {
         public string[] texts;
+        public int actorId;
 
         private GUIStyle guiStyleFore;
+        private string pingString = "";
 
         private void Start()
         {
@@ -389,6 +422,8 @@ namespace UnboundLib.Networking
             background.Apply();
             guiStyleFore.normal.background = background;
             guiStyleFore.fontSize = 20;
+
+            PingMonitor.instance.PingUpdateAction += OnPingUpdate;
         }
         private void OnGUI()
         {
@@ -424,6 +459,23 @@ namespace UnboundLib.Networking
             }
 
             return false;
+        }
+
+        private void OnPingUpdate(int updatedActorId, int ping)
+        {
+            if (updatedActorId == actorId)
+            {
+                if (pingString == "")
+                {
+                    pingString = texts[1];
+                }
+                texts[1] = $"{pingString} - {ping}ms";
+            }
+        }
+
+        private void OnDestroy()
+        {
+            PingMonitor.instance.PingUpdateAction -= OnPingUpdate;
         }
     }
 }
