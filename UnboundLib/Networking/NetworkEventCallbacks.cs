@@ -1,4 +1,5 @@
 ﻿using Photon.Pun;
+using UnboundLib.GameModes;
 
 namespace UnboundLib
 {
@@ -14,6 +15,10 @@ namespace UnboundLib
         public override void OnLeftRoom()
         {
             OnLeftRoomEvent?.Invoke();
+        }
+        public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
+        {
+            GameModeManager.CurrentHandler.OnPlayerLeftRoom(otherPlayer);
         }
     }
 }

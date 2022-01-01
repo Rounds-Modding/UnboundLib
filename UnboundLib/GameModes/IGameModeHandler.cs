@@ -28,6 +28,13 @@ namespace UnboundLib.GameModes
         void PlayerDied(Player killedPlayer, int playersAlive);
 
         /// <summary>
+        ///     Should handle cleanup when a player leaves the game mid-match, ideally in such a way that allows the game to continue.
+        ///     The default implementation takes care of reassigning playerIDs and teamIDs to ensure they are sequential, but any extra
+        ///     handling must be done here.
+        /// </summary>
+        void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer);
+
+        /// <summary>
         ///     Should return the current score of a team. This value should reflect the state of the actual game when applicable.
         /// </summary>
         /// <param name="teamID">The ID of the team whose score should be returned.</param>
