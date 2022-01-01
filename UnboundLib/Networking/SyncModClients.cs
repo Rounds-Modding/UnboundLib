@@ -272,7 +272,6 @@ namespace UnboundLib.Networking
                 }
                 var text = MenuHandler.CreateText(nickName, playerObj, out var uGUI, 20, false, error ? Color.red : new Color(0.902f, 0.902f, 0.902f, 1f), null, null, TextAlignmentOptions.MidlineLeft );
                 text.name = nickName;
-                var textTMP = text.GetComponent<TextMeshProUGUI>();
                 var ping = text.AddComponent<PingUpdater>();
                 ping.actorId = actorID;
                 var hover = text.AddComponent<CheckHover>();
