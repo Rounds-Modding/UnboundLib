@@ -32,7 +32,7 @@ namespace UnboundLib.GameModes
         ///     The default implementation takes care of reassigning playerIDs and teamIDs to ensure they are sequential, but any extra
         ///     handling must be done here.
         /// </summary>
-        void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer);
+        void PlayerLeft(Player leftPlayer);
 
         /// <summary>
         ///     Should return the current score of a team. This value should reflect the state of the actual game when applicable.

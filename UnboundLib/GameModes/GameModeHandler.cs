@@ -60,24 +60,24 @@ namespace UnboundLib.GameModes
 
         public abstract void PlayerDied(Player killedPlayer, int playersAlive);
 
-        public virtual void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
+        public virtual void PlayerLeft(Player leftPlayer)
         {
-            List<Player> disconnected = PlayerManager.instance.players.Where(p => p.data.view.ControllerActorNr == otherPlayer.ActorNumber).ToList();
+            List<Player> remainingPlayers = PlayerManager.instance.players.Where(p => p != leftPlayer).ToList();
+            int playersAlive = remainingPlayers.Where(p => !p.data.dead).Count();
 
-            int playersAlive = PlayerManager.instance.players.Except(disconnected).Where(p => !p.data.dead).Count();
-
-            foreach (Player player in disconnected)
+            if (!leftPlayer.data.dead)
             {
                 try
                 {
-                    this.PlayerDied(player, playersAlive);
+                    this.PlayerDied(leftPlayer, playersAlive);
                 }
                 catch { }
             }
+
             // get new playerIDs
             Dictionary<Player, int> newPlayerIDs = new Dictionary<Player, int>() { };
             int playerID = 0;
-            foreach (Player player in PlayerManager.instance.players.Except(disconnected).OrderBy(p => p.playerID))
+            foreach (Player player in remainingPlayers.OrderBy(p => p.playerID))
             {
                 newPlayerIDs[player] = playerID;
                 playerID++;
@@ -101,7 +101,7 @@ namespace UnboundLib.GameModes
 
             // reassign teamIDs
             Dictionary<int, List<Player>> teams = new Dictionary<int, List<Player>>() { };
-            foreach (Player player in PlayerManager.instance.players.Except(disconnected).OrderBy(p=>p.teamID).ThenBy(p=>p.playerID))
+            foreach (Player player in remainingPlayers.OrderBy(p=>p.teamID).ThenBy(p=>p.playerID))
             {
                 if (!teams.ContainsKey(player.teamID)) { teams[player.teamID] = new List<Player>() { }; }
 
@@ -118,14 +118,13 @@ namespace UnboundLib.GameModes
                 teamID++;
             }
 
-            PlayerManager.instance.players = PlayerManager.instance.players.Except(disconnected).ToList();
+            PlayerManager.instance.players = remainingPlayers.ToList();
 
             // count number of unique teams remaining as well as the number of unique clients, if either are equal to 1, the game is borked
             if (GameManager.instance.isPlaying && (PlayerManager.instance.players.Select(p => p.teamID).Distinct().Count() <= 1 || PlayerManager.instance.players.Select(p => p.data.view.ControllerActorNr).Distinct().Count() <= 1))
             {
                 Unbound.Instance.StartCoroutine((IEnumerator) NetworkConnectionHandler.instance.InvokeMethod("DoDisconnect", "DISCONNECTED", "TOO MANY DISCONNECTS"));
             }
-
         }
 
         public abstract TeamScore GetTeamScore(int teamID);
