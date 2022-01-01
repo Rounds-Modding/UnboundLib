@@ -121,7 +121,7 @@ namespace UnboundLib.GameModes
             PlayerManager.instance.players = PlayerManager.instance.players.Except(disconnected).ToList();
 
             // count number of unique teams remaining as well as the number of unique clients, if either are equal to 1, the game is borked
-            if (PlayerManager.instance.players.Select(p => p.teamID).Distinct().Count() <= 1 || PlayerManager.instance.players.Select(p => p.data.view.ControllerActorNr).Distinct().Count() <= 1)
+            if (GameManager.instance.isPlaying && (PlayerManager.instance.players.Select(p => p.teamID).Distinct().Count() <= 1 || PlayerManager.instance.players.Select(p => p.data.view.ControllerActorNr).Distinct().Count() <= 1))
             {
                 Unbound.Instance.StartCoroutine((IEnumerator) NetworkConnectionHandler.instance.InvokeMethod("DoDisconnect", "DISCONNECTED", "TOO MANY DISCONNECTS"));
             }
