@@ -70,7 +70,6 @@ namespace UnboundLib
         public delegate void OnLeftDelegate();
         public static event OnJoinedDelegate OnJoinedRoom;
         public static event OnLeftDelegate OnLeftRoom;
-        public PingMonitor pingMonitor;
 
         internal static List<string> loadedGUIDs = new List<string>();
         internal static List<string> loadedMods = new List<string>();
@@ -284,7 +283,7 @@ namespace UnboundLib
             networkEvents.OnLeftRoomEvent += LevelManager.OnLeftRoomAction;
 
             // Adds the ping monitor
-            pingMonitor = gameObject.AddComponent<PingMonitor>();
+            gameObject.AddComponent<PingMonitor>();
 
             // sync modded clients
             networkEvents.OnJoinedRoomEvent += SyncModClients.RequestSync;

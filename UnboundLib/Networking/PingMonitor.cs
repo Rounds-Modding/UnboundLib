@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Photon.Pun;
-using UnboundLib;
 using UnboundLib.Networking;
 using ExitGames.Client.Photon;
 
@@ -16,6 +15,8 @@ namespace UnboundLib
         public Dictionary<int, int> PlayerPings = new Dictionary<int, int>();
         public Action<int, int> PingUpdateAction;
 
+        public static PingMonitor instance;
+
         private int pingUpdate = 0;
 
         private void Start()
@@ -26,6 +27,19 @@ namespace UnboundLib
                 {
                     ConnectedPlayers.Add(player.ActorNumber, true);
                 }
+            }
+        }
+
+        private void Awake()
+        {
+            if (instance == null)
+            {
+                instance = this;
+            }
+            else if (instance != this)
+            {
+                DestroyImmediate(this);
+                return;
             }
         }
 
@@ -42,22 +56,6 @@ namespace UnboundLib
             {
                 pingUpdate = 0;
                 RPCA_UpdatePings();
-            }
-        }
-
-        public override void OnPlayerEnteredRoom(Photon.Realtime.Player newPlayer)
-        {
-            // See if the connecting player existed previously, if not register them.
-            // There should be enough time between a player joining and their ping update to do so.
-            if (ConnectedPlayers.TryGetValue(newPlayer.ActorNumber, out var connected))
-            {
-                connected = true;
-                PlayerPings[newPlayer.ActorNumber] = 0;
-            }
-            else
-            {
-                ConnectedPlayers.Add(newPlayer.ActorNumber, true);
-                PlayerPings.Add(newPlayer.ActorNumber, 0);
             }
         }
 
@@ -99,6 +97,12 @@ namespace UnboundLib
             PlayerPings[otherPlayer.ActorNumber] = 0;
         }
 
+        public override void OnPlayerEnteredRoom(Photon.Realtime.Player newPlayer)
+        {
+            ConnectedPlayers[newPlayer.ActorNumber] = true;
+            PlayerPings[newPlayer.ActorNumber] = 0;
+        }
+
         public override void OnPlayerPropertiesUpdate(Photon.Realtime.Player targetPlayer, Hashtable changedProps)
         {
             // If ping was updated, we run any actions for it now.
@@ -127,27 +131,30 @@ namespace UnboundLib
         /// <returns>An array of players who are owned by the actor number. Returns null if none are found.</returns>
         public Player[] GetPlayersByOwnerActorNumber(int actorNumber)
         {
+            // Get each player with the same actor number
             var players = PlayerManager.instance.players.Where((player) => player.data.view.OwnerActorNr == actorNumber).ToArray();
 
+            // If it's not an empty array, return it.
             if (players.Length > 0)
             {
                 return players;
             }
+
+            // Default to null.
             return null;
         }
 
+        // Uses UnboundRPCs to send ping update requests.
         [UnboundRPC]
         private static void RPCA_UpdatePings()
         {
+            // Get the current custom properties of the local photon player object.
             Hashtable customProperties = PhotonNetwork.LocalPlayer.CustomProperties;
-            if (customProperties.ContainsKey("Ping"))
-            {
-                customProperties["Ping"] = PhotonNetwork.GetPing();
-            }
-            else
-            {
-                customProperties.Add("Ping", PhotonNetwork.GetPing());
-            }
+
+            // Record the ping, we don't care if we override anything.
+            customProperties["Ping"] = PhotonNetwork.GetPing();
+
+            // Send out the update to their properties.
             PhotonNetwork.LocalPlayer.SetCustomProperties(customProperties, null, null);
         }
     }
