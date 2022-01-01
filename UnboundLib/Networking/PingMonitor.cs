@@ -48,7 +48,7 @@ namespace UnboundLib
             // We only check ping if connected to a room.
             if (!PhotonNetwork.OfflineMode)
             {
-                pingUpdate = pingUpdate + 1;
+                pingUpdate++;
             }
 
             // We want to check our ping every 100 frames, roughly every 2 secs.
