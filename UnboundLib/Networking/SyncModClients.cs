@@ -274,8 +274,6 @@ namespace UnboundLib.Networking
                 text.name = nickName;
                 var textTMP = text.GetComponent<TextMeshProUGUI>();
                 var ping = text.AddComponent<PingUpdater>();
-                ping.text = textTMP.text;
-                ping.textBox = textTMP;
                 ping.actorId = actorID;
                 var hover = text.AddComponent<CheckHover>();
                 hover.texts = flags;
@@ -340,9 +338,10 @@ namespace UnboundLib.Networking
 
     internal class PingUpdater : MonoBehaviour
     {
-        public string text;
         public int actorId;
-        public TextMeshProUGUI textBox;
+
+        private TextMeshProUGUI textBox;
+        private string text = null;
 
         private void Start()
         {
@@ -351,6 +350,12 @@ namespace UnboundLib.Networking
 
         private void OnPingUpdate(int updatedActorId, int ping)
         {
+            if (!textBox)
+            {
+                textBox = gameObject.GetComponent<TextMeshProUGUI>();
+                text = textBox.text;
+            }
+
             if (updatedActorId == actorId)
             {
                 textBox.text = $"{text} - {ping}ms";
