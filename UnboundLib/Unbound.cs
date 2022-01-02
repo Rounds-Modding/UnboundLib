@@ -282,6 +282,9 @@ namespace UnboundLib
             networkEvents.OnLeftRoomEvent += CardManager.OnLeftRoomAction;
             networkEvents.OnLeftRoomEvent += LevelManager.OnLeftRoomAction;
 
+            // Adds the ping monitor
+            gameObject.AddComponent<PingMonitor>();
+
             // sync modded clients
             networkEvents.OnJoinedRoomEvent += SyncModClients.RequestSync;
         }
