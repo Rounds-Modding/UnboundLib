@@ -84,12 +84,12 @@ namespace UnboundLib
         internal static AssetBundle linkAssets;
         private static GameObject modalPrefab;
 
+        private TextMeshProUGUI text;
+
         public Unbound()
         {
             // Add UNBOUND text to the main menu screen
-            TextMeshProUGUI text = null;
             bool firstTime = true;
-            bool canCreate;
 
             On.MainMenuHandler.Awake += (orig, self) =>
             {
@@ -106,21 +106,7 @@ namespace UnboundLib
 
 
                 // create unbound text
-                canCreate = true;
-                this.ExecuteAfterSeconds(firstTime ? 4f : 0.1f, () =>
-                {
-                    if (!canCreate) return;
-                    text = MenuHandler.CreateTextAt("UNBOUND", Vector2.zero);
-                    text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-                    text.fontSize = 30;
-                    text.color = (Color.yellow + Color.red) / 2;
-                    text.font = ((TextMeshProUGUI) FindObjectOfType<ListMenuButton>().GetFieldValue("text")).font;
-                    text.transform.SetParent(MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group"), true);
-                    text.transform.SetAsFirstSibling();
-                    text.rectTransform.localScale = Vector3.one;
-                    text.rectTransform.localPosition = new Vector3(0, 350, text.rectTransform.localPosition.z);
-
-                });
+                this.StartCoroutine(this.AddTextWhenReady(firstTime ? 4f : 0.1f));
 
                 ModOptions.Instance.CreateModOptions(firstTime);
                 Credits.Instance.CreateCreditsMenu(firstTime);
@@ -163,8 +149,7 @@ namespace UnboundLib
 
             On.MainMenuHandler.Close += (orig, self) =>
             {
-                canCreate = false;
-                if (text != null) Destroy(text.gameObject);
+                if (this.text != null) Destroy(this.text.gameObject);
 
                 orig(self);
             };
@@ -207,6 +192,30 @@ namespace UnboundLib
             gameObject.AddComponent<ToggleCardsMenuHandler>();
         }
 
+        private IEnumerator AddTextWhenReady(float delay = 0f, float maxTimeToWait = 10f)
+        {
+            if (delay > 0f) { yield return new WaitForSecondsRealtime(delay); }
+
+            float time = maxTimeToWait;
+            while (time > 0f && MainMenuHandler.instance?.transform?.Find("Canvas/ListSelector/Main/Group") == null)
+            {
+                time -= Time.deltaTime;
+                yield return null;
+            }
+            if (MainMenuHandler.instance?.transform?.Find("Canvas/ListSelector/Main/Group") == null)
+            {
+                yield break;
+            }
+            text = MenuHandler.CreateTextAt("UNBOUND", Vector2.zero);
+            text.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+            text.fontSize = 30;
+            text.color = (Color.yellow + Color.red) / 2;
+            text.transform.SetParent(MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group"), true);
+            text.transform.SetAsFirstSibling();
+            text.rectTransform.localScale = Vector3.one;
+            text.rectTransform.localPosition = new Vector3(0, 350, text.rectTransform.localPosition.z);
+
+        }
         private void Awake()
         {
             if (Instance == null)
