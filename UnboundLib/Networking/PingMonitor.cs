@@ -150,7 +150,7 @@ namespace UnboundLib
 
             if (ping <= 150)
             {
-                result = new PingColor(new Color(60f / 255f, 189f / 255f, 28f / 255f), "#3cbd1c");
+                result = new PingColor(new Color(255f / 255f, 255f / 255f, 255f / 255f), "#FFFFFF");
             }
             else if (ping <= 200)
             {

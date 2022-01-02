@@ -357,9 +357,14 @@ namespace UnboundLib.Networking
 
             var color = PingMonitor.instance.GetPingColors(ping);
 
+            if (textBox.color == Color.red)
+            {
+                color = PingMonitor.instance.GetPingColors(5000);
+            }
+
             if (updatedActorId == actorId)
             {
-                textBox.text = $"{text} - <color={color.HTMLCode}>{ping}</color>ms";
+                textBox.text = $"{text} - <color={color.HTMLCode}>{ping}ms</color>";
             }
         }
 
@@ -478,7 +483,7 @@ namespace UnboundLib.Networking
 
                 var color = PingMonitor.instance.GetPingColors(ping);
 
-                texts[0] = $"{pingString} - <color={color.HTMLCode}>{ping}</color>ms";
+                texts[0] = $"{pingString} - <color={color.HTMLCode}>{ping}ms</color>";
             }
         }
 
