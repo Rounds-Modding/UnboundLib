@@ -162,7 +162,7 @@ namespace UnboundLib.Networking
                 NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { actorID, new string[] { "✗ " + PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName, "UNMODDED" }, true });
             }
 
-            foreach (int actorID in clientsServerSideGUIDs.Keys)
+            foreach (int actorID in clientsServerSideGUIDs.Keys.Intersect(PhotonNetwork.CurrentRoom.Players.Select(kv => kv.Value.ActorNumber)))
             {
                 List<string> flags = new List<string>();
 
@@ -254,6 +254,11 @@ namespace UnboundLib.Networking
                 playerObj = uiParent.transform.Find(nickName).gameObject;
             }
 
+            // destroy sync object and remake it
+            if (playerObj?.transform?.Find(nickName)?.gameObject != null)
+            {
+                UnityEngine.GameObject.DestroyImmediate(playerObj.transform.Find(nickName).gameObject);
+            }
             if (!playerObj.transform.Find(nickName))
             {
                 var flag = flags[0];
