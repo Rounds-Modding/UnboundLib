@@ -144,6 +144,38 @@ namespace UnboundLib
             return null;
         }
 
+        public PingColor GetPingColors(int ping)
+        {
+            PingColor result;
+
+            if (ping <= 150)
+            {
+                result = new PingColor(new Color(60f / 255f, 189f / 255f, 28f / 255f), "#3cbd1c");
+            }
+            else if (ping <= 200)
+            {
+                result = new PingColor(new Color(191f / 255f, 101f / 255f, 17f / 255f), "#bf6511");
+            }
+            else
+            {
+                result = new PingColor(new Color(219f / 255f, 0f / 255f, 0f / 255f), "#db0000");
+            }
+
+            return result;
+        }
+
+        public struct PingColor
+        {
+            public Color color;
+            public string HTMLCode;
+
+            public PingColor(Color colorColor, string code)
+            {
+                color = colorColor;
+                HTMLCode = code;
+            }
+        }
+
         // Uses UnboundRPCs to send ping update requests.
         [UnboundRPC]
         private static void RPCA_UpdatePings()
