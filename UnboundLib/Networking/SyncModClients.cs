@@ -473,7 +473,7 @@ namespace UnboundLib.Networking
             {
                 if (pingString == "")
                 {
-                    pingString = texts[1];
+                    pingString = texts[0];
                 }
 
                 var color = PingMonitor.instance.GetPingColors(ping);
