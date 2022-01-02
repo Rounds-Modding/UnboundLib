@@ -1,4 +1,7 @@
 ﻿using Photon.Pun;
+using UnboundLib.GameModes;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace UnboundLib
 {
@@ -14,6 +17,15 @@ namespace UnboundLib
         public override void OnLeftRoom()
         {
             OnLeftRoomEvent?.Invoke();
+        }
+        public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
+        {
+            List<Player> disconnected = PlayerManager.instance.players.Where(p => p.data.view.ControllerActorNr == otherPlayer.ActorNumber).ToList();
+
+            foreach (Player player in disconnected)
+            {
+                GameModeManager.CurrentHandler.PlayerLeft(player);
+            }
         }
     }
 }
