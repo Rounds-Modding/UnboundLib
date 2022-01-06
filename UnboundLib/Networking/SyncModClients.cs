@@ -255,9 +255,9 @@ namespace UnboundLib.Networking
             }
 
             // destroy sync object and remake it
-            if (playerObj?.transform?.Find(nickName)?.gameObject != null)
+            while (playerObj.transform.childCount > 0)
             {
-                UnityEngine.GameObject.DestroyImmediate(playerObj.transform.Find(nickName).gameObject);
+                UnityEngine.GameObject.DestroyImmediate(playerObj.transform.GetChild(0).gameObject);
             }
             if (!playerObj.transform.Find(nickName))
             {
@@ -417,13 +417,15 @@ namespace UnboundLib.Networking
         }
     }
 
-    internal class CheckHover : MonoBehaviour
+    internal class CheckHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         public string[] texts;
         public int actorId;
 
         private GUIStyle guiStyleFore;
         private string pingString = "";
+
+        private bool inBounds = false;
 
         private void Start()
         {
@@ -443,7 +445,7 @@ namespace UnboundLib.Networking
         }
         private void OnGUI()
         {
-            if (IsOverThisObject() && texts != Array.Empty<string>() && Input.mousePosition.x < Screen.width/4)
+            if (this.inBounds && texts != Array.Empty<string>() && Input.mousePosition.x < Screen.width/4)
             {
                 Vector2 size = guiStyleFore.CalcSize(new GUIContent(String.Join("\n",texts)));
                 GUILayout.BeginArea(new Rect(Input.mousePosition.x + 25, Screen.height - Input.mousePosition.y + 25, size.x + 10, size.y+10));
@@ -457,24 +459,13 @@ namespace UnboundLib.Networking
             }
         }
 
-        private bool IsOverThisObject()
+        public void OnPointerEnter(PointerEventData eventData)
         {
-            var pointerEventData = new PointerEventData(EventSystem.current)
-            {
-                position = Input.mousePosition
-            };
-
-            var raycastResults = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(pointerEventData, raycastResults);
-            foreach (var raycast in raycastResults)
-            {
-                if (raycast.gameObject.name == gameObject.name)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            this.inBounds = true;
+        }
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            this.inBounds = false;
         }
 
         private void OnPingUpdate(int updatedActorId, int ping)
