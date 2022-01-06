@@ -154,15 +154,15 @@ namespace UnboundLib.Networking
             //UnityEngine.Debug.Log("MAKING FLAGS...");
 
             // add a host flag for the host
-            NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { PhotonNetwork.LocalPlayer.ActorNumber, new string[] { "✓ " + PhotonNetwork.CurrentRoom.GetPlayer(PhotonNetwork.LocalPlayer.ActorNumber).NickName, "HOST" }, false });
+            NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { PhotonNetwork.LocalPlayer.ActorNumber, new string[] { "✓ " + PhotonNetwork.CurrentRoom.GetPlayer(PhotonNetwork.LocalPlayer.ActorNumber).NickName, "HOST"}, false });
 
             // detect unmodded clients
             foreach (int actorID in PhotonNetwork.CurrentRoom.Players.Values.Select(p => p.ActorNumber).Except(clientsServerSideGUIDs.Keys).Except(new int[] { PhotonNetwork.LocalPlayer.ActorNumber }).ToArray())
             {
-                NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { actorID, new string[] { "✗ " + PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName, "UNMODDED" }, true });
+                NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { actorID, new string[] { "✗ " + PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName, "UNMODDED" }, true });
             }
 
-            foreach (int actorID in clientsServerSideGUIDs.Keys)
+            foreach (int actorID in clientsServerSideGUIDs.Keys.Intersect(PhotonNetwork.CurrentRoom.Players.Select(kv => kv.Value.ActorNumber)))
             {
                 List<string> flags = new List<string>();
 
@@ -172,7 +172,7 @@ namespace UnboundLib.Networking
                     flags.Add("ALL MODS SYNCED");
                     //UnityEngine.Debug.Log(PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName + " is synced!");
 
-                    NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] {actorID, flags.ToArray(), false});
+                    NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] {actorID, flags.ToArray(), false});
                     continue;
                 }
                 else
@@ -191,7 +191,7 @@ namespace UnboundLib.Networking
                 {
                     flags.Add("EXTRA: " + ModIDFromGUID(actorID, extraGUID) + " (" + extraGUID + ") Version: " + VersionFromGUID(actorID, extraGUID));
                 }
-                NetworkingManager.RPC(typeof(SyncModClients), "AddFlags", new object[] { actorID, flags.ToArray(), true });
+                NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { actorID, flags.ToArray(), true });
             }
 
 
@@ -254,6 +254,11 @@ namespace UnboundLib.Networking
                 playerObj = uiParent.transform.Find(nickName).gameObject;
             }
 
+            // destroy sync object and remake it
+            while (playerObj.transform.childCount > 0)
+            {
+                UnityEngine.GameObject.DestroyImmediate(playerObj.transform.GetChild(0).gameObject);
+            }
             if (!playerObj.transform.Find(nickName))
             {
                 var flag = flags[0];
@@ -272,8 +277,11 @@ namespace UnboundLib.Networking
                 }
                 var text = MenuHandler.CreateText(nickName, playerObj, out var uGUI, 20, false, error ? Color.red : new Color(0.902f, 0.902f, 0.902f, 1f), null, null, TextAlignmentOptions.MidlineLeft );
                 text.name = nickName;
+                var ping = text.AddComponent<PingUpdater>();
+                ping.actorId = actorID;
                 var hover = text.AddComponent<CheckHover>();
                 hover.texts = flags;
+                hover.actorId = actorID;
                 //var uGUIMargin = uGUI.margin;
                 //uGUIMargin.z = 1600;
                 //uGUI.margin = uGUIMargin;
@@ -332,6 +340,45 @@ namespace UnboundLib.Networking
         }
     }
 
+    internal class PingUpdater : MonoBehaviour
+    {
+        public int actorId;
+
+        private TextMeshProUGUI textBox;
+        private string text = null;
+
+        private void Start()
+        {
+            PingMonitor.instance.PingUpdateAction += OnPingUpdate;
+        }
+
+        private void OnPingUpdate(int updatedActorId, int ping)
+        {
+            if (!textBox)
+            {
+                textBox = gameObject.GetComponent<TextMeshProUGUI>();
+                text = textBox.text;
+            }
+
+            var color = PingMonitor.instance.GetPingColors(ping);
+
+            if (textBox.color == Color.red)
+            {
+                color = PingMonitor.instance.GetPingColors(5000);
+            }
+
+            if (updatedActorId == actorId)
+            {
+                textBox.text = $"{text} - <color={color.HTMLCode}>{ping}ms</color>";
+            }
+        }
+
+        private void OnDestroy()
+        {
+            PingMonitor.instance.PingUpdateAction -= OnPingUpdate;
+        }
+    }
+
     internal class DetectUnmodded : MonoBehaviour
     {
         private readonly float baseDelay = 1f;
@@ -370,11 +417,15 @@ namespace UnboundLib.Networking
         }
     }
 
-    internal class CheckHover : MonoBehaviour
+    internal class CheckHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         public string[] texts;
+        public int actorId;
 
         private GUIStyle guiStyleFore;
+        private string pingString = "";
+
+        private bool inBounds = false;
 
         private void Start()
         {
@@ -389,10 +440,12 @@ namespace UnboundLib.Networking
             background.Apply();
             guiStyleFore.normal.background = background;
             guiStyleFore.fontSize = 20;
+
+            PingMonitor.instance.PingUpdateAction += OnPingUpdate;
         }
         private void OnGUI()
         {
-            if (IsOverThisObject() && texts != Array.Empty<string>() && Input.mousePosition.x < Screen.width/4)
+            if (this.inBounds && texts != Array.Empty<string>() && Input.mousePosition.x < Screen.width/4)
             {
                 Vector2 size = guiStyleFore.CalcSize(new GUIContent(String.Join("\n",texts)));
                 GUILayout.BeginArea(new Rect(Input.mousePosition.x + 25, Screen.height - Input.mousePosition.y + 25, size.x + 10, size.y+10));
@@ -406,24 +459,33 @@ namespace UnboundLib.Networking
             }
         }
 
-        private bool IsOverThisObject()
+        public void OnPointerEnter(PointerEventData eventData)
         {
-            var pointerEventData = new PointerEventData(EventSystem.current)
-            {
-                position = Input.mousePosition
-            };
+            this.inBounds = true;
+        }
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            this.inBounds = false;
+        }
 
-            var raycastResults = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(pointerEventData, raycastResults);
-            foreach (var raycast in raycastResults)
+        private void OnPingUpdate(int updatedActorId, int ping)
+        {
+            if (updatedActorId == actorId)
             {
-                if (raycast.gameObject.name == gameObject.name)
+                if (pingString == "")
                 {
-                    return true;
+                    pingString = texts[0];
                 }
-            }
 
-            return false;
+                var color = PingMonitor.instance.GetPingColors(ping);
+
+                texts[0] = $"{pingString} - <color={color.HTMLCode}>{ping}ms</color>";
+            }
+        }
+
+        private void OnDestroy()
+        {
+            PingMonitor.instance.PingUpdateAction -= OnPingUpdate;
         }
     }
 }
