@@ -151,6 +151,7 @@ namespace UnboundLib.Networking
 
         internal static void MakeFlags()
         {
+            if (!PhotonNetwork.IsMasterClient) { return; }
             //UnityEngine.Debug.Log("MAKING FLAGS...");
 
             // add a host flag for the host
@@ -217,6 +218,7 @@ namespace UnboundLib.Networking
 
             
             var nickName = PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName;
+            var objName = actorID.ToString();
 
             var _uiHolder = MenuHandler.modOptionsUI.LoadAsset<GameObject>("uiHolder");
             var _checkmark =  MenuHandler.modOptionsUI.LoadAsset<GameObject>("checkmark");
@@ -233,6 +235,7 @@ namespace UnboundLib.Networking
                 uiParent.name = "UIHolder";
                 uiParent.GetComponent<RectTransform>().localPosition = new Vector3(-975, 486, 2565);
                 uiParent.GetOrAddComponent<DetectUnmodded>();
+                uiParent.GetOrAddComponent<DetectMissingPlayers>();
                 uiParent.GetComponent<VerticalLayoutGroup>().spacing = -60;
             }
             else
@@ -241,17 +244,17 @@ namespace UnboundLib.Networking
             }
             
             GameObject playerObj;
-            if (!uiParent.transform.Find(nickName))
+            if (!uiParent.transform.Find(objName))
             {
                 playerObj = new GameObject();
                 playerObj.AddComponent<RectTransform>();
                 playerObj.transform.SetParent(uiParent.transform, true);
                 playerObj.transform.localScale = Vector3.one;
-                playerObj.name = nickName;
+                playerObj.name = objName;
             }
             else
             {
-                playerObj = uiParent.transform.Find(nickName).gameObject;
+                playerObj = uiParent.transform.Find(objName).gameObject;
             }
 
             // destroy sync object and remake it
@@ -413,6 +416,45 @@ namespace UnboundLib.Networking
                         update = true;
                     }
                 }
+            }
+        }
+    }
+
+    internal class DetectMissingPlayers : MonoBehaviour
+    {
+        private const float baseDelay = 1f;
+        private float delay = baseDelay;
+        void Start()
+        {
+            this.delay = baseDelay;
+        }
+
+        void Update()
+        {
+            if (this.delay <= 0f)
+            {
+                this.delay = baseDelay;
+
+                // look through all of the mod syncing objects and make sure there is a photon client with the same actor number
+                List<int> toDestroy = new List<int>();
+                for (int i = 0; i < this.gameObject.transform.childCount; i++)
+                {
+                    GameObject playerObj = this.gameObject.transform.GetChild(i).gameObject;
+                    if (!PhotonNetwork.CurrentRoom.Players.Keys.Select(aID => aID.ToString()).Contains(playerObj.name))
+                    {
+                        toDestroy.Add(i);
+                    }
+                }
+                foreach (int i in toDestroy)
+                {
+                    Destroy(this.gameObject.transform.GetChild(i).gameObject);
+                }
+                
+
+            }
+            else
+            {
+                this.delay -= TimeHandler.deltaTime;
             }
         }
     }
