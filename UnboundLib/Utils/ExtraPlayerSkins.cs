@@ -328,7 +328,7 @@ namespace UnboundLib.Utils
                 case 21:
                     return "Indigo";
                 case 22:
-                    return "Telemagenta";
+                    return "Cerise";
                 case 23:
                     return "Teal";
                 case 24:
