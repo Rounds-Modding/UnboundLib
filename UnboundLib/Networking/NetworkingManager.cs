@@ -131,7 +131,7 @@ namespace UnboundLib
 
             if (!rpcMethodCache.ContainsKey(key))
             {
-                var methodInfo = (from m in type.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static)
+                var methodInfo = (from m in type.GetMethods(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.FlattenHierarchy)
                                   let attr = m.GetCustomAttribute<UnboundRPC>()
                                   where attr != null
                                   let name = attr.EventID == null ? m.Name : attr.EventID
