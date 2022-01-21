@@ -91,7 +91,16 @@ namespace UnboundLib.Patches
             return newInstructions;
         }
     }
-
+    [HarmonyPatch(typeof(GM_ArmsRace), "StartGame")]
+    class GM_ArmsRace_Patch_StartGame
+    {
+        // Postfix to reset previousRound/PointWinners
+        static void Postfix(GM_ArmsRace __instance)
+        {
+            __instance.GetAdditionalData().previousPointWinners = new int[] { };
+            __instance.GetAdditionalData().previousRoundWinners = new int[] { };
+        }
+    }
     [HarmonyPatch(typeof(GM_ArmsRace), "DoStartGame")]
     class GM_ArmsRace_Patch_DoStartGame
     {
