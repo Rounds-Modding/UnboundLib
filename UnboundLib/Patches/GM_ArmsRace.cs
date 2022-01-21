@@ -333,10 +333,22 @@ namespace UnboundLib.Patches
             }
         }
     }
-
+    [HarmonyPatch(typeof(GM_ArmsRace), "PointOver")]
+    class GM_ArmsRace_Patch_PointOver
+    {
+        static void Postfix(GM_ArmsRace __instance, int winningTeamID)
+        {
+            __instance.GetAdditionalData().previousPointWinners = new int[] { winningTeamID };
+        }
+    }
     [HarmonyPatch(typeof(GM_ArmsRace), "RoundOver")]
     class GM_ArmsRace_Patch_RoundOver
     {
+        static void Postfix(GM_ArmsRace __instance, int winningTeamID)
+        {
+            __instance.GetAdditionalData().previousRoundWinners = new int[] { winningTeamID };
+        }
+
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator gen)
         {
             // Do not set p1Points and p2Points to zero in RoundOver. We want to do it only after we've displayed them in RoundTransition.

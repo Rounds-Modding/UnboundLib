@@ -1,15 +1,18 @@
-﻿namespace UnboundLib.GameModes
+﻿using System.Collections.Generic;
+using UnboundLib.Extensions;
+
+namespace UnboundLib.GameModes
 {
     public class ArmsRaceHandler : GameModeHandler<GM_ArmsRace>
     {
         public override string Name
         {
-            get { return "ArmsRace"; }
+            get { return "Versus"; }
         }
 
         public override GameSettings Settings { get; protected set; }
 
-        public ArmsRaceHandler() : base("Arms race")
+        public ArmsRaceHandler() : base(GameModeManager.ArmsRaceID)
         {
             Settings = new GameSettings()
             {
@@ -62,6 +65,24 @@
         public override void StartGame()
         {
             GameMode.StartGame();
+        }
+
+        public override int[] GetGameWinners()
+        {
+            List<int> winners = new List<int>() { };
+            if (GameMode.p1Rounds >= GameMode.roundsToWinGame) { winners.Add(0); }
+            if (GameMode.p2Rounds >= GameMode.roundsToWinGame) { winners.Add(1); }
+            return winners.ToArray();
+        }
+
+        public override int[] GetRoundWinners()
+        {
+            return GameMode.GetAdditionalData().previousRoundWinners;
+        }
+
+        public override int[] GetPointWinners()
+        {
+            return GameMode.GetAdditionalData().previousPointWinners;
         }
 
         public override void ResetGame()

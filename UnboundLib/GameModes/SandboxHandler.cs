@@ -9,7 +9,7 @@
 
         public override GameSettings Settings { get; protected set; }
 
-        public SandboxHandler() : base("Test") {
+        public SandboxHandler() : base(GameModeManager.SandBoxID) {
             Settings = new GameSettings();
         }
 

@@ -7,11 +7,16 @@ using UnityEngine.SceneManagement;
 using ExitGames.Client.Photon;
 using System.Linq;
 using System.Collections.ObjectModel;
+using TMPro;
 
 namespace UnboundLib.GameModes
 {
     public static class GameModeManager
     {
+        // both of these identify existing gameobjects by name and therefore cannot be changed
+        public const string SandBoxID = "Test";
+        public const string ArmsRaceID = "Arms race";
+
         private static Dictionary<string, IGameModeHandler> handlers = new Dictionary<string, IGameModeHandler>();
         private static Dictionary<string, Type> gameModes = new Dictionary<string, Type>();
         private static Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>> hooks = new Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>>();
@@ -38,54 +43,103 @@ namespace UnboundLib.GameModes
             PhotonPeer.RegisterType(typeof(GameSettings), 200, GameSettings.Serialize, GameSettings.Deserialize);
 
             // Add preset game modes
-            handlers.Add("ArmsRace", new ArmsRaceHandler());
-            gameModes.Add("ArmsRace", typeof(GM_ArmsRace));
-            handlers.Add("Sandbox", new SandboxHandler());
-            gameModes.Add("Sandbox", typeof(GM_Test));
+            handlers.Add(ArmsRaceID, new ArmsRaceHandler());
+            gameModes.Add(ArmsRaceID, typeof(GM_ArmsRace));
+            handlers.Add(SandBoxID, new SandboxHandler());
+            gameModes.Add(SandBoxID, typeof(GM_Test));
 
             SceneManager.sceneLoaded += (scene, mode) =>
             {
                 if (scene.name == "Main")
                 {
-                    // Make existing UI buttons use our GameModeHandler logic
-                    var gameModeGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/GameMode");
-                    var onlineGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/Online/Group");
-                    var versusGo = gameModeGo.transform.Find("Group").Find("Versus").gameObject;
-                    var sandboxGo = gameModeGo.transform.Find("Group").Find("Test").gameObject;
-                    var characterSelectGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/CharacterSelect");
-                    var qMatchRem = onlineGo.transform.Find("Quick").gameObject;
-                    var tMatchRem = onlineGo.transform.Find("Twitch").gameObject;
 
-                    GameObject.DestroyImmediate(qMatchRem);
-                    GameObject.DestroyImmediate(tMatchRem);
-
-                    GameObject.DestroyImmediate(versusGo.GetComponent<Button>());
-                    var versusButton = versusGo.AddComponent<Button>();
-                    versusButton.onClick.AddListener(characterSelectGo.GetComponent<ListMenuPage>().Open);
-                    versusButton.onClick.AddListener(() => SetGameMode("ArmsRace"));
-
-                    GameObject.DestroyImmediate(sandboxGo.GetComponent<Button>());
-                    var sandboxButton = sandboxGo.AddComponent<Button>();
-                    sandboxButton.onClick.AddListener(MainMenuHandler.instance.Close);
-                    sandboxButton.onClick.AddListener(() => {
-                        SetGameMode("Sandbox");
-                        CurrentHandler.StartGame();
-                    });
+                    SetupUI();
 
                     // Add game modes back when the main scene is reloaded
                     foreach (var id in handlers.Keys)
                     {
-                        if (id != "ArmsRace" && id != "Sandbox")
+                        if (id != ArmsRaceID && id != SandBoxID)
                         {
                             AddGameMode(id, gameModes[id]);
                         }
-
                         handlers[id].SetActive(false);
                     }
 
                     SetGameMode(null);
                 }
             };
+        }
+        internal static void SetupUI()
+        {
+            // Make existing UI buttons use our GameModeHandler logic
+            var gameModeGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/GameMode");
+            var onlineGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/Online/Group");
+            var groupGo = gameModeGo.transform.Find("Group");
+            var versusGo = gameModeGo.transform.Find("Group").Find("Versus").gameObject;
+            var sandboxGo = gameModeGo.transform.Find("Group").Find(SandBoxID).gameObject;
+            var characterSelectGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/CharacterSelect");
+            var qMatchRem = onlineGo.transform.Find("Quick")?.gameObject;
+            var tMatchRem = onlineGo.transform.Find("Twitch")?.gameObject;
+
+            if (qMatchRem != null) { GameObject.DestroyImmediate(qMatchRem); }
+            if (tMatchRem != null) { GameObject.DestroyImmediate(tMatchRem); }
+
+            GameObject.DestroyImmediate(versusGo.GetComponent<Button>());
+            var versusButton = versusGo.AddComponent<Button>();
+            versusButton.onClick.AddListener(characterSelectGo.GetComponent<ListMenuPage>().Open);
+            versusButton.onClick.AddListener(() => SetGameMode(ArmsRaceID));
+
+            GameObject.DestroyImmediate(sandboxGo.GetComponent<Button>());
+            var sandboxButton = sandboxGo.AddComponent<Button>();
+            sandboxButton.onClick.AddListener(MainMenuHandler.instance.Close);
+            sandboxButton.onClick.AddListener(() => {
+                SetGameMode(SandBoxID);
+                CurrentHandler.StartGame();
+            });
+
+            // destroy all other buttons in this menu
+            List<GameObject> objsToDestroy = new List<GameObject>() { };
+            for (int i = 0; i < groupGo.childCount; i++)
+            {
+                if (groupGo.GetChild(i)?.gameObject != null && groupGo.GetChild(i).gameObject.name != "Back" && groupGo.GetChild(i).gameObject.name != "Versus" && groupGo.GetChild(i).gameObject.name != SandBoxID)
+                {
+                    objsToDestroy.Add(groupGo.GetChild(i).gameObject);
+                }
+            }
+            for (int i = 0; i < objsToDestroy.Count(); i++)
+            {
+                UnityEngine.GameObject.DestroyImmediate(objsToDestroy[i]);
+            }
+
+            var characterSelectPage = characterSelectGo.GetComponent<ListMenuPage>();
+
+            // create gamemode buttons alphabetically
+            foreach (var id in handlers.Keys.OrderByDescending(k => handlers[k].Name.ToLower()).Where(k => k!=SandBoxID && k!=ArmsRaceID))
+            {
+                var gameModeButtonGo = GameObject.Instantiate(versusGo, versusGo.transform.parent);
+                gameModeButtonGo.SetActive(true);
+                gameModeButtonGo.transform.localScale = Vector3.one;
+                gameModeButtonGo.transform.SetSiblingIndex(0);
+
+                var gameModeButtonText = gameModeButtonGo.GetComponentInChildren<TextMeshProUGUI>();
+                gameModeButtonText.text = handlers[id].Name.ToUpper();
+
+                GameObject.DestroyImmediate(gameModeButtonGo.GetComponent<Button>());
+                var gameModeButton = gameModeButtonGo.AddComponent<Button>();
+
+                gameModeButton.onClick.AddListener(characterSelectPage.Open);
+                // create a copy of the string to give to the anonymous function
+                string id_ = string.Copy(id); 
+                gameModeButton.onClick.AddListener(() => GameModeManager.SetGameMode(id_));
+            }
+
+            // keep Versus and Sandbox at the top
+            versusGo.transform.SetAsFirstSibling();
+            sandboxGo.transform.SetSiblingIndex(1);
+
+            // finally, if Versus or Sandbox were removed from the handlers/gamemodes, set their buttons to inactive - do not destroy their buttons
+            versusGo.SetActive(handlers.ContainsKey(ArmsRaceID));
+            sandboxGo.SetActive(handlers.ContainsKey(SandBoxID));
         }
 
         public static IEnumerator TriggerHook(string key)
@@ -234,6 +288,19 @@ namespace UnboundLib.GameModes
             handlers.Add(id, handler);
             gameModes.Add(id, typeof(TGameMode));
             AddGameMode(id, typeof(TGameMode));
+
+            // rebuild UI
+            SetupUI();
+        }
+
+        public static void RemoveHandler(string id)
+        {
+            if (handlers.ContainsKey(id)) { handlers.Remove(id); }
+            if (gameModes.ContainsKey(id)) { gameModes.Remove(id); }
+            RemoveGameMode(id);
+
+            // rebuild UI
+            SetupUI();
         }
 
         private static void AddGameMode(string id, Type type)
@@ -242,6 +309,14 @@ namespace UnboundLib.GameModes
             go.SetActive(false);
             go.transform.SetParent(GameObject.Find("/Game/Code/Game Modes").transform);
             go.AddComponent(type);
+        }
+
+        private static void RemoveGameMode(string id)
+        {
+            // do not destroy the sandbox or versus gamemodes
+            if (id == SandBoxID || id == ArmsRaceID) { return; }
+            var gameMode = GameObject.Find("/Game/Code/Game Modes").transform.Find($"[GameMode] {id}")?.gameObject;
+            if (gameMode != null) { UnityEngine.GameObject.Destroy(gameMode); }
         }
     }
 }
