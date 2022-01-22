@@ -71,18 +71,54 @@ namespace UnboundLib.GameModes
         }
         internal static void SetupUI()
         {
+
+            /*
+            // have to do this every time the scene is reloaded
+
+            // get original buttons and move them into a new scrollview menu
+            var origGameModeGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/GameMode");
+            if (origGameModeGo != null)
+            {
+                var origGroupGo = origGameModeGo.transform.Find("Group");
+                //var origVersusGo = origGameModeGo.transform.Find("Group").Find("Versus")?.gameObject;
+                //var origSandboxGo = origGameModeGo.transform.Find("Group").Find(SandBoxID).gameObject;
+                var characterSelectGo_ = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/CharacterSelect");
+
+                var localMenu = Utils.UI.MenuHandler.CreateMenu("LOCAL", () => { }, 
+                    MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 
+                    60, true, false, null, true, 1);
+
+                var content = localMenu.transform.Find("Group/Grid/Scroll View/Viewport/Content");
+
+                content.GetComponent<VerticalLayoutGroup>().spacing = 60;
+
+                //origVersusGo.transform.SetParent(content);
+                //origSandboxGo.transform.SetParent(content);
+
+                UnityEngine.GameObject.DestroyImmediate(origGameModeGo.gameObject);
+
+                // do not destroy local button since RWF relies on it
+                MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group/Local").gameObject.SetActive(false);
+
+                //Utils.UI.MenuHandler.CreateButton("VERSUS", localMenu, () => { characterSelectGo_.GetComponent<ListMenuPage>().Open(); SetGameMode(ArmsRaceID); });
+                Utils.UI.MenuHandler.CreateButton("SANDBOX", localMenu, () => { MainMenuHandler.instance.Close(); SetGameMode(SandBoxID); CurrentHandler.StartGame(); });
+
+            }
+            return;*/
             // Make existing UI buttons use our GameModeHandler logic
+            //var gameModeGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/LOCAL");
             var gameModeGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/GameMode");
             var onlineGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/Online/Group");
-            var groupGo = gameModeGo.transform.Find("Group");
-            var versusGo = gameModeGo.transform.Find("Group").Find("Versus").gameObject;
-            var sandboxGo = gameModeGo.transform.Find("Group").Find(SandBoxID).gameObject;
+            //var contentGo = gameModeGo.transform.Find("Group/Grid/Scroll View/Viewport/Content");
+            var contentGo = gameModeGo.transform.Find("Group");
+            var versusGo = contentGo.Find("Versus").gameObject;
+            var sandboxGo = contentGo.Find(SandBoxID).gameObject;
             var characterSelectGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/CharacterSelect");
-            var qMatchRem = onlineGo.transform.Find("Quick")?.gameObject;
-            var tMatchRem = onlineGo.transform.Find("Twitch")?.gameObject;
+            var qMatchGo = onlineGo.transform.Find("Quick")?.gameObject;
+            var tMatchGo = onlineGo.transform.Find("Twitch")?.gameObject;
 
-            if (qMatchRem != null) { GameObject.DestroyImmediate(qMatchRem); }
-            if (tMatchRem != null) { GameObject.DestroyImmediate(tMatchRem); }
+            if (qMatchGo != null) { GameObject.DestroyImmediate(qMatchGo); }
+            if (tMatchGo != null) { GameObject.DestroyImmediate(tMatchGo); }
 
             GameObject.DestroyImmediate(versusGo.GetComponent<Button>());
             var versusButton = versusGo.AddComponent<Button>();
@@ -99,11 +135,11 @@ namespace UnboundLib.GameModes
 
             // destroy all other buttons in this menu
             List<GameObject> objsToDestroy = new List<GameObject>() { };
-            for (int i = 0; i < groupGo.childCount; i++)
+            for (int i = 0; i < contentGo.childCount; i++)
             {
-                if (groupGo.GetChild(i)?.gameObject != null && groupGo.GetChild(i).gameObject.name != "Back" && groupGo.GetChild(i).gameObject.name != "Versus" && groupGo.GetChild(i).gameObject.name != SandBoxID)
+                if (contentGo.GetChild(i)?.gameObject != null && contentGo.GetChild(i).gameObject.name != "Back" && contentGo.GetChild(i).gameObject.name != "Versus" && contentGo.GetChild(i).gameObject.name != SandBoxID)
                 {
-                    objsToDestroy.Add(groupGo.GetChild(i).gameObject);
+                    objsToDestroy.Add(contentGo.GetChild(i).gameObject);
                 }
             }
             for (int i = 0; i < objsToDestroy.Count(); i++)
@@ -120,6 +156,7 @@ namespace UnboundLib.GameModes
                 gameModeButtonGo.SetActive(true);
                 gameModeButtonGo.transform.localScale = Vector3.one;
                 gameModeButtonGo.transform.SetSiblingIndex(0);
+                gameModeButtonGo.name = handlers[id].Name.ToUpper();
 
                 var gameModeButtonText = gameModeButtonGo.GetComponentInChildren<TextMeshProUGUI>();
                 gameModeButtonText.text = handlers[id].Name.ToUpper();
