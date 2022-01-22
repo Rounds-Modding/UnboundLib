@@ -83,8 +83,8 @@ namespace UnboundLib.GameModes
                 //var origVersusGo = origGameModeGo.transform.Find("Group").Find("Versus")?.gameObject;
                 //var origSandboxGo = origGameModeGo.transform.Find("Group").Find(SandBoxID).gameObject;
                 var characterSelectGo_ = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/CharacterSelect");
-
-                var localMenu = Utils.UI.MenuHandler.CreateMenu("LOCAL", () => { }, 
+            
+                var localMenu = Utils.UI.MenuHandler.CreateMenu("LOCAL", () => {MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group/Local").GetComponent<Button>().onClick.Invoke();}, 
                     MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 
                     60, true, false, null, true, 1);
 
@@ -102,7 +102,10 @@ namespace UnboundLib.GameModes
 
                 //Utils.UI.MenuHandler.CreateButton("VERSUS", localMenu, () => { characterSelectGo_.GetComponent<ListMenuPage>().Open(); SetGameMode(ArmsRaceID); });
                 Utils.UI.MenuHandler.CreateButton("SANDBOX", localMenu, () => { MainMenuHandler.instance.Close(); SetGameMode(SandBoxID); CurrentHandler.StartGame(); });
-
+            
+                // Select the local button so selection doesn't look weird
+                Unbound.Instance.ExecuteAfterSeconds(1.5f, () => {GameObject.Find("Game/UI/UI_MainMenu/Canvas/ListSelector/Main/Group/LOCAL").GetComponent<ListMenuButton>().OnPointerEnter(null);});
+                
             }
             return;*/
             // Make existing UI buttons use our GameModeHandler logic
