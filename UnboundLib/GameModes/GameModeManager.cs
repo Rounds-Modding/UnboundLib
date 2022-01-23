@@ -14,7 +14,7 @@ namespace UnboundLib.GameModes
     public static class GameModeManager
     {
         // both of these identify existing gameobjects by name and therefore cannot be changed
-        public const string SandBoxID = "Test";
+        public const string SandBoxID = "Sandbox";
         public const string ArmsRaceID = "Arms race";
 
         private static Dictionary<string, IGameModeHandler> handlers = new Dictionary<string, IGameModeHandler>();
@@ -52,6 +52,10 @@ namespace UnboundLib.GameModes
             {
                 if (scene.name == "Main")
                 {
+
+                    // rename test gamemode object to SandboxID
+                    GetGameMode<GM_Test>("Test").name = $"[GameMode] {SandBoxID}";
+
 
                     SetupUI();
 
@@ -115,7 +119,7 @@ namespace UnboundLib.GameModes
             //var contentGo = gameModeGo.transform.Find("Group/Grid/Scroll View/Viewport/Content");
             var contentGo = gameModeGo.transform.Find("Group");
             var versusGo = contentGo.Find("Versus").gameObject;
-            var sandboxGo = contentGo.Find(SandBoxID).gameObject;
+            var sandboxGo = contentGo.Find("Test").gameObject;
             var characterSelectGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/CharacterSelect");
             var qMatchGo = onlineGo.transform.Find("Quick")?.gameObject;
             var tMatchGo = onlineGo.transform.Find("Twitch")?.gameObject;
@@ -140,7 +144,7 @@ namespace UnboundLib.GameModes
             List<GameObject> objsToDestroy = new List<GameObject>() { };
             for (int i = 0; i < contentGo.childCount; i++)
             {
-                if (contentGo.GetChild(i)?.gameObject != null && contentGo.GetChild(i).gameObject.name != "Back" && contentGo.GetChild(i).gameObject.name != "Versus" && contentGo.GetChild(i).gameObject.name != SandBoxID)
+                if (contentGo.GetChild(i)?.gameObject != null && contentGo.GetChild(i).gameObject.name != "Back" && contentGo.GetChild(i).gameObject.name != "Versus" && contentGo.GetChild(i).gameObject.name != "Test")
                 {
                     objsToDestroy.Add(contentGo.GetChild(i).gameObject);
                 }
