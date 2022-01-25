@@ -76,48 +76,45 @@ namespace UnboundLib.GameModes
         internal static void SetupUI()
         {
 
-            /*
             // have to do this every time the scene is reloaded
 
-            // get original buttons and move them into a new scrollview menu
+            // Make existing UI buttons use our GameModeHandler logic
+            // as well as make the Local menu a scrollview
             var origGameModeGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/GameMode");
             if (origGameModeGo != null)
             {
                 var origGroupGo = origGameModeGo.transform.Find("Group");
-                //var origVersusGo = origGameModeGo.transform.Find("Group").Find("Versus")?.gameObject;
-                //var origSandboxGo = origGameModeGo.transform.Find("Group").Find(SandBoxID).gameObject;
                 var characterSelectGo_ = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/CharacterSelect");
             
-                var localMenu = Utils.UI.MenuHandler.CreateMenu("LOCAL", () => {MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group/Local").GetComponent<Button>().onClick.Invoke();}, 
+                var newLocalMenu = Utils.UI.MenuHandler.CreateMenu("LOCAL", () => {MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group/Local").GetComponent<Button>().onClick.Invoke();}, 
                     MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 
                     60, true, false, null, true, 1);
 
-                var content = localMenu.transform.Find("Group/Grid/Scroll View/Viewport/Content");
+                var content = newLocalMenu.transform.Find("Group/Grid/Scroll View/Viewport/Content");
 
                 content.GetComponent<VerticalLayoutGroup>().spacing = 60;
-
-                //origVersusGo.transform.SetParent(content);
-                //origSandboxGo.transform.SetParent(content);
 
                 UnityEngine.GameObject.DestroyImmediate(origGameModeGo.gameObject);
 
                 // do not destroy local button since RWF relies on it
                 MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group/Local").gameObject.SetActive(false);
 
-                //Utils.UI.MenuHandler.CreateButton("VERSUS", localMenu, () => { characterSelectGo_.GetComponent<ListMenuPage>().Open(); SetGameMode(ArmsRaceID); });
-                Utils.UI.MenuHandler.CreateButton("SANDBOX", localMenu, () => { MainMenuHandler.instance.Close(); SetGameMode(SandBoxID); CurrentHandler.StartGame(); });
+                var newVersusGo = Utils.UI.MenuHandler.CreateButton("VERSUS", newLocalMenu, () => { characterSelectGo_.GetComponent<ListMenuPage>().Open(); SetGameMode(ArmsRaceID); });
+                newVersusGo.name = "Versus";
+                var newSandboxGo = Utils.UI.MenuHandler.CreateButton("SANDBOX", newLocalMenu, () => { MainMenuHandler.instance.Close(); SetGameMode(SandBoxID); CurrentHandler.StartGame(); });
+                newSandboxGo.name = "Test";
             
                 // Select the local button so selection doesn't look weird
                 Unbound.Instance.ExecuteAfterSeconds(1.5f, () => {GameObject.Find("Game/UI/UI_MainMenu/Canvas/ListSelector/Main/Group/LOCAL").GetComponent<ListMenuButton>().OnPointerEnter(null);});
                 
             }
-            return;*/
-            // Make existing UI buttons use our GameModeHandler logic
-            //var gameModeGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/LOCAL");
-            var gameModeGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/GameMode");
+            var gameModeGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/LOCAL");
             var onlineGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/Online/Group");
-            //var contentGo = gameModeGo.transform.Find("Group/Grid/Scroll View/Viewport/Content");
-            var contentGo = gameModeGo.transform.Find("Group");
+            var contentGo = gameModeGo.transform.Find("Group/Grid/Scroll View/Viewport/Content");
+
+            // fix spacing
+            contentGo.GetComponent<VerticalLayoutGroup>().spacing = 0f;
+
             var versusGo = contentGo.Find("Versus").gameObject;
             var sandboxGo = contentGo.Find("Test").gameObject;
             var characterSelectGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/CharacterSelect");
@@ -126,19 +123,6 @@ namespace UnboundLib.GameModes
 
             if (qMatchGo != null) { GameObject.DestroyImmediate(qMatchGo); }
             if (tMatchGo != null) { GameObject.DestroyImmediate(tMatchGo); }
-
-            GameObject.DestroyImmediate(versusGo.GetComponent<Button>());
-            var versusButton = versusGo.AddComponent<Button>();
-            versusButton.onClick.AddListener(characterSelectGo.GetComponent<ListMenuPage>().Open);
-            versusButton.onClick.AddListener(() => SetGameMode(ArmsRaceID));
-
-            GameObject.DestroyImmediate(sandboxGo.GetComponent<Button>());
-            var sandboxButton = sandboxGo.AddComponent<Button>();
-            sandboxButton.onClick.AddListener(MainMenuHandler.instance.Close);
-            sandboxButton.onClick.AddListener(() => {
-                SetGameMode(SandBoxID);
-                CurrentHandler.StartGame();
-            });
 
             // destroy all other buttons in this menu
             List<GameObject> objsToDestroy = new List<GameObject>() { };
@@ -156,26 +140,31 @@ namespace UnboundLib.GameModes
 
             var characterSelectPage = characterSelectGo.GetComponent<ListMenuPage>();
 
-            // create gamemode buttons alphabetically
-            foreach (var id in handlers.Keys.OrderByDescending(k => handlers[k].Name.ToLower()).Where(k => k!=SandBoxID && k!=ArmsRaceID))
+            // create gamemode buttons alphabetically (creating them in reverse order)
+            // non-team gamemodes at the top, team gamemodes at the bottom
+            foreach (var id in handlers.Keys.Where(k => !handlers[k].Settings.TryGetValue("allowTeams", out object allowTeams) || (bool)allowTeams).OrderByDescending(k => handlers[k].Name.ToLower()).Where(k => k!=SandBoxID && k!=ArmsRaceID))
             {
-                var gameModeButtonGo = GameObject.Instantiate(versusGo, versusGo.transform.parent);
-                gameModeButtonGo.SetActive(true);
-                gameModeButtonGo.transform.localScale = Vector3.one;
-                gameModeButtonGo.transform.SetSiblingIndex(0);
-                gameModeButtonGo.name = handlers[id].Name.ToUpper();
-
-                var gameModeButtonText = gameModeButtonGo.GetComponentInChildren<TextMeshProUGUI>();
-                gameModeButtonText.text = handlers[id].Name.ToUpper();
-
-                GameObject.DestroyImmediate(gameModeButtonGo.GetComponent<Button>());
-                var gameModeButton = gameModeButtonGo.AddComponent<Button>();
-
-                gameModeButton.onClick.AddListener(characterSelectPage.Open);
                 // create a copy of the string to give to the anonymous function
                 string id_ = string.Copy(id); 
-                gameModeButton.onClick.AddListener(() => GameModeManager.SetGameMode(id_));
+                var gamemodeButtonGo = Utils.UI.MenuHandler.CreateButton(handlers[id].Name.ToUpper(), gameModeGo.gameObject, () => { characterSelectGo.GetComponent<ListMenuPage>().Open(); SetGameMode(id_); });
+                gamemodeButtonGo.name = id;
+                gamemodeButtonGo.transform.SetAsFirstSibling();
             }
+
+            // add a small separator
+            Utils.UI.MenuHandler.CreateText(" ", gameModeGo, out TextMeshProUGUI _, 30).transform.SetAsFirstSibling();
+
+            foreach (var id in handlers.Keys.Where(k => handlers[k].Settings.TryGetValue("allowTeams", out object allowTeams) && !(bool)allowTeams).OrderByDescending(k => handlers[k].Name.ToLower()).Where(k => k!=SandBoxID && k!=ArmsRaceID))
+            {
+                // create a copy of the string to give to the anonymous function
+                string id_ = string.Copy(id); 
+                var gamemodeButtonGo = Utils.UI.MenuHandler.CreateButton(handlers[id].Name.ToUpper(), gameModeGo.gameObject, () => { characterSelectGo.GetComponent<ListMenuPage>().Open(); SetGameMode(id_); });
+                gamemodeButtonGo.name = id;
+                gamemodeButtonGo.transform.SetAsFirstSibling();
+            }
+
+            // add a small separator
+            Utils.UI.MenuHandler.CreateText(" ", gameModeGo, out TextMeshProUGUI _, 30).transform.SetAsFirstSibling();
 
             // keep Versus and Sandbox at the top
             versusGo.transform.SetAsFirstSibling();
