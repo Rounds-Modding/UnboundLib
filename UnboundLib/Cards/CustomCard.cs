@@ -123,7 +123,6 @@ namespace UnboundLib.Cards
                 // Reset stats
                 newCard.GetComponent<CharacterStatModifiers>().health = 1;
 
-
                 // Finish initializing
                 newCardInfo.SendMessage("Awake");
                 PhotonNetwork.PrefabPool.RegisterPrefab(newCard.gameObject.name, newCard);
@@ -151,13 +150,12 @@ namespace UnboundLib.Cards
                     // Destroy extra art object
                     var artContainer = newCard.transform.Find("CardBase(Clone)(Clone)/Canvas/Front/Background/Art");
                     if (artContainer != null && artContainer.childCount > 1)
-                        Destroy(artContainer.GetChild(0).gameObject);  
+                        Destroy(artContainer.GetChild(0).gameObject);
 
                     // Disable "prefab"
                     newCard.SetActive(false);
 
                     callback?.Invoke(newCardInfo);
-
                 });
             });
         }

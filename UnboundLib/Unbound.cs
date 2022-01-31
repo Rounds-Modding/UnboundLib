@@ -25,7 +25,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.10.2";
+        public const string Version = "2.10.3";
 
         internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing, extra player colors, disconnect handling)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)", "willuwontu (Custom cards, ping UI)" }, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
@@ -448,6 +448,20 @@ namespace UnboundLib
         public static void AddAllCardsCallback(Action<CardInfo[]> callback)
         {
             CardManager.AddAllCardsCallback(callback);
+        }
+
+        private GameObject FindObjectInChilds(GameObject gameObject, string gameObjectName)
+        {
+            Transform[] children = gameObject.GetComponentsInChildren<Transform>(true);
+            foreach (Transform item in children)
+            {
+                if (item.name == gameObjectName)
+                {
+                    return item.gameObject;
+                }
+            }
+
+            return null;
         }
 
         public static void RegisterHandshake(string modId, Action callback)
