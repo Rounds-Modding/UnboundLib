@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
 namespace UnboundLib.Utils.UI
 {
@@ -17,7 +14,7 @@ namespace UnboundLib.Utils.UI
 
         public static Credits Instance = new Credits();
 
-        private static readonly ModCredits roundsCredits = new ModCredits("ROUNDS", new string[] { "Landfall Games (Publisher)", "Wilhelm Nulynd (Game design, programming and art)", "Karl Flodin (Music)", "Pontus Ullbors (Card and Face Art)", "Natalia Martinsson (Face Art)", "Sonigon (Sound design)"}, "Landfall.se", "https://landfall.se/rounds");
+        private static readonly ModCredits roundsCredits = new ModCredits("ROUNDS", new string[] { "Landfall Games (Publisher)", "Wilhelm Nulynd (Game design, programming and art)", "Karl Flodin (Music)", "Pontus Ullbors (Card and Face Art)", "Natalia Martinsson (Face Art)", "Sonigon (Sound design)" }, "Landfall.se", "https://landfall.se/rounds");
 
         private GameObject CreditsMenu;
         private GameObject RoundsCredits;
@@ -38,7 +35,7 @@ namespace UnboundLib.Utils.UI
             Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.2f : 0f, () =>
             {
                 // Create credits menu
-                CreditsMenu = MenuHandler.CreateMenu("CREDITS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, null,true, 5);
+                CreditsMenu = MenuHandler.CreateMenu("CREDITS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, null, true, 5);
 
                 // Fix main menu layout
                 void fixMainMenuLayout()
@@ -108,7 +105,7 @@ namespace UnboundLib.Utils.UI
                 string linkText = credits.linkTexts[i];
                 string linkURL = "";
                 if (i < credits.linkURLs.Length) { linkURL = credits.linkURLs[i]; }
-                if (linkText != "") 
+                if (linkText != "")
                 {
                     MenuHandler.CreateText("<link=\"" + linkURL + "\">" + linkText.ToUpper() + "</link>", parentMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
                 }
@@ -124,7 +121,7 @@ namespace UnboundLib.Utils.UI
         public string[] linkTexts = new string[] { "" };
         public string[] linkURLs = new string[] { "" };
 
-        public ModCredits(string modName = "", string[] credits = null,  string[] linkTexts = null, string[] linkURLs = null)
+        public ModCredits(string modName = "", string[] credits = null, string[] linkTexts = null, string[] linkURLs = null)
         {
             this.modName = modName;
             this.credits = credits;

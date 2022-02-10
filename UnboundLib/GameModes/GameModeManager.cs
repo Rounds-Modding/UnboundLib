@@ -1,12 +1,12 @@
-﻿using System;
+﻿using ExitGames.Client.Photon;
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
-using UnityEngine.SceneManagement;
-using ExitGames.Client.Photon;
-using System.Linq;
 using System.Collections.ObjectModel;
+using System.Linq;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 namespace UnboundLib.GameModes
 {
@@ -67,7 +67,8 @@ namespace UnboundLib.GameModes
                     GameObject.DestroyImmediate(sandboxGo.GetComponent<Button>());
                     var sandboxButton = sandboxGo.AddComponent<Button>();
                     sandboxButton.onClick.AddListener(MainMenuHandler.instance.Close);
-                    sandboxButton.onClick.AddListener(() => {
+                    sandboxButton.onClick.AddListener(() =>
+                    {
                         SetGameMode("Sandbox");
                         CurrentHandler.StartGame();
                     });

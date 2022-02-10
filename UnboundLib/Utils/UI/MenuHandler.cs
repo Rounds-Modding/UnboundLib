@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Jotunn.Utils;
+using System;
 using System.Collections;
-using Jotunn.Utils;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
@@ -45,11 +45,11 @@ namespace UnboundLib.Utils.UI
         }
 
         // Creates a menu and returns its gameObject
-        public static GameObject CreateMenu(string Name, UnityAction buttonAction, GameObject parentForButton, int size = 50, bool forceUpper = true, bool setBarHeight = true, GameObject parentForMenu = null,  bool setFontSize = true, int siblingIndex = -1)
+        public static GameObject CreateMenu(string Name, UnityAction buttonAction, GameObject parentForButton, int size = 50, bool forceUpper = true, bool setBarHeight = true, GameObject parentForMenu = null, bool setFontSize = true, int siblingIndex = -1)
         {
             var obj = parentForMenu is null ? GameObject.Instantiate(menuBase, MainMenuHandler.instance.transform.Find("Canvas/ListSelector")) : GameObject.Instantiate(menuBase, parentForMenu.transform);
             obj.name = Name;
-            
+
             // Assign back objects
             var goBackObject = parentForButton.GetComponentInParent<ListMenuPage>();
             obj.GetComponentInChildren<GoBack>(true).target = goBackObject;
@@ -60,21 +60,21 @@ namespace UnboundLib.Utils.UI
             Transform buttonParent = null;
             if (parentForButton.transform.Find("Group/Grid/Scroll View/Viewport/Content")) buttonParent = parentForButton.transform.Find("Group/Grid/Scroll View/Viewport/Content");
             else if (parentForButton.transform.Find("Group")) buttonParent = parentForButton.transform.Find("Group");
-            
+
             // Create button to menu
             var button = GameObject.Instantiate(buttonBase, buttonParent);
             button.GetComponent<ListMenuButton>().setBarHeight = setBarHeight ? size : 0;
             button.name = Name;
             button.GetComponent<RectTransform>().sizeDelta += new Vector2(400, 0);
             if (siblingIndex != -1) button.transform.SetSiblingIndex(siblingIndex);
-            button.GetComponent<RectTransform>().sizeDelta = new Vector2(button.GetComponent<RectTransform>().sizeDelta.x, size+12);
+            button.GetComponent<RectTransform>().sizeDelta = new Vector2(button.GetComponent<RectTransform>().sizeDelta.x, size + 12);
             var uGUI = button.GetComponentInChildren<TextMeshProUGUI>();
             if (forceUpper) uGUI.text = Name.ToUpper();
             else uGUI.text = Name;
             uGUI.fontSize = setFontSize ? size : 50;
             if (buttonAction == null)
             {
-                buttonAction = () => 
+                buttonAction = () =>
                 {
                     obj.GetComponent<ListMenuPage>().Open();
                     goBackObject.Close();
@@ -83,7 +83,7 @@ namespace UnboundLib.Utils.UI
             }
             else
             {
-                buttonAction += () => 
+                buttonAction += () =>
                 {
                     obj.GetComponent<ListMenuPage>().Open();
                     goBackObject.Close();
@@ -121,7 +121,7 @@ namespace UnboundLib.Utils.UI
             uGUI.color = color ?? new Color(0.902f, 0.902f, 0.902f, 1f);
             if (font != null) { uGUI.font = font; }
             if (fontMaterial != null) { uGUI.fontMaterial = fontMaterial; }
-            if (alignmentOptions != null) { uGUI.alignment = (TextAlignmentOptions)alignmentOptions; }
+            if (alignmentOptions != null) { uGUI.alignment = (TextAlignmentOptions) alignmentOptions; }
 
             return textObject;
         }
@@ -135,14 +135,14 @@ namespace UnboundLib.Utils.UI
             var toggleObject = GameObject.Instantiate(toggleBase, parent.transform);
             var toggle = toggleObject.GetComponent<Toggle>();
             toggle.isOn = value;
-            if (onValueChangedAction != null) toggle.onValueChanged.AddListener(onValueChangedAction); 
+            if (onValueChangedAction != null) toggle.onValueChanged.AddListener(onValueChangedAction);
             var uGUI = toggleObject.GetComponentInChildren<TextMeshProUGUI>();
-            uGUI.text = forceUpper ? text.ToUpper() : text; 
+            uGUI.text = forceUpper ? text.ToUpper() : text;
             uGUI.fontSizeMax = fontSize;
             uGUI.color = color ?? new Color(0.902f, 0.902f, 0.902f, 1f);
             if (font != null) { uGUI.font = font; }
             if (fontMaterial != null) { uGUI.fontMaterial = fontMaterial; }
-            if (alignmentOptions != null) { uGUI.alignment = (TextAlignmentOptions)alignmentOptions; }
+            if (alignmentOptions != null) { uGUI.alignment = (TextAlignmentOptions) alignmentOptions; }
 
             return toggleObject;
         }
@@ -158,15 +158,15 @@ namespace UnboundLib.Utils.UI
             var button = buttonObject.GetComponent<Button>();
             if (onClickAction != null) { button.onClick.AddListener(onClickAction); }
             var uGUI = buttonObject.GetComponentInChildren<TextMeshProUGUI>();
-            uGUI.text = forceUpper ? text.ToUpper() : text; 
+            uGUI.text = forceUpper ? text.ToUpper() : text;
             uGUI.fontSizeMax = fontSize;
             uGUI.color = color ?? new Color(0.902f, 0.902f, 0.902f, 1f);
             if (font != null) { uGUI.font = font; }
             if (fontMaterial != null) { uGUI.fontMaterial = fontMaterial; }
-            if (alignmentOptions != null) { uGUI.alignment = (TextAlignmentOptions)alignmentOptions; }
+            if (alignmentOptions != null) { uGUI.alignment = (TextAlignmentOptions) alignmentOptions; }
 
             buttonObject.GetComponent<RectTransform>().sizeDelta += new Vector2(400, 0);
-            
+
             return buttonObject;
         }
 
@@ -184,10 +184,10 @@ namespace UnboundLib.Utils.UI
             var inputFieldColors = inputField.colors;
             inputFieldColors.colorMultiplier = 0.75f;
             inputField.colors = inputFieldColors;
-            
+
             var placeHolder = (TextMeshProUGUI) inputField.placeholder;
             placeHolder.text = placeholderText;
-            
+
             return inputObject;
         }
 
@@ -209,11 +209,11 @@ namespace UnboundLib.Utils.UI
             var vector2 = inputField.gameObject.GetComponent<RectTransform>().sizeDelta;
             vector2.x = 65;
             inputField.gameObject.GetComponent<RectTransform>().sizeDelta = vector2;
-            onValueChangedAction += arg0 => inputField.text = arg0.ToString((wholeNumbers)? "N0":"N");
+            onValueChangedAction += arg0 => inputField.text = arg0.ToString((wholeNumbers) ? "N0" : "N");
             inputField.contentType = wholeNumbers
                 ? TMP_InputField.ContentType.IntegerNumber
                 : TMP_InputField.ContentType.DecimalNumber;
-            
+
             // Set slider values
             slider = sliderObject.GetComponentInChildren<Slider>();
             var sliderColors = slider.colors;
@@ -226,25 +226,25 @@ namespace UnboundLib.Utils.UI
             slider.onValueChanged.AddListener(onValueChangedAction);
             slider.value = defaultValue;
             slider.transform.Find("Fill Area/Fill").GetComponent<Image>().color = sliderColor ?? new Color(0.902f, 0.902f, 0.902f, 1f);
-            
-            
+
+
             inputField.text = slider.value.ToString();
             var slider1 = slider;
             inputField.onValueChanged.AddListener(arg1 =>
             {
-                if(arg1 != "") slider1.value = Convert.ToSingle(arg1);
+                if (arg1 != "") slider1.value = Convert.ToSingle(arg1);
             });
 
             // Set text values
             var uGUI = sliderObject.GetComponentsInChildren<TextMeshProUGUI>()[2];
             uGUI.text = text;
             uGUI.fontSizeMax = fontSize;
-            uGUI.text = forceUpper ? text.ToUpper() : text; 
+            uGUI.text = forceUpper ? text.ToUpper() : text;
             uGUI.color = color ?? new Color(0.902f, 0.902f, 0.902f, 1f);
             if (font != null) { uGUI.font = font; }
             if (fontMaterial != null) { uGUI.fontMaterial = fontMaterial; }
-            if (alignmentOptions != null) { uGUI.alignment = (TextAlignmentOptions)alignmentOptions; }
-            
+            if (alignmentOptions != null) { uGUI.alignment = (TextAlignmentOptions) alignmentOptions; }
+
             return sliderObject;
         }
 

@@ -1,11 +1,10 @@
-﻿using System;
+﻿using BepInEx;
+using Photon.Pun;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using BepInEx;
-using Photon.Pun;
 using TMPro;
-using UnboundLib.GameModes;
 using UnboundLib.Utils.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -98,7 +97,7 @@ namespace UnboundLib.Networking
         {
             if (PhotonNetwork.IsMasterClient)
             {
-                NetworkingManager.RPC(typeof(SyncModClients), "SendModList", new object[] {  });
+                NetworkingManager.RPC(typeof(SyncModClients), "SendModList", new object[] { });
             }
         }
 
@@ -155,7 +154,7 @@ namespace UnboundLib.Networking
             //UnityEngine.Debug.Log("MAKING FLAGS...");
 
             // add a host flag for the host
-            NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { PhotonNetwork.LocalPlayer.ActorNumber, new string[] { "✓ " + PhotonNetwork.CurrentRoom.GetPlayer(PhotonNetwork.LocalPlayer.ActorNumber).NickName, "HOST"}, false });
+            NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { PhotonNetwork.LocalPlayer.ActorNumber, new string[] { "✓ " + PhotonNetwork.CurrentRoom.GetPlayer(PhotonNetwork.LocalPlayer.ActorNumber).NickName, "HOST" }, false });
 
             // detect unmodded clients
             foreach (int actorID in PhotonNetwork.CurrentRoom.Players.Values.Select(p => p.ActorNumber).Except(clientsServerSideGUIDs.Keys).Except(new int[] { PhotonNetwork.LocalPlayer.ActorNumber }).ToArray())
@@ -173,7 +172,7 @@ namespace UnboundLib.Networking
                     flags.Add("ALL MODS SYNCED");
                     //UnityEngine.Debug.Log(PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName + " is synced!");
 
-                    NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] {actorID, flags.ToArray(), false});
+                    NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { actorID, flags.ToArray(), false });
                     continue;
                 }
                 else
@@ -186,7 +185,7 @@ namespace UnboundLib.Networking
                 }
                 foreach (string versionGUID in mismatch[actorID])
                 {
-                    flags.Add("VERSION: " + ModIDFromGUID(actorID, versionGUID) + " (" + versionGUID + ") Version: " + VersionFromGUID(actorID, versionGUID) + " <b>Host has: " + HostVersionFromGUID(versionGUID)+"</b>");
+                    flags.Add("VERSION: " + ModIDFromGUID(actorID, versionGUID) + " (" + versionGUID + ") Version: " + VersionFromGUID(actorID, versionGUID) + " <b>Host has: " + HostVersionFromGUID(versionGUID) + "</b>");
                 }
                 foreach (string extraGUID in extra[actorID])
                 {
@@ -216,14 +215,14 @@ namespace UnboundLib.Networking
 
             // when a player hovers over (with mouse) the green/red check/X it should display a textbox or something with the full error/warning messages - each entry on a new line
 
-            
+
             var nickName = PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName;
             var objName = actorID.ToString();
 
             var _uiHolder = MenuHandler.modOptionsUI.LoadAsset<GameObject>("uiHolder");
-            var _checkmark =  MenuHandler.modOptionsUI.LoadAsset<GameObject>("checkmark");
+            var _checkmark = MenuHandler.modOptionsUI.LoadAsset<GameObject>("checkmark");
             var _redx = MenuHandler.modOptionsUI.LoadAsset<GameObject>("redx");
-            
+
             // Check if uiHolder has already been made
             if (!UIHandler.instance.transform.Find("Canvas/UIHolder"))
             {
@@ -231,7 +230,7 @@ namespace UnboundLib.Networking
                 // t.transform.parent = UIHandler.instance.transform.Find("Canvas");
                 // t.transform.localScale = Vector3.one;
                 // t.AddComponent<RectTransform>();
-                uiParent = GameObject.Instantiate(_uiHolder,UIHandler.instance.transform.Find("Canvas"));
+                uiParent = GameObject.Instantiate(_uiHolder, UIHandler.instance.transform.Find("Canvas"));
                 uiParent.name = "UIHolder";
                 uiParent.GetComponent<RectTransform>().localPosition = new Vector3(-975, 486, 2565);
                 uiParent.GetOrAddComponent<DetectUnmodded>();
@@ -242,7 +241,7 @@ namespace UnboundLib.Networking
             {
                 uiParent = UIHandler.instance.transform.Find("Canvas/UIHolder").gameObject;
             }
-            
+
             GameObject playerObj;
             if (!uiParent.transform.Find(objName))
             {
@@ -271,14 +270,15 @@ namespace UnboundLib.Networking
                     var _hover = check.AddComponent<CheckHover>();
                     _hover.texts = flags;
                     check.transform.localPosition = new Vector3(-15, 25, 0);
-                } else if (flag.Contains("✗ "))
+                }
+                else if (flag.Contains("✗ "))
                 {
                     var redcheck = GameObject.Instantiate(_redx, playerObj.transform);
                     var _hover = redcheck.AddComponent<CheckHover>();
                     _hover.texts = flags;
                     redcheck.transform.localPosition = new Vector3(-15, 25, 0);
                 }
-                var text = MenuHandler.CreateText(nickName, playerObj, out var uGUI, 20, false, error ? Color.red : new Color(0.902f, 0.902f, 0.902f, 1f), null, null, TextAlignmentOptions.MidlineLeft );
+                var text = MenuHandler.CreateText(nickName, playerObj, out var uGUI, 20, false, error ? Color.red : new Color(0.902f, 0.902f, 0.902f, 1f), null, null, TextAlignmentOptions.MidlineLeft);
                 text.name = nickName;
                 var ping = text.AddComponent<PingUpdater>();
                 ping.actorId = actorID;
@@ -294,7 +294,7 @@ namespace UnboundLib.Networking
                 layout.preferredHeight = 100;
                 layout.minWidth = 300;
                 layout.minHeight = 100;
-                
+
                 var rectTrans = text.GetComponent<RectTransform>();
                 rectTrans.pivot = Vector2.zero;
                 text.transform.localPosition = Vector3.zero;
@@ -310,7 +310,7 @@ namespace UnboundLib.Networking
         {
             GameObject.Destroy(parent);
             yield break;
-        } 
+        }
 
         [UnboundRPC]
         private static void SendModList()
@@ -449,7 +449,7 @@ namespace UnboundLib.Networking
                 {
                     Destroy(this.gameObject.transform.GetChild(i).gameObject);
                 }
-                
+
 
             }
             else
@@ -473,12 +473,12 @@ namespace UnboundLib.Networking
         {
             guiStyleFore = new GUIStyle();
             guiStyleFore.richText = true;
-            guiStyleFore.normal.textColor = Color.white;  
-            guiStyleFore.alignment = TextAnchor.UpperLeft ;
+            guiStyleFore.normal.textColor = Color.white;
+            guiStyleFore.alignment = TextAnchor.UpperLeft;
             guiStyleFore.wordWrap = false;
             guiStyleFore.stretchWidth = true;
             var background = new Texture2D(1, 1);
-            background.SetPixel(0,0, Color.gray);
+            background.SetPixel(0, 0, Color.gray);
             background.Apply();
             guiStyleFore.normal.background = background;
             guiStyleFore.fontSize = 20;
@@ -487,14 +487,14 @@ namespace UnboundLib.Networking
         }
         private void OnGUI()
         {
-            if (this.inBounds && texts != Array.Empty<string>() && Input.mousePosition.x < Screen.width/4)
+            if (this.inBounds && texts != Array.Empty<string>() && Input.mousePosition.x < Screen.width / 4)
             {
-                Vector2 size = guiStyleFore.CalcSize(new GUIContent(String.Join("\n",texts)));
-                GUILayout.BeginArea(new Rect(Input.mousePosition.x + 25, Screen.height - Input.mousePosition.y + 25, size.x + 10, size.y+10));
+                Vector2 size = guiStyleFore.CalcSize(new GUIContent(String.Join("\n", texts)));
+                GUILayout.BeginArea(new Rect(Input.mousePosition.x + 25, Screen.height - Input.mousePosition.y + 25, size.x + 10, size.y + 10));
                 GUILayout.BeginVertical();
                 foreach (var t in texts)
                 {
-                    GUILayout.Label (t, guiStyleFore);
+                    GUILayout.Label(t, guiStyleFore);
                 }
                 GUILayout.EndVertical();
                 GUILayout.EndArea();

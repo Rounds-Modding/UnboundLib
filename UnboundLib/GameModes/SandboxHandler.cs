@@ -9,7 +9,8 @@
 
         public override GameSettings Settings { get; protected set; }
 
-        public SandboxHandler() : base("Test") {
+        public SandboxHandler() : base("Test")
+        {
             Settings = new GameSettings();
         }
 

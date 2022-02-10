@@ -6,7 +6,7 @@ namespace UnboundLib.Patches
 {
     internal class MapLoaderPatch
     {
-        [HarmonyPatch(typeof (MapManager), "OnLevelFinishedLoading")]
+        [HarmonyPatch(typeof(MapManager), "OnLevelFinishedLoading")]
         private class Patch_OnLevelFinishedLoading
         {
             private static void Prefix(Scene scene, LoadSceneMode mode)
@@ -33,9 +33,9 @@ namespace UnboundLib.Patches
                 }
             }
         }
-        
-        
 
-        
+
+
+
     }
 }

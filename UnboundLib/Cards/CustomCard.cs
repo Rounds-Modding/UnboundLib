@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Photon.Pun;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using UnityEngine;
-using Photon.Pun;
-using TMPro;
 using System.Linq;
+using TMPro;
 using UnboundLib.Utils;
+using UnityEngine;
 
 namespace UnboundLib.Cards
 {
@@ -139,7 +139,7 @@ namespace UnboundLib.Cards
                         new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), newCardInfo.cardName, true), newCardInfo));
                 }
 
-                
+
 
                 // Post-creation clean up
                 newCardInfo.ExecuteAfterFrames(5, () =>
@@ -278,7 +278,7 @@ namespace UnboundLib.Cards
                 if (gameObject.transform.localPosition != localpos)
                 {
                     gameObject.transform.localPosition = localpos;
-                    Destroy(this,1f);
+                    Destroy(this, 1f);
                 }
             }
         }
