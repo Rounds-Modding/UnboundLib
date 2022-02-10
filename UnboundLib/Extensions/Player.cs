@@ -78,7 +78,8 @@ namespace UnboundLib.Extensions
             // this is kinda messy, but for whatever reason the particlesystem colors for the vanilla skins (teams 0 to 3)
             // do not correspond to any color in PlayerSkin, so they're hardcoded here since this is the only place that these colors are set
 
-            PlayerSkinHandler skinHandler = instance.GetComponentInChildren<PlayerSkinHandler>();
+            PlayerSkinHandler skinHandler = instance.GetComponentInChildren<PlayerSkinHandler>(true);
+            skinHandler.SetFieldValue("skins", skinHandler.GetComponentsInChildren<PlayerSkinParticle>(true));
             try
             {
                 foreach (PlayerSkinParticle skin in (PlayerSkinParticle[]) skinHandler.GetFieldValue("skins"))
@@ -93,7 +94,6 @@ namespace UnboundLib.Extensions
                 }
             }
             catch { }
-
         }
     }
 }
