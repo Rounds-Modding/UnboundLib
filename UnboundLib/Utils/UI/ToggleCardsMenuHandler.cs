@@ -12,7 +12,7 @@ namespace UnboundLib.Utils.UI
     {
         public static ToggleCardsMenuHandler instance;
 
-        private readonly Dictionary<string, Transform> scrollViews = new Dictionary<string, Transform>();
+        private static readonly Dictionary<string, Transform> ScrollViews = new Dictionary<string, Transform>();
 
         public static readonly Dictionary<GameObject, Action> cardObjs = new Dictionary<GameObject, Action>();
         public static readonly List<Action> defaultCardActions = new List<Action>();
@@ -30,7 +30,6 @@ namespace UnboundLib.Utils.UI
         private Transform categoryContent;
 
         public static bool disableEscapeButton;
-        public static bool disableButtons;
 
         public static bool menuOpenFromOutside;
 
@@ -38,20 +37,16 @@ namespace UnboundLib.Utils.UI
 
         private static bool sortedByName = true;
 
-        public static Color backgroundColor = new Color(1, 1, 1, 0.034f);
-        internal static Color primaryColor = new Color(0.29f, 0.29f, 0.29f, 0.998f);
-        internal static Color secondaryColor = new Color32(141, 149, 163, 255);
-        internal static Color textColor = new Color32(242, 242, 250, 255);
         internal static Color cardTextNameColor = new Color(0.179f, 0.179f, 0.179f, 1);
-
         internal static Color positiveColor = new Color(0.465f, 0.603f, 0.390f, 1);
         internal static Color negativeColor = new Color(0.698f, 0.326f, 0.326f, 1);
-
         // internal static Color commonColor = new Color(0.698f, 0.326f, 0.326f, 1);
         internal static Color uncommonColor = new Color(0, 0.5f, 1, 1);
         internal static Color rareColor = new Color(1, 0.2f, 1, 1);
 
-        private string CurrentCategory => (from scroll in scrollViews where scroll.Value.gameObject.activeInHierarchy select scroll.Key).FirstOrDefault();
+        private static TextMeshProUGUI cardAmountText;
+
+        private string CurrentCategory => (from scroll in ScrollViews where scroll.Value.gameObject.activeInHierarchy select scroll.Key).FirstOrDefault();
 
         // if need to toggle all on or off
         private bool toggledAll;
@@ -61,99 +56,43 @@ namespace UnboundLib.Utils.UI
             instance = this;
             var mainCamera = GameObject.Find("MainCamera").GetComponent<Camera>();
 
-            var toggleCardsCanvas = Unbound.toggleUI.LoadAsset<GameObject>("ToggleCardsCanvas");
+            var cardsCanvas = Unbound.toggleUI.LoadAsset<GameObject>("ToggleCardsCanvas");
 
             cardObjAsset = Unbound.toggleUI.LoadAsset<GameObject>("CardObj");
 
-            // Better to have it removed directly in the object but oh well
-            var backgroundObject = FindObjectInChilds(cardObjAsset, "Background");
-            if (backgroundObject != null)
-            {
-                Destroy(backgroundObject);
-            }
-
-            var descriptionObject = FindObjectInChilds(cardObjAsset, "Description");
-            if (descriptionObject != null)
-            {
-                Destroy(descriptionObject);
-            }
-
-            var statsObject = FindObjectInChilds(cardObjAsset, "Stats");
-            if (statsObject != null)
-            {
-                Destroy(statsObject);
-            }
-
             scrollViewAsset = Unbound.toggleUI.LoadAsset<GameObject>("ScrollView2");
             categoryButtonAsset = Unbound.toggleUI.LoadAsset<GameObject>("CategoryButton");
-            // foreach (Image imageComponent in categoryButtonAsset.GetComponentsInChildren<Image>())
-            // {
-            //     imageComponent.color = primaryColor;
-            // }
 
-            ToggleCardsMenuHandler.toggleCardsCanvas = Instantiate(toggleCardsCanvas);
+            ToggleCardsMenuHandler.toggleCardsCanvas = Instantiate(cardsCanvas);
             DontDestroyOnLoad(ToggleCardsMenuHandler.toggleCardsCanvas);
             var canvas = ToggleCardsMenuHandler.toggleCardsCanvas.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = mainCamera;
             ToggleCardsMenuHandler.toggleCardsCanvas.SetActive(false);
 
-            var cardMenuObject = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu");
-            // foreach (Image imageComponent in cardMenuObject.GetComponentsInChildren<Image>())
-            // {
-            //     imageComponent.color = backgroundColor;
-            // }
-
             scrollViewTrans = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/ScrollViews");
 
             categoryContent = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/Categories/ButtonsScroll/Viewport/Content");
-            var categoriesObject = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/Categories");
-            // foreach (Image imageComponent in categoriesObject.GetComponentsInChildren<Image>())
-            // {
-            //     imageComponent.color = primaryColor;
-            // }
 
             // Create and set searchbar
             var searchBar = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/InputField").gameObject;
-            // foreach (Image imageComponent in searchBar.GetComponents<Image>())
-            // {
-            //     imageComponent.color = primaryColor;
-            // }
             searchBar.GetComponent<TMP_InputField>().onValueChanged.AddListener(value =>
             {
-                foreach (var card in scrollViews.SelectMany(scrollView => scrollView.Value.GetComponentsInChildren<Button>(true)))
+                foreach (var card in ScrollViews.SelectMany(scrollView => scrollView.Value.GetComponentsInChildren<Button>(true)))
                 {
                     if (value == "")
                     {
                         card.gameObject.SetActive(true);
-                        //SetActive(card.transform, true);
-                        //card.GetComponent<LayoutElement>().ignoreLayout = false;
                         continue;
                     }
 
-                    if (card.name.ToUpper().Contains(value.ToUpper()))
-                    {
-                        card.gameObject.SetActive(true);
-                        //SetActive(card.transform, true);
-                        //card.GetComponent<LayoutElement>().ignoreLayout = false;
-                    }
-                    else
-                    {
-                        card.gameObject.SetActive(false);
-                        //SetActive(card.transform, false);
-                        //card.GetComponent<LayoutElement>().ignoreLayout = true;
-                    }
+                    card.gameObject.SetActive(card.name.ToUpper().Contains(value.ToUpper()));
                 }
             });
 
             // create and set sort button (making use of the unused "Switch profile" button)
-            // ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/SortBy").gameObject.SetActive(true);
             ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/SortBy").GetComponentInChildren<TextMeshProUGUI>().text = "Sort By: " + (sortedByName ? "Name" : "Rarity");
             var sortButton = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/SortBy").GetComponent<Button>();
-            // foreach (Image imageComponent in sortButton.GetComponents<Image>())
-            // {
-            //     imageComponent.color = primaryColor;
-            // }
             sortButton.onClick.AddListener(() =>
             {
                 sortedByName = !sortedByName;
@@ -161,9 +100,10 @@ namespace UnboundLib.Utils.UI
 
                 SortCardMenus(sortedByName);
             });
-            
+
             Transform cardAmountObject = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/CardAmount");
-            var cardAmountText = cardAmountObject.GetComponentInChildren<TextMeshProUGUI>();
+            cardAmountText = cardAmountObject.GetComponentInChildren<TextMeshProUGUI>();
+
             var cardAmountSlider = cardAmountObject.GetComponentsInChildren<Slider>();
             foreach (Slider slider in cardAmountSlider)
             {
@@ -171,17 +111,11 @@ namespace UnboundLib.Utils.UI
                 {
                     int integerAmount = (int) amount;
                     ChangeCardColumnAmountMenus(integerAmount);
-                    cardAmountText.text = "Cards: " + integerAmount;
                 })));
             }
-            
 
             // Create and set toggle all button
             var toggleAllButton = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/ToggleAll").GetComponent<Button>();
-            // foreach (Image imageComponent in toggleAllButton.GetComponents<Image>())
-            // {
-            //     imageComponent.color = primaryColor;
-            // }
             ButtonsToDisable.Add(toggleAllButton);
             toggleAllButton.onClick.AddListener(() =>
             {
@@ -218,7 +152,7 @@ namespace UnboundLib.Utils.UI
                 infoMenu.SetActive(!infoMenu.activeInHierarchy);
             });
 
-            this.ExecuteAfterSeconds(0.65f, () =>
+            this.ExecuteAfterSeconds(0.85f, () =>
             {
                 ToggleCardsMenuHandler.toggleCardsCanvas.SetActive(true);
                 // Create category scrollViews
@@ -228,32 +162,18 @@ namespace UnboundLib.Utils.UI
                     scrollView.SetActive(true);
                     SetActive(scrollView.transform, false);
                     scrollView.name = category;
-                    scrollViews.Add(category, scrollView.transform);
+                    ScrollViews.Add(category, scrollView.transform);
                     if (category == "Vanilla")
                     {
                         SetActive(scrollView.transform, true);
                     }
-                    var handleObject = scrollView.transform.Find("Scrollbar Vertical/Sliding Area/Handle");
-                    // foreach (Image imageComponent in handleObject.GetComponents<Image>())
-                    // {
-                    //     imageComponent.color = primaryColor;
-                    // }
-                    var scrollbarObject = scrollView.transform.Find("Scrollbar Vertical");
-                    // foreach (Image imageComponent in handleObject.GetComponents<Image>())
-                    // {
-                    //     imageComponent.color = secondaryColor;
-                    // }
-                    // foreach (Image imageComponent in scrollView.GetComponentsInChildren<Image>())
-                    // {
-                    //     imageComponent.color = primaryColor;
-                    // }
                 }
 
                 // Create cardObjs
                 foreach (var card in CardManager.cards)
                 {
                     Card cardValue = card.Value;
-                    var parentScroll = scrollViews[cardValue.category].Find("Viewport/Content");
+                    var parentScroll = ScrollViews[cardValue.category].Find("Viewport/Content");
                     var crdObj = Instantiate(cardObjAsset, parentScroll);
 
                     crdObj.name = card.Key;
@@ -280,50 +200,17 @@ namespace UnboundLib.Utils.UI
                                             DestroyImmediate(cardRarityComponent);
                                         }
 
-                                        // var topObject = new GameObject("CardPreviewHolder");
-                                        // topObject.transform.SetParent(crdObj.transform);
-                                        // topObject.transform.localPosition = new Vector3(0, 0, 1);
-                                        // topObject.transform.localScale = new Vector3(1, 1, 1);
-                                        // topObject.transform.localRotation = Quaternion.Euler(0, 0, 0);
-                                        // topObject.transform.SetAsFirstSibling();
-
-                                        var darken = crdObj.transform.Find("Darken");
-
                                         var cardBaseObj = Instantiate(frontCard);
 
-                                        // var cardCanvas = cardBaseObj.gameObject.AddComponent<Canvas>();
-                                        // cardCanvas.worldCamera = mainCamera;
-                                        // cardCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-
-                                        Vector3 sizeCalculated = new Vector3(0.115f, 0.115f, 1f);
-                                        // var renderer = crdObj.GetComponent<Renderer>();
-                                        // if (renderer == null)
-                                        // {
-                                        //     sizeCalculated = renderer.bounds.size;
-                                        // }
-
+                                        Vector3 sizeCalculated = new Vector3(0.1f, 0.1f, 1f);
 
                                         cardBaseObj.name = "CardPreview";
                                         cardBaseObj.transform.SetParent(crdObj.transform);
                                         cardBaseObj.transform.localPosition = new Vector3(0, -10, 1f);
                                         cardBaseObj.transform.localScale = sizeCalculated;
                                         cardBaseObj.transform.localRotation = Quaternion.Euler(0, 0, 0);
-                                        cardBaseObj.transform.SetAsFirstSibling();
+                                        cardBaseObj.transform.SetSiblingIndex(1);
                                         cardBaseObj.GetComponent<RectTransform>().sizeDelta = new Vector2(1500, 1500);
-
-                                        // There is no reason to have the script rely on each cards stat and icon objects as we create useless objects (probably better to just create one that each card will just refer to)
-                                        // var iconObject = cardBaseObj.transform.Find("Icon");
-                                        // if (iconObject != null)
-                                        // {
-                                        //     UnityEngine.Debug.Log($"[Unbound] iconObject.");
-                                        //     Destroy(iconObject);
-                                        // }
-                                        // var statObject = cardBaseObj.transform.Find("StatObject");
-                                        // if (statObject != null)
-                                        // {
-                                        //     UnityEngine.Debug.Log($"[Unbound] statObject.");
-                                        //     Destroy(statObject);
-                                        // }
 
                                         var canvasGroups = cardBaseObj.GetComponentsInChildren<CanvasGroup>();
                                         foreach (var canvasGroup in canvasGroups)
@@ -387,6 +274,12 @@ namespace UnboundLib.Utils.UI
                                             }
                                         }
 
+                                        var edgePieces = cardBaseObj.GetComponentsInChildren<Image>(true).Where(x => x.gameObject.transform.name.Contains("FRAME")).ToList();
+                                        foreach (Image edgePiece in edgePieces)
+                                        {
+                                            edgePiece.color = CardChoice.instance.GetCardColor(cardInfo.colorTheme);
+                                        }
+
                                         if (cardInfo.rarity != CardInfo.Rarity.Common)
                                         {
                                             var colorFromRarity = cardInfo.rarity == CardInfo.Rarity.Uncommon ? uncommonColor : rareColor;
@@ -448,9 +341,7 @@ namespace UnboundLib.Utils.UI
                                         }
                                     }
                                 }
-
                             }
-
                         }
                     }
 
@@ -504,13 +395,13 @@ namespace UnboundLib.Utils.UI
                     categoryObj.GetComponentInChildren<TextMeshProUGUI>().text = category;
                     categoryObj.GetComponent<Button>().onClick.AddListener(() =>
                     {
-                        foreach (var scroll in scrollViews)
+                        foreach (var scroll in ScrollViews)
                         {
                             SetActive(scroll.Value, false);
                         }
 
-                        scrollViews[category].GetComponent<ScrollRect>().normalizedPosition = new Vector2(0, 1);
-                        SetActive(scrollViews[category].transform, true);
+                        ScrollViews[category].GetComponent<ScrollRect>().normalizedPosition = new Vector2(0, 1);
+                        SetActive(ScrollViews[category].transform, true);
 
                         viewingText.text = "Viewing: " + category;
                     });
@@ -532,7 +423,7 @@ namespace UnboundLib.Utils.UI
 
                     void UpdateCategoryVisuals(bool enabled, bool firstTime = false)
                     {
-                        foreach (var obj in scrollViews.Where(obj => obj.Key == category))
+                        foreach (var obj in ScrollViews.Where(obj => obj.Key == category))
                         {
                             obj.Value.Find("Darken").gameObject.SetActive(!enabled);
                             if (enabled)
@@ -582,13 +473,6 @@ namespace UnboundLib.Utils.UI
                     cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
                 }
                 ToggleCardsMenuHandler.toggleCardsCanvas.SetActive(false);
-                // foreach (TextMeshProUGUI textComponent in ToggleCardsMenuHandler.toggleCardsCanvas.GetComponentsInChildren<TextMeshProUGUI>())
-                // {
-                //     if (!textComponent.transform.parent.name.Equals("CardPreview") && !textComponent.transform.parent.name.Contains("StatObject"))
-                //     {
-                //         textComponent.color = textColor;
-                //     }
-                // }
             });
         }
 
@@ -643,7 +527,7 @@ namespace UnboundLib.Utils.UI
         {
             foreach (string category in CardManager.categories)
             {
-                Transform categoryMenu = scrollViews[category].Find("Viewport/Content");
+                Transform categoryMenu = ScrollViews[category].Find("Viewport/Content");
 
                 List<Transform> cardsInMenu = new List<Transform>() { };
                 cardsInMenu.AddRange(categoryMenu.Cast<Transform>());
@@ -659,10 +543,11 @@ namespace UnboundLib.Utils.UI
             }
         }
 
-        internal void ChangeCardColumnAmountMenus(int amount)
+        private static void ChangeCardColumnAmountMenus(int amount)
         {
             Vector2 cellSize = new Vector2(221, 312);
-            // Vector3 localScale = new Vector3(0.25f, 0.25f, 1);
+            Vector3 localScale = new Vector3(0.17f, 0.17f, 1);
+            int y = -10;
 
             if (amount > 3)
             {
@@ -671,69 +556,72 @@ namespace UnboundLib.Utils.UI
                     case 4:
                         {
                             cellSize = new Vector2(170, 240);
-                            // localScale = new Vector3(0.18f, 0.18f, 1);
-                            break;
-                        }
-                    case 5:
-                        {
-                            cellSize = new Vector2(136, 192);
-                            // localScale = new Vector3(0.145f, 0.145f, 1);
+                            localScale = new Vector3(0.13f, 0.13f, 1);
                             break;
                         }
                     default:
+                    case 5:
+                        {
+                            cellSize = new Vector2(136, 192);
+                            localScale = new Vector3(0.1f, 0.1f, 1);
+                            break;
+                        }
                     case 6:
                         {
                             cellSize = new Vector2(112, 158);
+                            localScale = new Vector3(0.08f, 0.08f, 1);
+                            y = -5;
                             break;
                         }
                     case 7:
                         {
                             cellSize = new Vector2(97, 137);
+                            localScale = new Vector3(0.065f, 0.065f, 1);
+                            y = -4;
                             break;
                         }
                     case 8:
                         {
                             cellSize = new Vector2(85, 120);
+                            localScale = new Vector3(0.055f, 0.055f, 1);
+                            y = -3;
                             break;
                         }
                     case 9:
                         {
                             cellSize = new Vector2(75, 106);
+                            localScale = new Vector3(0.045f, 0.045f, 1);
+                            y = -2;
                             break;
                         }
                     case 10:
                         {
                             cellSize = new Vector2(68, 96);
+                            localScale = new Vector3(0.04f, 0.04f, 1);
+                            y = -2;
                             break;
                         }
                 }
             }
 
+            cardAmountText.text = "Cards Per Line: " + amount;
             foreach (string category in CardManager.categories)
             {
-                Transform categoryMenu = scrollViews[category].Find("Viewport/Content");
+                Transform categoryMenu = ScrollViews[category].Find("Viewport/Content");
                 var gridLayout = categoryMenu.gameObject.GetComponent<GridLayoutGroup>();
                 gridLayout.cellSize = cellSize;
-                gridLayout.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
                 gridLayout.constraintCount = amount;
                 gridLayout.childAlignment = TextAnchor.UpperCenter;
 
                 List<Transform> cardsInMenu = new List<Transform>() { };
                 cardsInMenu.AddRange(categoryMenu.Cast<Transform>());
 
-                // foreach (Transform cardTransform in cardsInMenu)
-                // {
-                //     cardTransform.GetChild(0).localScale = localScale;
-                // }
-                //
-                // List<Transform> sorted = alph ? cardsInMenu.OrderBy(t => t.name).ToList() : cardsInMenu.OrderBy(t => CardManager.cards[t.name].cardInfo.rarity).ThenBy(t => t.name).ToList();
-                //
-                // int i = 0;
-                // foreach (Transform cardInMenu in sorted)
-                // {
-                //     cardInMenu.SetSiblingIndex(i);
-                //     i++;
-                // }
+                foreach (Transform cardTransform in cardsInMenu)
+                {
+                    Transform cardTransformChild = cardTransform.GetChild(1);
+                    cardTransformChild.localScale = localScale;
+                    cardTransformChild.localPosition = new Vector3(0, y, 1);
+                }
             }
         }
 
@@ -754,12 +642,6 @@ namespace UnboundLib.Utils.UI
                     UpdateVisualsCardObj(card.Key, CardManager.cards[card.Key.name].enabled);
                 }
             });
-
-            // trans.localScale = active ? Vector3.one : new Vector3(0.0001f, 0.0001f, 0.0001f);
-            // if (trans.GetComponent<LayoutElement>())
-            // {
-            //     trans.GetComponent<LayoutElement>().ignoreLayout = false;
-            // }
         }
 
         /// <summary>This method allows you to opens the menu with settings from outside unbound</summary>
@@ -792,7 +674,6 @@ namespace UnboundLib.Utils.UI
             {
                 UpdateVisualsCardObj(card.Key, true);
             }
-
 
             if (buttonActions != null) SetAllButtonActions(buttonActions);
 
@@ -935,12 +816,6 @@ namespace UnboundLib.Utils.UI
 
         private void Update()
         {
-            // // Activate and deactivate the menu
-            // if (Input.GetKeyDown(KeyCode.F3))
-            // {
-            //     SetActive(toggleCardsCanvas.transform.Find("CardMenu"),!IsActive(toggleCardsCanvas.transform.Find("CardMenu")));
-            // }
-
             if (!menuOpenFromOutside)
             {
                 if (GameManager.instance.isPlaying && !disabled)
