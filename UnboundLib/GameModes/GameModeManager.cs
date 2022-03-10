@@ -124,6 +124,9 @@ namespace UnboundLib.GameModes
             if (qMatchGo != null) { GameObject.DestroyImmediate(qMatchGo); }
             if (tMatchGo != null) { GameObject.DestroyImmediate(tMatchGo); }
 
+            // restore GoBack target
+            characterSelectGo.transform.GetChild(0).GetComponent<GoBack>().target = gameModeGo.GetComponent<ListMenuPage>();
+
             // destroy all other buttons in this menu
             List<GameObject> objsToDestroy = new List<GameObject>() { };
             for (int i = 0; i < contentGo.childCount; i++)
