@@ -22,6 +22,8 @@ namespace UnboundLib.GameModes
         private static Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>> hooks = new Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>>();
         private static Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>> onceHooks = new Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>>();
 
+        private static bool firstTime = true;
+
         // public properties that return deep copies of the handlers and gameModes dictionarys (the values in the dictionaries returned are shallow copies)
         public static ReadOnlyDictionary<string, IGameModeHandler> Handlers => new ReadOnlyDictionary<string, IGameModeHandler>(handlers.ToDictionary(kv => kv.Key, kv => kv.Value));
         public static ReadOnlyDictionary<string, Type> GameModes => new ReadOnlyDictionary<string, Type>(gameModes.ToDictionary(kv => kv.Key, kv => kv.Value));
@@ -106,7 +108,23 @@ namespace UnboundLib.GameModes
             
                 // Select the local button so selection doesn't look weird
                 Unbound.Instance.ExecuteAfterSeconds(1.5f, () => {GameObject.Find("Game/UI/UI_MainMenu/Canvas/ListSelector/Main/Group/LOCAL").GetComponent<ListMenuButton>().OnPointerEnter(null);});
-                
+
+                // finally, restore the main menu button order
+                Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.5f : 0.01f, () =>
+                {
+                    Transform group = MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group");
+                    group.Find("LOCAL")?.SetAsLastSibling();
+                    group.Find("Local")?.SetAsLastSibling();
+                    group.Find("Online")?.SetAsLastSibling();
+                    group.Find("Options")?.SetAsLastSibling();
+                    group.Find("MODS")?.SetAsLastSibling();
+                    group.Find("CREDITS")?.SetAsLastSibling();
+                    group.Find("Quit")?.SetAsLastSibling();
+                });
+
+                firstTime = false;
+
+
             }
             var gameModeGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/LOCAL");
             var onlineGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/Online/Group");
