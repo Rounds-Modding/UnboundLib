@@ -25,6 +25,7 @@ namespace UnboundLib.GameModes
 
         public abstract GameSettings Settings { get; protected set; }
         public abstract string Name { get; }
+        public virtual bool OnlineOnly => false;
 
         // Used to find the correct game mode from scene
         internal readonly string gameModeId;

@@ -17,6 +17,8 @@ namespace UnboundLib.GameModes
 
         GameSettings Settings { get; }
 
+        bool OnlineOnly { get; }
+
         string Name { get; }
 
         void SetSettings(GameSettings settings);
