@@ -11,6 +11,7 @@ namespace UnboundLib.GameModes
         }
 
         public override GameSettings Settings { get; protected set; }
+        public override bool AllowTeams => true;
 
         public ArmsRaceHandler() : base(GameModeManager.ArmsRaceID)
         {

@@ -163,7 +163,7 @@ namespace UnboundLib.GameModes
 
             // create gamemode buttons alphabetically (creating them in reverse order)
             // non-team gamemodes at the top, team gamemodes at the bottom
-            foreach (var id in handlers.Keys.Where(k => !handlers[k].OnlineOnly && (!handlers[k].Settings.TryGetValue("allowTeams", out object allowTeams) || (bool)allowTeams)).OrderByDescending(k => handlers[k].Name.ToLower()).Where(k => k!=SandBoxID && k!=ArmsRaceID))
+            foreach (var id in handlers.Keys.Where(k => !handlers[k].OnlineOnly && handlers[k].AllowTeams).OrderByDescending(k => handlers[k].Name.ToLower()).Where(k => k!=SandBoxID && k!=ArmsRaceID))
             {
                 // create a copy of the string to give to the anonymous function
                 string id_ = string.Copy(id); 
@@ -175,7 +175,7 @@ namespace UnboundLib.GameModes
             // add a small separator
             Utils.UI.MenuHandler.CreateText(" ", gameModeGo, out TextMeshProUGUI _, 30).transform.SetAsFirstSibling();
 
-            foreach (var id in handlers.Keys.Where(k => !handlers[k].OnlineOnly && handlers[k].Settings.TryGetValue("allowTeams", out object allowTeams) && !(bool)allowTeams).OrderByDescending(k => handlers[k].Name.ToLower()).Where(k => k!=SandBoxID && k!=ArmsRaceID))
+            foreach (var id in handlers.Keys.Where(k => !handlers[k].OnlineOnly && !handlers[k].AllowTeams).OrderByDescending(k => handlers[k].Name.ToLower()).Where(k => k!=SandBoxID && k!=ArmsRaceID))
             {
                 // create a copy of the string to give to the anonymous function
                 string id_ = string.Copy(id); 

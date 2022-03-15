@@ -6,6 +6,7 @@
         {
             get { return "Sandbox"; }
         }
+        public override bool AllowTeams => true;
 
         public override GameSettings Settings { get; protected set; }
 
