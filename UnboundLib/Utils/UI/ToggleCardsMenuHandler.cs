@@ -14,8 +14,8 @@ namespace UnboundLib.Utils.UI
 
         private static readonly Dictionary<string, Transform> ScrollViews = new Dictionary<string, Transform>();
 
-        public static readonly Dictionary<GameObject, Action> cardObjs = new Dictionary<GameObject, Action>();
-        public static readonly List<Action> defaultCardActions = new List<Action>();
+        public static readonly Dictionary<GameObject, Action> CardObjs = new Dictionary<GameObject, Action>();
+        public static readonly List<Action> DefaultCardActions = new List<Action>();
 
         private static readonly List<Button> ButtonsToDisable = new List<Button>();
         private static readonly List<Toggle> TogglesToDisable = new List<Toggle>();
@@ -37,7 +37,6 @@ namespace UnboundLib.Utils.UI
 
         private static bool sortedByName = true;
 
-        internal static Color cardTextNameColor = new Color(0.179f, 0.179f, 0.179f, 1);
         internal static Color positiveColor = new Color(0.465f, 0.603f, 0.390f, 1);
         internal static Color negativeColor = new Color(0.698f, 0.326f, 0.326f, 1);
         // internal static Color commonColor = new Color(0.698f, 0.326f, 0.326f, 1);
@@ -46,7 +45,7 @@ namespace UnboundLib.Utils.UI
 
         private static TextMeshProUGUI cardAmountText;
 
-        private string CurrentCategory => (from scroll in ScrollViews where scroll.Value.gameObject.activeInHierarchy select scroll.Key).FirstOrDefault();
+        private static string CurrentCategory => (from scroll in ScrollViews where scroll.Value.gameObject.activeInHierarchy select scroll.Key).FirstOrDefault();
 
         // if need to toggle all on or off
         private bool toggledAll;
@@ -130,7 +129,7 @@ namespace UnboundLib.Utils.UI
                     foreach (var obj in objs)
                     {
                         CardManager.cards[obj.name].enabled = false;
-                        cardObjs[obj].Invoke();
+                        CardObjs[obj].Invoke();
                     }
                 }
                 else
@@ -139,7 +138,7 @@ namespace UnboundLib.Utils.UI
                     foreach (var obj in objs)
                     {
                         CardManager.cards[obj.name].enabled = true;
-                        cardObjs[obj].Invoke();
+                        CardObjs[obj].Invoke();
                     }
                 }
             });
@@ -200,14 +199,14 @@ namespace UnboundLib.Utils.UI
                                             DestroyImmediate(cardRarityComponent);
                                         }
 
-                                        var cardBaseObj = Instantiate(frontCard);
+                                        var cardBaseObj = Instantiate(frontCard, crdObj.transform, true);
 
                                         Vector3 sizeCalculated = new Vector3(0.1f, 0.1f, 1f);
 
                                         cardBaseObj.name = "CardPreview";
-                                        cardBaseObj.transform.SetParent(crdObj.transform);
-                                        cardBaseObj.transform.localPosition = new Vector3(0, -10, 1f);
-                                        cardBaseObj.transform.localScale = sizeCalculated;
+                                        var cardBaseTransform = cardBaseObj.transform;
+                                        cardBaseTransform.localPosition = new Vector3(0, -10, 1f);
+                                        cardBaseTransform.localScale = sizeCalculated;
                                         cardBaseObj.transform.localRotation = Quaternion.Euler(0, 0, 0);
                                         cardBaseObj.transform.SetSiblingIndex(1);
                                         cardBaseObj.GetComponent<RectTransform>().sizeDelta = new Vector2(1500, 1500);
@@ -219,7 +218,7 @@ namespace UnboundLib.Utils.UI
                                         }
 
                                         // Creates problems if it's not in the game scene and also is the main cause of lag
-                                        GameObject uiParticleObject = FindObjectInChilds(cardBaseObj.gameObject, "UI_ParticleSystem");
+                                        GameObject uiParticleObject = FindObjectInChildren(cardBaseObj.gameObject, "UI_ParticleSystem");
                                         if (uiParticleObject != null)
                                         {
                                             Destroy(uiParticleObject);
@@ -227,14 +226,13 @@ namespace UnboundLib.Utils.UI
 
                                         if (cardInfo.cardArt != null)
                                         {
-                                            var artObject = FindObjectInChilds(cardBaseObj.gameObject, "Art");
+                                            var artObject = FindObjectInChildren(cardBaseObj.gameObject, "Art");
                                             if (artObject != null)
                                             {
                                                 var canvasComponent = artObject.AddComponent<Canvas>();
                                                 canvasComponent.sortingOrder = 1;
 
-                                                var cardArtObj = Instantiate(cardInfo.cardArt);
-                                                cardArtObj.transform.SetParent(artObject.transform);
+                                                var cardArtObj = Instantiate(cardInfo.cardArt, artObject.transform, true);
                                                 cardArtObj.transform.localPosition = new Vector3(0, 0, 1);
                                                 cardArtObj.transform.localScale = new Vector3(1f, 1f, 1);
                                                 cardArtObj.transform.localRotation = Quaternion.identity;
@@ -244,14 +242,14 @@ namespace UnboundLib.Utils.UI
                                                 cardAnimationHandler.ToggleAnimation(false);
                                             }
 
-                                            var blockFrontObject = FindObjectInChilds(cardBaseObj.gameObject, "BlockFront");
+                                            var blockFrontObject = FindObjectInChildren(cardBaseObj.gameObject, "BlockFront");
                                             if (blockFrontObject != null)
                                             {
                                                 blockFrontObject.SetActive(true);
                                             }
                                         }
 
-                                        var backgroundObj = FindObjectInChilds(cardBaseObj.gameObject, "Background");
+                                        var backgroundObj = FindObjectInChildren(cardBaseObj.gameObject, "Background");
                                         if (backgroundObj != null)
                                         {
                                             backgroundObj.transform.localScale = new Vector3(1, 1, 1);
@@ -274,31 +272,38 @@ namespace UnboundLib.Utils.UI
                                             }
                                         }
 
+                                        var cardColor = CardChoice.instance.GetCardColor(cardInfo.colorTheme);
                                         var edgePieces = cardBaseObj.GetComponentsInChildren<Image>(true).Where(x => x.gameObject.transform.name.Contains("FRAME")).ToList();
                                         foreach (Image edgePiece in edgePieces)
                                         {
-                                            edgePiece.color = CardChoice.instance.GetCardColor(cardInfo.colorTheme);
+                                            edgePiece.color = cardColor;
+                                        }
+                                        var textName = cardBaseObj.transform.GetChild(1);
+                                        if (textName != null)
+                                        {
+                                            var textComponent = textName.GetComponent<TextMeshProUGUI>();
+                                            if (textComponent != null)
+                                            {
+                                                textComponent.text = cardInfo.cardName.ToUpper();
+                                                textComponent.color = cardColor;
+                                            }
                                         }
 
                                         if (cardInfo.rarity != CardInfo.Rarity.Common)
                                         {
                                             var colorFromRarity = cardInfo.rarity == CardInfo.Rarity.Uncommon ? uncommonColor : rareColor;
-                                            foreach (GameObject triangleObject in FindObjectsInChilds(cardBaseObj.gameObject, "Triangle"))
+                                            foreach (var imageComponent in FindObjectsInChildren(cardBaseObj.gameObject, "Triangle").Select(triangleObject => triangleObject.GetComponent<Image>()).Where(imageComponent => imageComponent != null))
                                             {
-                                                var imageComponent = triangleObject.GetComponent<Image>();
-                                                if (imageComponent != null)
-                                                {
-                                                    imageComponent.color = colorFromRarity;
-                                                }
+                                                imageComponent.color = colorFromRarity;
                                             }
                                         }
 
                                         if (cardValue.category == "Vanilla")
                                         {
-                                            var gridObject = FindObjectInChilds(cardBaseObj.gameObject, "Grid");
+                                            var gridObject = FindObjectInChildren(cardBaseObj.gameObject, "Grid");
                                             gridObject.transform.localScale = new Vector3(1, 1, 1);
-                                            var effectsText =
-                                                Instantiate(FindObjectInChilds(cardBaseObj.gameObject, "EffectText"));
+
+                                            var effectsText = Instantiate(FindObjectInChildren(cardBaseObj.gameObject, "EffectText"));
                                             if (effectsText != null)
                                             {
                                                 effectsText.SetActive(true);
@@ -308,7 +313,7 @@ namespace UnboundLib.Utils.UI
                                                 effectsTextComponent.text = cardInfo.cardDestription;
                                             }
 
-                                            var statObject = FindObjectInChilds(cardBaseObj.gameObject, "StatObject");
+                                            var statObject = FindObjectInChildren(cardBaseObj.gameObject, "StatObject");
                                             foreach (CardInfoStat cardStat in cardInfo.cardStats)
                                             {
                                                 GameObject newGameObject = Instantiate<GameObject>(statObject, gridObject.transform.position, gridObject.transform.rotation, gridObject.transform);
@@ -325,18 +330,6 @@ namespace UnboundLib.Utils.UI
                                                 else
                                                     component2.text = cardStat.amount;
                                                 component2.color = cardStat.positive ? positiveColor : negativeColor;
-                                            }
-
-
-                                            var textName = cardBaseObj.transform.GetChild(1);
-                                            if (textName != null)
-                                            {
-                                                var textComponent = textName.GetComponent<TextMeshProUGUI>();
-                                                if (textComponent != null)
-                                                {
-                                                    textComponent.text = cardInfo.cardName.ToUpper();
-                                                    textComponent.color = cardTextNameColor;
-                                                }
                                             }
                                         }
                                     }
@@ -361,8 +354,8 @@ namespace UnboundLib.Utils.UI
                         }
                     }
 
-                    cardObjs[crdObj] = CardAction;
-                    defaultCardActions.Add(CardAction);
+                    CardObjs[crdObj] = CardAction;
+                    DefaultCardActions.Add(CardAction);
 
                     ButtonsToDisable.Add(crdObj.GetComponent<Button>());
 
@@ -454,7 +447,7 @@ namespace UnboundLib.Utils.UI
                         if (!firstTime)
                         {
                             string[] cardsInCategory = CardManager.GetCardsInCategory(category);
-                            foreach (GameObject cardObj in cardObjs.Keys.Where(o => cardsInCategory.Contains(o.name)))
+                            foreach (GameObject cardObj in CardObjs.Keys.Where(o => cardsInCategory.Contains(o.name)))
                             {
                                 UpdateVisualsCardObj(cardObj, enabled);
                             }
@@ -465,33 +458,24 @@ namespace UnboundLib.Utils.UI
 
                     UpdateCategoryVisuals(CardManager.IsCategoryActive(category), true);
                 }
-                for (var i = 0; i < cardObjs.Keys.Count; i++)
+                for (var i = 0; i < CardObjs.Keys.Count; i++)
                 {
                     var buttonEvent = new Button.ButtonClickedEvent();
-                    var unityAction = new UnityAction(cardObjs.ElementAt(i).Value);
+                    var unityAction = new UnityAction(CardObjs.ElementAt(i).Value);
                     buttonEvent.AddListener(unityAction);
-                    cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
+                    CardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
                 }
                 ToggleCardsMenuHandler.toggleCardsCanvas.SetActive(false);
             });
         }
 
-        private static List<GameObject> FindObjectsInChilds(GameObject gameObject, string gameObjectName)
+        private static List<GameObject> FindObjectsInChildren(GameObject gameObject, string gameObjectName)
         {
-            List<GameObject> gameObjects = new List<GameObject>();
             Transform[] children = gameObject.GetComponentsInChildren<Transform>(true);
-            foreach (Transform item in children)
-            {
-                if (item.name == gameObjectName)
-                {
-                    gameObjects.Add(item.gameObject);
-                }
-            }
-
-            return gameObjects;
+            return (from item in children where item.name == gameObjectName select item.gameObject).ToList();
         }
 
-        private GameObject FindObjectInChilds(GameObject gameObject, string gameObjectName)
+        private static GameObject FindObjectInChildren(GameObject gameObject, string gameObjectName)
         {
             Transform[] children = gameObject.GetComponentsInChildren<Transform>(true);
             return (from item in children where item.name == gameObjectName select item.gameObject).FirstOrDefault();
@@ -637,7 +621,7 @@ namespace UnboundLib.Utils.UI
             trans.gameObject.SetActive(active);
             Unbound.Instance.ExecuteAfterFrames(5, () =>
             {
-                foreach (var card in cardObjs)
+                foreach (var card in CardObjs)
                 {
                     UpdateVisualsCardObj(card.Key, CardManager.cards[card.Key.name].enabled);
                 }
@@ -670,7 +654,7 @@ namespace UnboundLib.Utils.UI
                 trans.Find("Darken").gameObject.SetActive(false);
             }
 
-            foreach (var card in cardObjs)
+            foreach (var card in CardObjs)
             {
                 UpdateVisualsCardObj(card.Key, true);
             }
@@ -690,12 +674,12 @@ namespace UnboundLib.Utils.UI
                 }
             }
 
-            for (int i = 0; i < cardObjs.Keys.Count; i++)
+            for (int i = 0; i < CardObjs.Keys.Count; i++)
             {
                 var buttonEvent = new Button.ButtonClickedEvent();
-                var unityAction = new UnityAction(cardObjs.ElementAt(i).Value);
+                var unityAction = new UnityAction(CardObjs.ElementAt(i).Value);
                 buttonEvent.AddListener(unityAction);
-                cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
+                CardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
             }
         }
 
@@ -713,7 +697,7 @@ namespace UnboundLib.Utils.UI
             {
                 trans.Find("Toggle").gameObject.SetActive(true);
             }
-            foreach (var card in cardObjs)
+            foreach (var card in CardObjs)
             {
                 UpdateVisualsCardObj(card.Key, CardManager.cards[card.Key.name].enabled);
             }
@@ -723,54 +707,48 @@ namespace UnboundLib.Utils.UI
                 trans.Find("Darken").gameObject.SetActive(!CardManager.categoryBools[trans.name].Value);
             }
 
-            for (int i = 0; i < cardObjs.Keys.Count; i++)
+            for (int i = 0; i < CardObjs.Keys.Count; i++)
             {
                 var buttonEvent = new Button.ButtonClickedEvent();
-                var unityAction = new UnityAction(cardObjs.ElementAt(i).Value);
+                var unityAction = new UnityAction(CardObjs.ElementAt(i).Value);
                 buttonEvent.AddListener(unityAction);
-                cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
+                CardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
             }
         }
 
         public static GameObject[] GetCardObjs(string[] cardNames)
         {
-            List<GameObject> gameObjects = new List<GameObject>();
-            foreach (var cardName in cardNames)
-            {
-                gameObjects.Add(GetCardObj(cardName));
-            }
-
-            return gameObjects.ToArray();
+            return cardNames.Select(GetCardObj).ToArray();
         }
 
         public static GameObject GetCardObj(string cardName)
         {
-            return cardObjs.FirstOrDefault(obj => obj.Key.name == cardName).Key;
+            return CardObjs.FirstOrDefault(obj => obj.Key.name == cardName).Key;
         }
 
         public static void SetAllButtonActions(Action[] actions)
         {
-            for (var i = 0; i < cardObjs.Count; i++)
+            for (var i = 0; i < CardObjs.Count; i++)
             {
-                var obj = cardObjs.ElementAt(i).Key;
-                cardObjs[obj] = actions[i];
+                var obj = CardObjs.ElementAt(i).Key;
+                CardObjs[obj] = actions[i];
             }
         }
 
         public static void ResetCardActions()
         {
-            for (var i = 0; i < cardObjs.Count; i++)
+            for (var i = 0; i < CardObjs.Count; i++)
             {
-                var obj = cardObjs.ElementAt(i).Key;
-                cardObjs[obj] = defaultCardActions[i];
+                var obj = CardObjs.ElementAt(i).Key;
+                CardObjs[obj] = DefaultCardActions[i];
             }
         }
 
         public static int GetActionIndex(GameObject cardObj)
         {
-            for (var i = 0; i < cardObjs.Count; i++)
+            for (var i = 0; i < CardObjs.Count; i++)
             {
-                var obj = cardObjs.ElementAt(i).Key;
+                var obj = CardObjs.ElementAt(i).Key;
                 if (obj == cardObj)
                 {
                     return i;
@@ -808,7 +786,7 @@ namespace UnboundLib.Utils.UI
 
         internal static void RestoreCardToggleVisuals()
         {
-            foreach (GameObject cardObj in cardObjs.Keys)
+            foreach (GameObject cardObj in CardObjs.Keys)
             {
                 UpdateVisualsCardObj(cardObj, CardManager.cards[cardObj.name].config.Value);
             }
@@ -816,16 +794,15 @@ namespace UnboundLib.Utils.UI
 
         private void Update()
         {
-            if (!menuOpenFromOutside)
+            if (menuOpenFromOutside) return;
+            switch (GameManager.instance.isPlaying)
             {
-                if (GameManager.instance.isPlaying && !disabled)
-                {
+                case true when !disabled:
                     DisableButtonsMethod();
-                }
-                else if (!GameManager.instance.isPlaying && disabled)
-                {
+                    break;
+                case false when disabled:
                     EnableButtonsMethod();
-                }
+                    break;
             }
         }
     }
