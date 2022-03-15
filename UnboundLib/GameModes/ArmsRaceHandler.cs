@@ -13,6 +13,8 @@ namespace UnboundLib.GameModes
         public override GameSettings Settings { get; protected set; }
         public override bool AllowTeams => true;
 
+        public override UISettings UISettings => new UISettings("Classic ROUNDS 1v1.");
+
         public ArmsRaceHandler() : base(GameModeManager.ArmsRaceID)
         {
             Settings = new GameSettings()

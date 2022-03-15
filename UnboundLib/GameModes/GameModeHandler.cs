@@ -27,6 +27,7 @@ namespace UnboundLib.GameModes
         public abstract string Name { get; }
         public virtual bool OnlineOnly => false;
         public abstract bool AllowTeams { get; }
+        public virtual UISettings UISettings => new UISettings();
 
         // Used to find the correct game mode from scene
         internal readonly string gameModeId;

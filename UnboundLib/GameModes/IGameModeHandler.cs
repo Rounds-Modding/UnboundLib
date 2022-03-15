@@ -17,6 +17,8 @@ namespace UnboundLib.GameModes
 
         GameSettings Settings { get; }
 
+        UISettings UISettings { get; }
+
         bool OnlineOnly { get; }
         bool AllowTeams { get; }
 
