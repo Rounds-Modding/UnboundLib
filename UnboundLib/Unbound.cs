@@ -177,6 +177,9 @@ namespace UnboundLib
             // GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsAndLevelsOnStart);
             GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.disableSyncModUI(SyncModClients.uiParent));
 
+            // hook for closing ongoing lobbies
+            GameModeManager.AddHook(GameModeHooks.HookGameStart, this.CloseLobby);
+
             // Load toggleUI asset bundle
             toggleUI = AssetUtils.LoadAssetBundleFromResources("toggle ui", typeof(ToggleLevelMenuHandler).Assembly);
 
@@ -192,6 +195,15 @@ namespace UnboundLib
             gameObject.AddComponent<ToggleCardsMenuHandler>();
         }
 
+        private IEnumerator CloseLobby(IGameModeHandler gm)
+        {
+            if (PhotonNetwork.IsMasterClient && !PhotonNetwork.OfflineMode)
+            {
+                PhotonNetwork.CurrentRoom.IsVisible = false;
+                PhotonNetwork.CurrentRoom.IsOpen = false;
+            }
+            yield break;
+        }
         private IEnumerator AddTextWhenReady(float delay = 0f, float maxTimeToWait = 10f)
         {
             if (delay > 0f) { yield return new WaitForSecondsRealtime(delay); }
