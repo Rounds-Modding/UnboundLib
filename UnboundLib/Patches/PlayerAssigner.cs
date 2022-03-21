@@ -1,7 +1,6 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using HarmonyLib;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnboundLib.Extensions;
@@ -48,7 +47,7 @@ namespace UnboundLib.Patches
                     // load the newly created character data onto the stack (local variable in slot 3) [characterData, ...]
                     yield return new CodeInstruction(OpCodes.Ldloc_3);
                     // call assignColorID which takes the character data off the stack [...]
-                    yield return new CodeInstruction(OpCodes.Call,m_assignColorID);
+                    yield return new CodeInstruction(OpCodes.Call, m_assignColorID);
                 }
                 else
                 {
@@ -56,7 +55,7 @@ namespace UnboundLib.Patches
                 }
             }
 
-            
+
         }
     }
 }

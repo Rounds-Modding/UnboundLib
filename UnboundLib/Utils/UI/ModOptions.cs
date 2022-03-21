@@ -57,22 +57,24 @@ namespace UnboundLib.Utils.UI
         private void CreatModOptionsMenu(GameObject parent, GameObject parentForMenu, bool pauseMenu)
         {
             // Create mod options menu
-            modOptionsMenu = MenuHandler.CreateMenu("MODS", () => {showingModOptions = true;
-                    inPauseMenu = pauseMenu;
-                }, parent
+            modOptionsMenu = MenuHandler.CreateMenu("MODS", () =>
+            {
+                showingModOptions = true;
+                inPauseMenu = pauseMenu;
+            }, parent
                 , 60, true, false, parentForMenu,
                 true, pauseMenu ? 2 : 4);
-            
+
             // Create back actions 
             if (!pauseMenu)
             {
-                modOptionsMenu.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(() => {showingModOptions = false;});
+                modOptionsMenu.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(() => { showingModOptions = false; });
             }
             else
             {
                 GameObject.Destroy(modOptionsMenu.GetComponentInChildren<GoBack>(true));
             }
-            modOptionsMenu.transform.Find("Group/Back").gameObject.GetComponent<Button>().onClick.AddListener(() => {showingModOptions = false;});
+            modOptionsMenu.transform.Find("Group/Back").gameObject.GetComponent<Button>().onClick.AddListener(() => { showingModOptions = false; });
 
             if (!pauseMenu)
             {

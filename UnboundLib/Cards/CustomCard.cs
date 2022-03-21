@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Photon.Pun;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using UnityEngine;
-using Photon.Pun;
-using TMPro;
 using System.Linq;
+using TMPro;
 using UnboundLib.Utils;
+using UnityEngine;
 
 namespace UnboundLib.Cards
 {
@@ -123,7 +123,6 @@ namespace UnboundLib.Cards
                 // Reset stats
                 newCard.GetComponent<CharacterStatModifiers>().health = 1;
 
-
                 // Finish initializing
                 newCardInfo.SendMessage("Awake");
                 PhotonNetwork.PrefabPool.RegisterPrefab(newCard.gameObject.name, newCard);
@@ -140,7 +139,7 @@ namespace UnboundLib.Cards
                         new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), newCardInfo.cardName, true), newCardInfo));
                 }
 
-                
+
 
                 // Post-creation clean up
                 newCardInfo.ExecuteAfterFrames(5, () =>
@@ -151,13 +150,12 @@ namespace UnboundLib.Cards
                     // Destroy extra art object
                     var artContainer = newCard.transform.Find("CardBase(Clone)(Clone)/Canvas/Front/Background/Art");
                     if (artContainer != null && artContainer.childCount > 1)
-                        Destroy(artContainer.GetChild(0).gameObject);  
+                        Destroy(artContainer.GetChild(0).gameObject);
 
                     // Disable "prefab"
                     newCard.SetActive(false);
 
                     callback?.Invoke(newCardInfo);
-
                 });
             });
         }
@@ -280,7 +278,7 @@ namespace UnboundLib.Cards
                 if (gameObject.transform.localPosition != localpos)
                 {
                     gameObject.transform.localPosition = localpos;
-                    Destroy(this,1f);
+                    Destroy(this, 1f);
                 }
             }
         }

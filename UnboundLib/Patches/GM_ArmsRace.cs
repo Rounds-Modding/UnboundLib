@@ -5,9 +5,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using UnboundLib.Extensions;
 using UnboundLib.GameModes;
 using UnityEngine;
-using UnboundLib.Extensions;
 
 namespace UnboundLib.Patches
 {

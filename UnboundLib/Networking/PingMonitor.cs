@@ -1,10 +1,10 @@
-﻿using System;
+﻿using ExitGames.Client.Photon;
+using Photon.Pun;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using Photon.Pun;
 using UnboundLib.Networking;
-using ExitGames.Client.Photon;
+using UnityEngine;
 
 namespace UnboundLib
 {
@@ -108,13 +108,13 @@ namespace UnboundLib
             // If ping was updated, we run any actions for it now.
             if (changedProps.TryGetValue("Ping", out var ping))
             {
-                PlayerPings[targetPlayer.ActorNumber] = (int)ping;
+                PlayerPings[targetPlayer.ActorNumber] = (int) ping;
 
                 if (PingUpdateAction != null)
                 {
                     try
                     {
-                        PingUpdateAction(targetPlayer.ActorNumber, (int)ping);
+                        PingUpdateAction(targetPlayer.ActorNumber, (int) ping);
                     }
                     catch (Exception e)
                     {

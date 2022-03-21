@@ -24,9 +24,9 @@ SOFTWARE.
 
 using System;
 using System.IO;
-using UnityEngine;
-using System.Reflection;
 using System.Linq;
+using System.Reflection;
+using UnityEngine;
 
 namespace Jotunn.Utils
 {
@@ -88,7 +88,7 @@ namespace Jotunn.Utils
 
             return null;
         }
-        
+
         /// <summary>
         ///     Loads an asset bundle at runtime.
         /// </summary>
@@ -123,7 +123,8 @@ namespace Jotunn.Utils
             try
             {
                 resourceName = resourceAssembly.GetManifestResourceNames().Single(str => str.EndsWith(bundleName));
-            } catch (Exception) { }
+            }
+            catch (Exception) { }
 
             if (resourceName == null)
             {
@@ -157,7 +158,7 @@ namespace Jotunn.Utils
 
             return File.ReadAllText(absPath);
         }
-        
+
         /// <summary>
         ///     Loads a <see cref="Sprite"/> from a file path or an asset bundle (separated by <see cref="AssetBundlePathSeparator"/>)
         /// </summary>
@@ -188,7 +189,7 @@ namespace Jotunn.Utils
 
             // Load texture and create sprite
             Texture2D texture = LoadTexture(path, false);
-            
+
             if (!texture)
             {
                 return null;
