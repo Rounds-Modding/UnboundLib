@@ -62,19 +62,19 @@ namespace UnboundLib.Utils.UI
             scrollViewAsset = Unbound.toggleUI.LoadAsset<GameObject>("ScrollView2");
             categoryButtonAsset = Unbound.toggleUI.LoadAsset<GameObject>("CategoryButton");
 
-            ToggleCardsMenuHandler.toggleCardsCanvas = Instantiate(cardsCanvas);
-            DontDestroyOnLoad(ToggleCardsMenuHandler.toggleCardsCanvas);
-            var canvas = ToggleCardsMenuHandler.toggleCardsCanvas.GetComponent<Canvas>();
+            toggleCardsCanvas = Instantiate(cardsCanvas);
+            DontDestroyOnLoad(toggleCardsCanvas);
+            var canvas = toggleCardsCanvas.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = mainCamera;
-            ToggleCardsMenuHandler.toggleCardsCanvas.SetActive(false);
+            toggleCardsCanvas.SetActive(false);
 
-            scrollViewTrans = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/ScrollViews");
+            scrollViewTrans = toggleCardsCanvas.transform.Find("CardMenu/ScrollViews");
 
-            categoryContent = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/Categories/ButtonsScroll/Viewport/Content");
+            categoryContent = toggleCardsCanvas.transform.Find("CardMenu/Top/Categories/ButtonsScroll/Viewport/Content");
 
             // Create and set searchbar
-            var searchBar = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/InputField").gameObject;
+            var searchBar = toggleCardsCanvas.transform.Find("CardMenu/Top/InputField").gameObject;
             searchBar.GetComponent<TMP_InputField>().onValueChanged.AddListener(value =>
             {
                 foreach (var card in ScrollViews.SelectMany(scrollView => scrollView.Value.GetComponentsInChildren<Button>(true)))
@@ -90,31 +90,31 @@ namespace UnboundLib.Utils.UI
             });
 
             // create and set sort button (making use of the unused "Switch profile" button)
-            ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/SortBy").GetComponentInChildren<TextMeshProUGUI>().text = "Sort By: " + (sortedByName ? "Name" : "Rarity");
-            var sortButton = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/SortBy").GetComponent<Button>();
+            toggleCardsCanvas.transform.Find("CardMenu/Top/SortBy").GetComponentInChildren<TextMeshProUGUI>().text = "Sort By: " + (sortedByName ? "Name" : "Rarity");
+            var sortButton = toggleCardsCanvas.transform.Find("CardMenu/Top/SortBy").GetComponent<Button>();
             sortButton.onClick.AddListener(() =>
             {
                 sortedByName = !sortedByName;
-                ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/SortBy").GetComponentInChildren<TextMeshProUGUI>().text = "Sort By: " + (sortedByName ? "Name" : "Rarity");
+                toggleCardsCanvas.transform.Find("CardMenu/Top/SortBy").GetComponentInChildren<TextMeshProUGUI>().text = "Sort By: " + (sortedByName ? "Name" : "Rarity");
 
                 SortCardMenus(sortedByName);
             });
 
-            Transform cardAmountObject = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/CardAmount");
+            Transform cardAmountObject = toggleCardsCanvas.transform.Find("CardMenu/Top/CardAmount");
             cardAmountText = cardAmountObject.GetComponentInChildren<TextMeshProUGUI>();
 
             var cardAmountSlider = cardAmountObject.GetComponentsInChildren<Slider>();
             foreach (Slider slider in cardAmountSlider)
             {
-                slider.onValueChanged.AddListener(new UnityAction<float>((amount =>
+                slider.onValueChanged.AddListener((amount =>
                 {
                     int integerAmount = (int) amount;
                     ChangeCardColumnAmountMenus(integerAmount);
-                })));
+                }));
             }
 
             // Create and set toggle all button
-            var toggleAllButton = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/ToggleAll").GetComponent<Button>();
+            var toggleAllButton = toggleCardsCanvas.transform.Find("CardMenu/Top/ToggleAll").GetComponent<Button>();
             ButtonsToDisable.Add(toggleAllButton);
             toggleAllButton.onClick.AddListener(() =>
             {
@@ -144,8 +144,8 @@ namespace UnboundLib.Utils.UI
             });
 
             // get and set info button
-            var infoButton = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/Help").GetComponent<Button>();
-            var infoMenu = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/InfoMenu").gameObject;
+            var infoButton = toggleCardsCanvas.transform.Find("CardMenu/Top/Help").GetComponent<Button>();
+            var infoMenu = toggleCardsCanvas.transform.Find("CardMenu/InfoMenu").gameObject;
             infoButton.onClick.AddListener(() =>
             {
                 infoMenu.SetActive(!infoMenu.activeInHierarchy);
@@ -153,7 +153,7 @@ namespace UnboundLib.Utils.UI
 
             this.ExecuteAfterSeconds(0.85f, () =>
             {
-                ToggleCardsMenuHandler.toggleCardsCanvas.SetActive(true);
+                toggleCardsCanvas.SetActive(true);
                 // Create category scrollViews
                 foreach (var category in CardManager.categories)
                 {
@@ -370,7 +370,7 @@ namespace UnboundLib.Utils.UI
                     UpdateVisualsCardObj(crdObj, cardValue.config.Value);
                 }
 
-                var viewingText = ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/Top/Viewing").gameObject.GetComponentInChildren<TextMeshProUGUI>();
+                var viewingText = toggleCardsCanvas.transform.Find("CardMenu/Top/Viewing").gameObject.GetComponentInChildren<TextMeshProUGUI>();
 
                 // Create category buttons
                 // sort categories
@@ -465,7 +465,7 @@ namespace UnboundLib.Utils.UI
                     buttonEvent.AddListener(unityAction);
                     CardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
                 }
-                ToggleCardsMenuHandler.toggleCardsCanvas.SetActive(false);
+                toggleCardsCanvas.SetActive(false);
             });
         }
 
