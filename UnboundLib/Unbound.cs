@@ -1,13 +1,13 @@
-﻿using BepInEx;
-using BepInEx.Configuration;
+using BepInEx;
 using HarmonyLib;
-using Jotunn.Utils;
 using Photon.Pun;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BepInEx.Configuration;
+using Jotunn.Utils;
 using TMPro;
 using UnboundLib.GameModes;
 using UnboundLib.Networking;
@@ -25,9 +25,9 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.10.3";
+        public const string Version = "2.11.1";
 
-        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing, extra player colors, disconnect handling)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)", "willuwontu (Custom cards, ping UI)" }, "Github", "https://github.com/Rounds-Modding/UnboundLib");
+        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, menus, modded lobby syncing, extra player colors, disconnect handling, game mode framework)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)", "willuwontu (Custom cards, ping UI)" }, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
         public static Unbound Instance { get; private set; }
 
@@ -177,6 +177,9 @@ namespace UnboundLib
             // GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsAndLevelsOnStart);
             GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.disableSyncModUI(SyncModClients.uiParent));
 
+            // hook for closing ongoing lobbies
+            GameModeManager.AddHook(GameModeHooks.HookGameStart, this.CloseLobby);
+
             // Load toggleUI asset bundle
             toggleUI = AssetUtils.LoadAssetBundleFromResources("toggle ui", typeof(ToggleLevelMenuHandler).Assembly);
 
@@ -192,6 +195,15 @@ namespace UnboundLib
             gameObject.AddComponent<ToggleCardsMenuHandler>();
         }
 
+        private IEnumerator CloseLobby(IGameModeHandler gm)
+        {
+            if (PhotonNetwork.IsMasterClient && !PhotonNetwork.OfflineMode)
+            {
+                PhotonNetwork.CurrentRoom.IsVisible = false;
+                PhotonNetwork.CurrentRoom.IsOpen = false;
+            }
+            yield break;
+        }
         private IEnumerator AddTextWhenReady(float delay = 0f, float maxTimeToWait = 10f)
         {
             if (delay > 0f) { yield return new WaitForSecondsRealtime(delay); }

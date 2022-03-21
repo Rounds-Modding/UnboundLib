@@ -26,9 +26,12 @@ namespace UnboundLib.GameModes
 
         public abstract GameSettings Settings { get; protected set; }
         public abstract string Name { get; }
+        public virtual bool OnlineOnly => false;
+        public abstract bool AllowTeams { get; }
+        public virtual UISettings UISettings => new UISettings();
 
         // Used to find the correct game mode from scene
-        private readonly string gameModeId;
+        internal readonly string gameModeId;
 
         protected GameModeHandler(string gameModeId)
         {
@@ -137,5 +140,17 @@ namespace UnboundLib.GameModes
         public abstract void StartGame();
 
         public abstract void ResetGame();
+        public virtual int[] GetGameWinners()
+        {
+            return new int[] { };
+        }
+        public virtual int[] GetRoundWinners()
+        {
+            return new int[] { };
+        }
+        public virtual int[] GetPointWinners()
+        {
+            return new int[] { };
+        }
     }
 }
