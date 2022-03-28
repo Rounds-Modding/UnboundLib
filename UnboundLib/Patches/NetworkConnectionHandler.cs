@@ -8,7 +8,7 @@ namespace UnboundLib.Patches
     {
         static void Prefix()
         {
-            GameModeManager.SetGameMode("ArmsRace", false);
+            GameModeManager.SetGameMode(GameModeManager.ArmsRaceID, false);
         }
     }
 
@@ -17,7 +17,7 @@ namespace UnboundLib.Patches
     {
         static void Prefix()
         {
-            GameModeManager.SetGameMode("ArmsRace", false);
+            GameModeManager.SetGameMode(GameModeManager.ArmsRaceID, false);
         }
     }
 
@@ -26,7 +26,7 @@ namespace UnboundLib.Patches
     {
         static void Prefix()
         {
-            GameModeManager.SetGameMode("ArmsRace", false);
+            GameModeManager.SetGameMode(GameModeManager.ArmsRaceID, false);
         }
     }
 }
