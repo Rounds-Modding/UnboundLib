@@ -152,9 +152,6 @@ namespace UnboundLib.Cards
                 // Post-creation clean up
                 newCardInfo.ExecuteAfterFrames(5, () =>
                 {
-                    // Disable "prefab"
-                    newCard.SetActive(false);
-
                     callback?.Invoke(newCardInfo);
                 });
             });
