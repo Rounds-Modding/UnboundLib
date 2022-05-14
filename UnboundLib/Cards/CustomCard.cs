@@ -35,6 +35,8 @@ namespace UnboundLib.Cards
             if (!isPrefab)
             {
                 Destroy(transform.GetChild(1).gameObject);
+
+                this.Callback();
             }
         }
 
@@ -66,6 +68,13 @@ namespace UnboundLib.Cards
         public virtual string GetModName()
         {
             return "Modded";
+        }
+        /// <summary>
+        /// A callback method that is called each time the card is spawned in and fully instantiated
+        /// </summary>
+        public virtual void Callback()
+        {
+
         }
 
         public static void BuildCard<T>() where T : CustomCard
