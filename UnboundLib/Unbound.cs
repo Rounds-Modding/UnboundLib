@@ -25,9 +25,16 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.11.2";
+        public const string Version = "3.0.0";
 
-        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, stability, menus, syncing, extra player colors, disconnect handling, game mode framework)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)", "willuwontu (Custom cards, ping UI)" }, "Github", "https://github.com/Rounds-Modding/UnboundLib");
+        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] 
+        { 
+            "Willis (Creation, design, networking, custom cards, custom maps, and more)", 
+            "Tilastokeskus (Custom game modes, networking, structure)", 
+            "Pykess (Custom cards, menus, modded lobby syncing, extra player colors, disconnect handling, game mode framework)", 
+            "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)", 
+            "willuwontu (Custom cards, ping UI)"
+        }, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
         public static Unbound Instance { get; private set; }
 
