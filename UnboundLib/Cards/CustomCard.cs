@@ -35,6 +35,8 @@ namespace UnboundLib.Cards
             if (!isPrefab)
             {
                 Destroy(transform.GetChild(1).gameObject);
+
+                this.Callback();
             }
         }
 
@@ -66,6 +68,13 @@ namespace UnboundLib.Cards
         public virtual string GetModName()
         {
             return "Modded";
+        }
+        /// <summary>
+        /// A callback method that is called each time the card is spawned in and fully instantiated
+        /// </summary>
+        public virtual void Callback()
+        {
+
         }
 
         public static void BuildCard<T>() where T : CustomCard
@@ -140,7 +149,7 @@ namespace UnboundLib.Cards
                         new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), newCardInfo.cardName, true), newCardInfo));
                 }
 
-                
+
 
                 // Post-creation clean up
                 newCardInfo.ExecuteAfterFrames(5, () =>
@@ -151,7 +160,7 @@ namespace UnboundLib.Cards
                     // Destroy extra art object
                     var artContainer = newCard.transform.Find("CardBase(Clone)(Clone)/Canvas/Front/Background/Art");
                     if (artContainer != null && artContainer.childCount > 1)
-                        Destroy(artContainer.GetChild(0).gameObject);  
+                        Destroy(artContainer.GetChild(0).gameObject);
 
                     // Disable "prefab"
                     newCard.SetActive(false);
@@ -280,7 +289,7 @@ namespace UnboundLib.Cards
                 if (gameObject.transform.localPosition != localpos)
                 {
                     gameObject.transform.localPosition = localpos;
-                    Destroy(this,1f);
+                    Destroy(this, 1f);
                 }
             }
         }

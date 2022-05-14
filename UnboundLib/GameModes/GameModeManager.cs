@@ -209,7 +209,7 @@ namespace UnboundLib.GameModes
             {
                 foreach (var hook in hooks)
                 {
-                    yield return hook(CurrentHandler);
+                    yield return ErrorTolerantHook(key, hook(CurrentHandler));
                 }
             }
 
@@ -221,6 +221,29 @@ namespace UnboundLib.GameModes
                 }
 
                 GameModeManager.onceHooks.Remove(key);
+            }
+        }
+
+        private static IEnumerator ErrorTolerantHook(string key, IEnumerator hook)
+        {
+            while (true)
+            {
+                object ret = null;
+                try
+                {
+                    if (!hook.MoveNext())
+                    {
+                        break;
+                    }
+                    ret = hook.Current;
+                }
+                catch (Exception ex)
+                {
+                    UnityEngine.Debug.LogError($"[{key.ToUpper()} HOOK] threw the following exception:");
+                    UnityEngine.Debug.LogException(ex);
+                    break;
+                }
+                yield return ret;
             }
         }
 
