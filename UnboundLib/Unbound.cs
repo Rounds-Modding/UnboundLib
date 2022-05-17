@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using HarmonyLib;
 using Photon.Pun;
 using System;
@@ -25,9 +25,17 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
+
         public const string Version = "2.12.0";
 
-        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, stability, menus, syncing, extra player colors, disconnect handling, game mode framework)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)", "willuwontu (Custom cards, ping UI)" }, "Github", "https://github.com/Rounds-Modding/UnboundLib");
+        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] 
+        { 
+            "Willis (Creation, design, networking, custom cards, custom maps, and more)", 
+            "Tilastokeskus (Custom game modes, networking, structure)", 
+            "Pykess (Custom cards, menus, modded lobby syncing, extra player colors, disconnect handling, game mode framework)", 
+            "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)", 
+            "willuwontu (Custom cards, ping UI)"
+        }, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
         public static Unbound Instance { get; private set; }
 
@@ -38,14 +46,16 @@ namespace UnboundLib
         {
             get
             {
-                if (_canvas == null)
+                if (_canvas != null)
                 {
-                    _canvas = new GameObject("UnboundLib Canvas").AddComponent<Canvas>();
-                    _canvas.gameObject.AddComponent<GraphicRaycaster>();
-                    _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                    _canvas.pixelPerfect = false;
-                    DontDestroyOnLoad(_canvas);
+                    return _canvas;
                 }
+
+                _canvas = new GameObject("UnboundLib Canvas").AddComponent<Canvas>();
+                _canvas.gameObject.AddComponent<GraphicRaycaster>();
+                _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                _canvas.pixelPerfect = false;
+                DontDestroyOnLoad(_canvas);
                 return _canvas;
             }
         }
@@ -79,8 +89,8 @@ namespace UnboundLib
 
         public static readonly Dictionary<string, bool> lockInputBools = new Dictionary<string, bool>();
 
-        internal static AssetBundle UIAssets;
-        public static AssetBundle toggleUI;
+        internal static AssetBundle uiAssets;
+        public static AssetBundle toggleUi;
         internal static AssetBundle linkAssets;
         private static GameObject modalPrefab;
 
@@ -106,7 +116,7 @@ namespace UnboundLib
 
 
                 // create unbound text
-                this.StartCoroutine(this.AddTextWhenReady(firstTime ? 4f : 0.1f));
+                StartCoroutine(AddTextWhenReady(firstTime ? 4f : 0.1f));
 
                 ModOptions.Instance.CreateModOptions(firstTime);
                 Credits.Instance.CreateCreditsMenu(firstTime);
@@ -149,7 +159,7 @@ namespace UnboundLib
 
             On.MainMenuHandler.Close += (orig, self) =>
             {
-                if (this.text != null) Destroy(this.text.gameObject);
+                if (text != null) Destroy(text.gameObject);
 
                 orig(self);
             };
@@ -178,10 +188,10 @@ namespace UnboundLib
             GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.disableSyncModUI(SyncModClients.uiParent));
 
             // hook for closing ongoing lobbies
-            GameModeManager.AddHook(GameModeHooks.HookGameStart, this.CloseLobby);
+            GameModeManager.AddHook(GameModeHooks.HookGameStart, CloseLobby);
 
             // Load toggleUI asset bundle
-            toggleUI = AssetUtils.LoadAssetBundleFromResources("toggle ui", typeof(ToggleLevelMenuHandler).Assembly);
+            toggleUi = AssetUtils.LoadAssetBundleFromResources("togglemenuui", typeof(ToggleLevelMenuHandler).Assembly);
 
             // Load toggleUI asset bundle
             linkAssets = AssetUtils.LoadAssetBundleFromResources("unboundlinks", typeof(Unbound).Assembly);
@@ -197,12 +207,13 @@ namespace UnboundLib
 
         private IEnumerator CloseLobby(IGameModeHandler gm)
         {
-            if (PhotonNetwork.IsMasterClient && !PhotonNetwork.OfflineMode)
+            if (!PhotonNetwork.IsMasterClient || PhotonNetwork.OfflineMode)
             {
-                PhotonNetwork.CurrentRoom.IsVisible = false;
-                PhotonNetwork.CurrentRoom.IsOpen = false;
+                yield break;
             }
-            yield break;
+
+            PhotonNetwork.CurrentRoom.IsVisible = false;
+            PhotonNetwork.CurrentRoom.IsOpen = false;
         }
         private IEnumerator AddTextWhenReady(float delay = 0f, float maxTimeToWait = 10f)
         {
@@ -273,11 +284,13 @@ namespace UnboundLib
                 //CardChoice.instance.cards = CardManager.activeCards.ToArray();
                 MapManager.instance.levels = LevelManager.activeLevels.ToArray();
 
-                if (data.Length > 0)
+                if (data.Length <= 0)
                 {
-                    GameModeManager.SetGameMode((string) data[0], false);
-                    GameModeManager.CurrentHandler.SetSettings((GameSettings) data[1]);
+                    return;
                 }
+
+                GameModeManager.SetGameMode((string) data[0], false);
+                GameModeManager.CurrentHandler.SetSettings((GameSettings) data[1]);
             });
 
             // fetch card to use as a template for all custom cards
@@ -320,7 +333,7 @@ namespace UnboundLib
 
             GameManager.lockInput = ModOptions.showModUi ||
                                     DevConsole.isTyping ||
-                                    ToggleLevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy ||
+                                    ToggleLevelMenuHandler.instance.mapMenuCanvas.activeInHierarchy ||
 
                                     (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group") &&
                                      UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group")
@@ -380,17 +393,17 @@ namespace UnboundLib
             GUILayout.EndVertical();
         }
 
-        private void LoadAssets()
+        private static void LoadAssets()
         {
-            UIAssets = AssetUtils.LoadAssetBundleFromResources("unboundui", typeof(Unbound).Assembly);
-            if (UIAssets != null)
+            uiAssets = AssetUtils.LoadAssetBundleFromResources("unboundui", typeof(Unbound).Assembly);
+            if (uiAssets != null)
             {
-                modalPrefab = UIAssets.LoadAsset<GameObject>("Modal");
+                modalPrefab = uiAssets.LoadAsset<GameObject>("Modal");
                 //Instantiate(UIAssets.LoadAsset<GameObject>("Card Toggle Menu"), canvas.transform).AddComponent<CardToggleMenuHandler>();
             }
         }
 
-        private void OnJoinedRoomAction()
+        private static void OnJoinedRoomAction()
         {
             //if (!PhotonNetwork.OfflineMode)
             //   CardChoice.instance.cards = CardManager.defaultCards;
@@ -402,7 +415,7 @@ namespace UnboundLib
                 handshake?.Invoke();
             }
         }
-        private void OnLeftRoomAction()
+        private static void OnLeftRoomAction()
         {
             OnLeftRoom?.Invoke();
         }

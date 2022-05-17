@@ -1,11 +1,11 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
-using HarmonyLib;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -26,7 +26,7 @@ namespace UnboundLib
             }
 
             return str;
-            
+
         }
         #endregion
 
@@ -94,7 +94,7 @@ namespace UnboundLib
 
         public static T GetRandom<T>(this IList array)
         {
-            return (T)array[Random.Range(0, array.Count)];
+            return (T) array[Random.Range(0, array.Count)];
         }
 
         public static void Shuffle<T>(this IList<T> list)
@@ -228,7 +228,7 @@ namespace UnboundLib
             /* The second instruction in an IEnumerator method loads a state variable, from which we can get the declaring type.
              * For example if an instruction calls PlayerManager::DoStuff(), then PlayerManager is the declaring type.
              */
-            var declaringType = ((FieldInfo)instructions[1].operand).DeclaringType;
+            var declaringType = ((FieldInfo) instructions[1].operand).DeclaringType;
 
             // Finding docs about generated IL code is impossible, but the fields we care about seem to be named <>1__state and <>2__current
             var f_state = GetFieldInfo(declaringType, "<>1__state");

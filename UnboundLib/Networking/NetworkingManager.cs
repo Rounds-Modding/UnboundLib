@@ -2,8 +2,8 @@
 using Photon.Pun;
 using Photon.Realtime;
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnboundLib.Networking;
 
@@ -46,7 +46,8 @@ namespace UnboundLib
 
             events.Add(eventName, handler);
         }
-        public static void RaiseEvent(string eventName, RaiseEventOptions options, params object[] data) {
+        public static void RaiseEvent(string eventName, RaiseEventOptions options, params object[] data)
+        {
             if (data == null) data = new object[0];
             var allData = new List<object>();
             allData.Add(eventName);
@@ -65,7 +66,8 @@ namespace UnboundLib
         {
             if (data == null) data = new object[0];
 
-            if (PhotonNetwork.OfflineMode || PhotonNetwork.CurrentRoom == null) {
+            if (PhotonNetwork.OfflineMode || PhotonNetwork.CurrentRoom == null)
+            {
                 var methodInfo = GetRPCMethod(targetType, methodName);
                 if (methodInfo != null)
                 {
@@ -97,7 +99,7 @@ namespace UnboundLib
 
             try
             {
-                data = (object[])photonEvent.CustomData;
+                data = (object[]) photonEvent.CustomData;
             }
             catch (Exception e)
             {
@@ -106,7 +108,7 @@ namespace UnboundLib
 
             try
             {
-                var type = Type.GetType((string)data[0]);
+                var type = Type.GetType((string) data[0]);
                 if (type != null)
                 {
                     var methodInfo = GetRPCMethod(type, (string) data[1]);
@@ -115,7 +117,7 @@ namespace UnboundLib
                         methodInfo.Invoke(null, data.Skip(2).ToArray());
                     }
                 }
-                else if (events.TryGetValue((string)data[0], out PhotonEvent handler))
+                else if (events.TryGetValue((string) data[0], out PhotonEvent handler))
                 {
                     handler?.Invoke(data.Skip(1).ToArray());
                 }
@@ -126,7 +128,8 @@ namespace UnboundLib
             }
         }
 
-        private static MethodInfo GetRPCMethod(Type type, string methodName) {
+        private static MethodInfo GetRPCMethod(Type type, string methodName)
+        {
             var key = new Tuple<Type, string>(type, methodName);
 
             if (!rpcMethodCache.ContainsKey(key))
