@@ -43,8 +43,7 @@ namespace UnboundLib.Cards
                 modNameObj.gameObject.transform.SetParent(BottomLeftCorner.transform);
                 TextMeshProUGUI modText = modNameObj.gameObject.AddComponent<TextMeshProUGUI>();
                 modText.text = this.GetModName().Sanitize();
-                modNameObj.transform.Rotate(new Vector3(0f, 0f, 1f), 45f);
-                modNameObj.transform.Rotate(new Vector3(0f, 1f, 0f), 180f);
+                modNameObj.transform.localEulerAngles = new Vector3(0f, 0f, 135f);
                 modNameObj.transform.localScale = new Vector3(1f, 1f, 1f);
                 modNameObj.AddComponent<SetLocalPos>();
                 modText.alignment = TextAlignmentOptions.Bottom;
