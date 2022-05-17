@@ -120,7 +120,8 @@ namespace UnboundLib.Cards
 
                 // Apply card data
                 newCardInfo.cardStats = customCard.GetStats() ?? new CardInfoStat[0];
-                newCard.gameObject.name = newCardInfo.cardName = customCard.GetTitle().Sanitize();
+                newCardInfo.cardName = customCard.GetTitle();
+                newCard.gameObject.name = $"__{customCard.GetModName()}__{customCard.GetTitle()}".Sanitize();
                 newCardInfo.cardDestription = customCard.GetDescription();
                 newCardInfo.sourceCard = newCardInfo;
                 newCardInfo.rarity = customCard.GetRarity();
