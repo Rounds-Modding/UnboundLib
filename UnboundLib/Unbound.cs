@@ -25,7 +25,8 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "3.0.0";
+
+        public const string Version = "2.12.0";
 
         internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] 
         { 
