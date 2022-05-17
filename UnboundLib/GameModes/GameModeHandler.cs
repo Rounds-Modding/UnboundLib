@@ -1,15 +1,14 @@
-﻿using System.Collections;
+﻿using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
-using UnityEngine;
 
 namespace UnboundLib.GameModes
 {
     /// <inheritdoc/>
     public abstract class GameModeHandler<T> : IGameModeHandler<T> where T : MonoBehaviour
     {
-        public T GameMode
-        {
+        public T GameMode {
             get
             {
                 return GameModeManager.GetGameMode<T>(gameModeId);
@@ -105,7 +104,7 @@ namespace UnboundLib.GameModes
 
             // reassign teamIDs
             Dictionary<int, List<Player>> teams = new Dictionary<int, List<Player>>() { };
-            foreach (Player player in remainingPlayers.OrderBy(p => p.teamID).ThenBy(p => p.playerID))
+            foreach (Player player in remainingPlayers.OrderBy(p=>p.teamID).ThenBy(p=>p.playerID))
             {
                 if (!teams.ContainsKey(player.teamID)) { teams[player.teamID] = new List<Player>() { }; }
 

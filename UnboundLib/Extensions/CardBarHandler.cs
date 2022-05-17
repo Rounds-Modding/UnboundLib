@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI.ProceduralImage;
+using UnboundLib;
+using System.Collections.Generic;
 
 namespace UnboundLib.Extensions
 {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using UnboundLib.Extensions;
+using System.Linq;
 
 namespace UnboundLib.Patches
 {
@@ -24,9 +25,9 @@ namespace UnboundLib.Patches
                     // we want colorID instead of 0/1
                     yield return new CodeInstruction(OpCodes.Call, m_getColorID); // call the colorID method, which pops the constant 0/1 off the stack and leaves the result [colorID, ...]
                 }
-
+                
                 yield return ins;
-
+                
             }
         }
     }

@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
-using System.Collections.Generic;
-using System.Linq;
 using UnboundLib.GameModes;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace UnboundLib.Patches
 {

@@ -39,15 +39,9 @@
     <IndirectBuildTask>true</IndirectBuildTask>
     <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
     <LangVersion>7.1</LangVersion>
-    <EnableNETAnalyzers>false</EnableNETAnalyzers>
-    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Assets\modoptionsui" />
-    <None Remove="Assets\togglemenuui" />
-    <None Remove="Assets\unboundlinks" />
-    <None Remove="Assets\unboundui" />
     <None Remove="UnboundLib.csproj.user.dist" />
     <None Remove="PostBuild.msbuild" />
     <None Remove="unboundlinks" />
@@ -56,10 +50,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Assets\modoptionsui" />
-    <EmbeddedResource Include="Assets\togglemenuui" />
-    <EmbeddedResource Include="Assets\unboundlinks" />
-    <EmbeddedResource Include="Assets\unboundui" />
+    <EmbeddedResource Include="..\AssetsEmbedded\unboundui" />
+    <EmbeddedResource Include="..\AssetsEmbedded\modoptionsui" />
+    <EmbeddedResource Include="..\AssetsEmbedded\toggle ui" />
+    <EmbeddedResource Include="..\AssetsEmbedded\unboundlinks" />
   </ItemGroup>
 
   <ItemGroup>

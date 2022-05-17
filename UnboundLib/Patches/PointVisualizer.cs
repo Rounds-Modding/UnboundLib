@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using UnboundLib.Extensions;
+using System.Linq;
 
 namespace UnboundLib.Patches
 {

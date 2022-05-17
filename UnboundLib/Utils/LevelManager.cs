@@ -1,11 +1,11 @@
-﻿using BepInEx.Configuration;
-using Photon.Pun;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
 using System.Text.RegularExpressions;
+using BepInEx.Configuration;
+using Photon.Pun;
 using UnboundLib.Networking;
 using UnboundLib.Utils.UI;
 using UnityEngine;
@@ -21,14 +21,14 @@ namespace UnboundLib.Utils
         private static readonly Dictionary<string, string> levelPaths = new Dictionary<string, string>();
 
         // A string array of all levels not in proper order
-        private static IEnumerable<string> allLevels
+        private static string[] allLevels
         {
             get
             {
                 List<string> _allLevels = new List<string>();
                 _allLevels.AddRange(activeLevels);
                 _allLevels.AddRange(inactiveLevels);
-                _allLevels.Sort(string.CompareOrdinal);
+                _allLevels.Sort((x, y) => string.CompareOrdinal(x, y));
                 return _allLevels.ToArray();
             }
         }
@@ -64,15 +64,21 @@ namespace UnboundLib.Utils
             instance = this;
 
             // Sort some of the default levels to a separate category
-            foreach (var level in levels.Values.Where(level => level.name.Contains("Phys") || level.name.Contains("Destructible") || level.name.Contains("Grape") || level.name.Contains("Serendipity") || level.name.Contains("Jumbo")))
+            foreach (var level in levels.Values)
             {
-                level.category = "Physics";
+                if (level.name.Contains("Phys") || level.name.Contains("Destructible") || level.name.Contains("Grape") || level.name.Contains("Serendipity") || level.name.Contains("Jumbo"))
+                {
+                    level.category = "Default physics";
+                }
             }
 
             // Populate the categories list
-            foreach (var level in levels.Values.Where(level => !categories.Contains(level.category)))
+            foreach (var level in levels.Values)
             {
-                categories.Add(level.category);
+                if (!categories.Contains(level.category))
+                {
+                    categories.Add(level.category);
+                }
             }
 
             // Populate the categoryBools dictionary
@@ -138,10 +144,11 @@ namespace UnboundLib.Utils
             }
 
 
-            if (!saved) return;
-
-            levels[levelName].enabled = true;
-            Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = true;
+            if (saved)
+            {
+                levels[levelName].enabled = true;
+                Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = true;
+            }
         }
 
         public static void DisableLevels(string[] levelNames, bool saved = true)
@@ -162,14 +169,15 @@ namespace UnboundLib.Utils
             if (!inactiveLevels.Contains(levelName))
             {
                 inactiveLevels.Add(levelName);
-                inactiveLevels.Sort(string.CompareOrdinal);
+                inactiveLevels.Sort((x, y) => string.CompareOrdinal(x, y));
             }
 
 
-            if (!saved) return;
-
-            levels[levelName].enabled = false;
-            Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = false;
+            if (saved)
+            {
+                levels[levelName].enabled = false;
+                Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = false;
+            }
         }
 
 
@@ -308,12 +316,20 @@ namespace UnboundLib.Utils
                     text = Regex.Replace(text, "/.*/", string.Empty);
                     text = text.Replace("/", "");
 
-                    var currentMatches = formattedMessage.Where((t, j) => text.Length > j && t == text[j]).Sum(t => 1f / formattedMessage.Length);
+                    var currentMatches = 0f;
+                    for (int j = 0; j < formattedMessage.Length; j++)
+                    {
+                        if (text.Length > j && formattedMessage[j] == text[j])
+                        {
+                            currentMatches += 1f / formattedMessage.Length;
+                        }
+                    }
                     currentMatches -= Mathf.Abs(formattedMessage.Length - text.Length) * 0.001f;
-                    if (!(currentMatches > 0.1f) || !(currentMatches > bestMatches)) continue;
-
-                    bestMatches = currentMatches;
-                    levelId = i;
+                    if (currentMatches > 0.1f && currentMatches > bestMatches)
+                    {
+                        bestMatches = currentMatches;
+                        levelId = i;
+                    }
                 }
                 if (levelId != -1)
                 {
@@ -321,17 +337,17 @@ namespace UnboundLib.Utils
                 }
                 else
                 {
-                    Unbound.BuildInfoPopup("No Level Named: " + formattedMessage);
+                    Unbound.BuildInfoPopup("Can't find level: " + formattedMessage);
                 }
             }
             catch (Exception e)
             {
                 Unbound.BuildModal()
                     .Title("Error Loading Level")
-                    .Message($"No Map Named:\n{message}\n\nError:\n{e}")
+                    .Message($"No map found named:\n{message}\n\nError:\n{e}")
                     .CancelButton("Copy", () =>
                     {
-                        Unbound.BuildInfoPopup("Copied Message");
+                        Unbound.BuildInfoPopup("Copied Message!");
                         GUIUtility.systemCopyBuffer = e.ToString();
                     })
                     .CancelButton("Cancel", () => { })
@@ -402,11 +418,11 @@ namespace UnboundLib.Utils
             {
                 Unbound.BuildModal()
                     .Title("These levels have been disabled because someone didn't have them")
-                    .Message(string.Join(", ", disabledLevels.ToArray()))
+                    .Message(String.Join(", ", disabledLevels.ToArray()))
                     .CancelButton("Copy", () =>
                     {
                         Unbound.BuildInfoPopup("Copied Message!");
-                        GUIUtility.systemCopyBuffer = string.Join(", ", disabledLevels.ToArray());
+                        GUIUtility.systemCopyBuffer = String.Join(", ", disabledLevels.ToArray());
                     })
                     .CancelButton("Cancel", () => { })
                     .Show();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
 namespace UnboundLib.Utils.UI
@@ -18,11 +19,11 @@ namespace UnboundLib.Utils.UI
             get
             {
                 if (_Links != null) { return _Links; }
-
+                
                 _Links = UnityEngine.GameObject.Instantiate(Unbound.linkAssets.LoadAsset<GameObject>("Links"), MainMenuHandler.instance.transform.Find("Canvas/"));
                 UnityEngine.GameObject.DontDestroyOnLoad(_Links);
                 // do setup like placement and adding components
-                _Links.transform.position = MainCam.instance.transform.GetComponent<Camera>().ScreenToWorldPoint(new Vector3(Screen.height * 16f / 9f, 0, 0f));
+                _Links.transform.position = MainCam.instance.transform.GetComponent<Camera>().ScreenToWorldPoint(new Vector3(Screen.height*16f/9f, 0, 0f));
                 _Links.transform.position += new Vector3(0f, 0f, 100f);
 
                 Link discordLink = _Links.transform.GetChild(0).gameObject.AddComponent<Link>();

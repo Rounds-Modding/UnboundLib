@@ -1,7 +1,7 @@
 ﻿using System;
+using System.IO;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace UnboundLib.GameModes
@@ -11,21 +11,17 @@ namespace UnboundLib.GameModes
     /// </summary>
     public class GameSettings : IReadOnlyDictionary<string, object>
     {
-        public static byte[] Serialize(object settings)
-        {
-            using (MemoryStream ms = new MemoryStream())
-            {
+        public static byte[] Serialize(object settings) {
+            using (MemoryStream ms = new MemoryStream()) {
                 var formatter = new BinaryFormatter();
                 formatter.Serialize(ms, ((GameSettings) settings).values);
                 return ms.ToArray();
             }
         }
 
-        public static GameSettings Deserialize(byte[] data)
-        {
+        public static GameSettings Deserialize(byte[] data) {
             var result = new GameSettings();
-            using (MemoryStream ms = new MemoryStream(data))
-            {
+            using (MemoryStream ms = new MemoryStream(data)) {
                 var formatter = new BinaryFormatter();
                 result.values = (Dictionary<string, object>) formatter.Deserialize(ms);
             }
@@ -35,7 +31,7 @@ namespace UnboundLib.GameModes
         private Dictionary<string, object> values;
 
         public GameSettings()
-        {
+        { 
             values = new Dictionary<string, object>();
         }
 
@@ -49,23 +45,19 @@ namespace UnboundLib.GameModes
             }
         }
 
-        public void Add(string name, object initialValue = default)
-        {
-            if (!initialValue.GetType().IsSerializable)
-            {
+        public void Add(string name, object initialValue = default) {
+            if (!initialValue.GetType().IsSerializable) {
                 throw new ArgumentException($"Setting \"{name}\" must be serializable");
             }
 
-            if (values.ContainsKey(name))
-            {
+            if (values.ContainsKey(name)) {
                 throw new ArgumentException($"Setting \"{name}\" already exists");
             }
 
             values.Add(name, initialValue);
         }
 
-        public bool ContainsKey(string name)
-        {
+        public bool ContainsKey(string name) {
             return values.ContainsKey(name);
         }
 
@@ -79,37 +71,29 @@ namespace UnboundLib.GameModes
             return values.GetEnumerator();
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
+        IEnumerator IEnumerable.GetEnumerator() {
             return values.GetEnumerator();
         }
 
-        public IEnumerable<string> Keys
-        {
-            get
-            {
+        public IEnumerable<string> Keys {
+            get {
                 return values.Keys;
             }
         }
 
-        public IEnumerable<object> Values
-        {
-            get
-            {
+        public IEnumerable<object> Values {
+            get {
                 return values.Values;
             }
         }
 
-        public int Count
-        {
-            get
-            {
+        public int Count {
+            get {
                 return values.Count;
             }
         }
 
-        public object this[string setting]
-        {
+        public object this[string setting] {
             get { return values[setting]; }
         }
     }

@@ -4,7 +4,6 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using Object = UnityEngine.Object;
 
 namespace UnboundLib.Utils.UI
 {
@@ -58,24 +57,22 @@ namespace UnboundLib.Utils.UI
         private void CreatModOptionsMenu(GameObject parent, GameObject parentForMenu, bool pauseMenu)
         {
             // Create mod options menu
-            modOptionsMenu = MenuHandler.CreateMenu("MODS", () =>
-            {
-                showingModOptions = true;
-                inPauseMenu = pauseMenu;
-            }, parent
+            modOptionsMenu = MenuHandler.CreateMenu("MODS", () => {showingModOptions = true;
+                    inPauseMenu = pauseMenu;
+                }, parent
                 , 60, true, false, parentForMenu,
                 true, pauseMenu ? 2 : 4);
-
+            
             // Create back actions 
             if (!pauseMenu)
             {
-                modOptionsMenu.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(() => { showingModOptions = false; });
+                modOptionsMenu.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(() => {showingModOptions = false;});
             }
             else
             {
-                Object.Destroy(modOptionsMenu.GetComponentInChildren<GoBack>(true));
+                GameObject.Destroy(modOptionsMenu.GetComponentInChildren<GoBack>(true));
             }
-            modOptionsMenu.transform.Find("Group/Back").gameObject.GetComponent<Button>().onClick.AddListener(() => { showingModOptions = false; });
+            modOptionsMenu.transform.Find("Group/Back").gameObject.GetComponent<Button>().onClick.AddListener(() => {showingModOptions = false;});
 
             if (!pauseMenu)
             {
@@ -103,11 +100,11 @@ namespace UnboundLib.Utils.UI
                 () =>
                 {
                     ToggleCardsMenuHandler.SetActive(
-                        ToggleCardsMenuHandler.cardMenuCanvas.transform, true);
+                        ToggleCardsMenuHandler.toggleCardsCanvas.transform, true);
                 });
 
             // Create toggle levels button
-            MenuHandler.CreateButton("Toggle Maps", modOptionsMenu,
+            MenuHandler.CreateButton("Toggle Levels", modOptionsMenu,
                 () => { ToggleLevelMenuHandler.instance.SetActive(true); });
 
             // Create menu's for mods with new UI
@@ -124,13 +121,11 @@ namespace UnboundLib.Utils.UI
 
                 void disableOldMenu()
                 {
-                    if (!GUIListeners.ContainsKey(menu.menuName))
+                    if (GUIListeners.ContainsKey(menu.menuName))
                     {
-                        return;
+                        GUIListeners[menu.menuName].guiEnabled = false;
+                        showModUi = false;
                     }
-
-                    GUIListeners[menu.menuName].guiEnabled = false;
-                    showModUi = false;
                 }
 
                 mmenu.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(disableOldMenu);
@@ -163,13 +158,11 @@ namespace UnboundLib.Utils.UI
 
                 void disableOldMenu()
                 {
-                    if (!GUIListeners.ContainsKey(menu.name))
+                    if (GUIListeners.ContainsKey(menu.name))
                     {
-                        return;
+                        GUIListeners[menu.name].guiEnabled = false;
+                        showModUi = false;
                     }
-
-                    GUIListeners[menu.name].guiEnabled = false;
-                    showModUi = false;
                 }
 
                 menu.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(disableOldMenu);
