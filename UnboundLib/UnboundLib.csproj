@@ -40,9 +40,14 @@
     <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
     <LangVersion>7.1</LangVersion>
     <EnableNETAnalyzers>false</EnableNETAnalyzers>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\modoptionsui" />
+    <None Remove="Assets\togglemenuui" />
+    <None Remove="Assets\unboundlinks" />
+    <None Remove="Assets\unboundui" />
     <None Remove="UnboundLib.csproj.user.dist" />
     <None Remove="PostBuild.msbuild" />
     <None Remove="unboundlinks" />
@@ -51,10 +56,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\AssetsEmbedded\unboundui" />
-    <EmbeddedResource Include="..\AssetsEmbedded\modoptionsui" />
-    <EmbeddedResource Include="..\AssetsEmbedded\toggle ui" />
-    <EmbeddedResource Include="..\AssetsEmbedded\unboundlinks" />
+    <EmbeddedResource Include="Assets\modoptionsui" />
+    <EmbeddedResource Include="Assets\togglemenuui" />
+    <EmbeddedResource Include="Assets\unboundlinks" />
+    <EmbeddedResource Include="Assets\unboundui" />
   </ItemGroup>
 
   <ItemGroup>
@@ -141,8 +146,11 @@
     </CallTarget>
     <Exec Command="powershell.exe -ExecutionPolicy RemoteSigned -File &quot;$(SolutionDir)publish.ps1&quot; -Version &quot;$(PackageVersion.Remove($(PackageVersion.LastIndexOf('.')), 2))&quot; -Target &quot;$(ConfigurationName)&quot; -TargetPath &quot;$(TargetDir.TrimEnd('\'))&quot; -TargetAssembly &quot;$(TargetFileName)&quot; -RoundsPath &quot;$(RoundsFolder.TrimEnd('\'))&quot; -ProjectPath &quot;$(SolutionDir.TrimEnd('\'))&quot;" />
   </Target>
-  
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy /Y &quot;E:\GitHub\Rounds\UnboundLib\UnboundLib\bin\Debug\net461\UnboundLib.dll&quot; &quot;C:\Users\ostas\AppData\Roaming\r2modmanPlus-local\ROUNDS\profiles\MyModdedTesting\BepInEx\plugins\Unknown-UnboundLib\UnboundLib.dll&quot;" />
-  </Target>
+
+	<Target Name="CopyDLLs" AfterTargets="Build">
+		<Message Text="Executing CopyDLLs task" Importance="High" />
+
+		<Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="C:\Users\ostas\AppData\Roaming\r2modmanPlus-local\ROUNDS\profiles\MyModdedTesting\BepInEx\plugins\Unknown-UnboundLib\" />
+		<Message Text="Copied build files" Importance="High" />
+	</Target>
 </Project>

@@ -11,48 +11,51 @@ namespace UnboundLib.Patches
         [HarmonyPrefix]
         private static bool Update(EscapeMenuHandler __instance)
         {
-            if (Input.GetKeyDown(KeyCode.Escape) && !ToggleCardsMenuHandler.disableEscapeButton)
+            if (!Input.GetKeyDown(KeyCode.Escape) || ToggleCardsMenuHandler.disableEscapeButton)
             {
-                if (ToggleLevelMenuHandler.instance.levelMenuCanvas.transform.Find("LevelMenu/InfoMenu").gameObject.activeInHierarchy)
-                {
-                    ToggleLevelMenuHandler.instance.levelMenuCanvas.transform.Find("LevelMenu/InfoMenu").gameObject
-                        .SetActive(false);
-                    return false;
-                }
+                return true;
+            }
 
-                if (ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/InfoMenu").gameObject.activeInHierarchy)
-                {
-                    ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/InfoMenu").gameObject
-                        .SetActive(false);
-                    if (ToggleCardsMenuHandler.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
-                    return false;
-                }
+            if (ToggleLevelMenuHandler.instance.mapMenuCanvas.transform.Find("MapMenu/InfoMenu").gameObject.activeInHierarchy)
+            {
+                ToggleLevelMenuHandler.instance.mapMenuCanvas.transform.Find("MapMenu/InfoMenu").gameObject
+                    .SetActive(false);
+                return false;
+            }
 
-                if (ToggleLevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy)
-                {
-                    ToggleLevelMenuHandler.instance.levelMenuCanvas.SetActive(false);
-                    return false;
-                }
+            if (ToggleCardsMenuHandler.cardMenuCanvas.transform.Find("CardMenu/InfoMenu").gameObject.activeInHierarchy)
+            {
+                ToggleCardsMenuHandler.cardMenuCanvas.transform.Find("CardMenu/InfoMenu").gameObject
+                    .SetActive(false);
+                if (ToggleCardsMenuHandler.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
+                return false;
+            }
 
-                if (!ToggleCardsMenuHandler.disableEscapeButton && ToggleCardsMenuHandler.toggleCardsCanvas.activeInHierarchy)
-                {
-                    ToggleCardsMenuHandler.SetActive(ToggleCardsMenuHandler.toggleCardsCanvas.transform, false);
-                    if (ToggleCardsMenuHandler.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
-                    return false;
-                }
+            if (ToggleLevelMenuHandler.instance.mapMenuCanvas.activeInHierarchy)
+            {
+                ToggleLevelMenuHandler.instance.mapMenuCanvas.SetActive(false);
+                return false;
+            }
 
-                if (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group").gameObject.activeInHierarchy)
+            if (!ToggleCardsMenuHandler.disableEscapeButton && ToggleCardsMenuHandler.cardMenuCanvas.activeInHierarchy)
+            {
+                ToggleCardsMenuHandler.SetActive(ToggleCardsMenuHandler.cardMenuCanvas.transform, false);
+                if (ToggleCardsMenuHandler.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
+                return false;
+            }
+
+            if (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group").gameObject.activeInHierarchy)
+            {
+                UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group").gameObject.SetActive(false);
+                UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject.SetActive(true);
+                return false;
+            }
+
+            foreach (Transform child in __instance.transform)
+            {
+                if (child.Find("Group") && child.Find("Group").gameObject.activeInHierarchy)
                 {
-                    UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group").gameObject.SetActive(false);
-                    UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group").gameObject.SetActive(true);
-                    return false;
-                }
-                foreach (Transform child in __instance.transform)
-                {
-                    if (child.Find("Group") && child.Find("Group").gameObject.activeInHierarchy)
-                    {
-                        return child.name == "Main";
-                    }
+                    return child.name == "Main";
                 }
             }
 

@@ -11,44 +11,42 @@ namespace UnboundLib.Patches
         [HarmonyPrefix]
         private static bool Update()
         {
-            if (Input.GetKeyDown(KeyCode.Escape))
+            if (!Input.GetKeyDown(KeyCode.Escape))
             {
-                if (ToggleLevelMenuHandler.instance.levelMenuCanvas.transform.Find("LevelMenu/InfoMenu").gameObject.activeInHierarchy)
-                {
-                    ToggleLevelMenuHandler.instance.levelMenuCanvas.transform.Find("LevelMenu/InfoMenu").gameObject
-                        .SetActive(false);
-                    return false;
-                }
-
-                if (ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/InfoMenu").gameObject.activeInHierarchy)
-                {
-                    ToggleCardsMenuHandler.toggleCardsCanvas.transform.Find("CardMenu/InfoMenu").gameObject
-                        .SetActive(false);
-                    if (ToggleCardsMenuHandler.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
-                    return false;
-                }
-
-                if (ToggleLevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy)
-                {
-                    ToggleLevelMenuHandler.instance.levelMenuCanvas.SetActive(false);
-                    return false;
-                }
-
-                if (!ToggleCardsMenuHandler.disableEscapeButton && ToggleCardsMenuHandler.toggleCardsCanvas.activeInHierarchy)
-                {
-                    ToggleCardsMenuHandler.SetActive(ToggleCardsMenuHandler.toggleCardsCanvas.transform, false);
-                    if (ToggleCardsMenuHandler.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
-                    return false;
-                }
+                return !ModOptions.inPauseMenu;
             }
 
-            if (ModOptions.inPauseMenu)
+            if (ToggleLevelMenuHandler.instance.mapMenuCanvas.transform.Find("MapMenu/InfoMenu").gameObject.activeInHierarchy)
             {
+                ToggleLevelMenuHandler.instance.mapMenuCanvas.transform.Find("MapMenu/InfoMenu").gameObject
+                    .SetActive(false);
                 return false;
             }
 
+            if (ToggleCardsMenuHandler.cardMenuCanvas.transform.Find("CardMenu/InfoMenu").gameObject.activeInHierarchy)
+            {
+                ToggleCardsMenuHandler.cardMenuCanvas.transform.Find("CardMenu/InfoMenu").gameObject
+                    .SetActive(false);
+                if (ToggleCardsMenuHandler.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
+                return false;
+            }
 
-            return true;
+            if (ToggleLevelMenuHandler.instance.mapMenuCanvas.activeInHierarchy)
+            {
+                ToggleLevelMenuHandler.instance.mapMenuCanvas.SetActive(false);
+                return false;
+            }
+
+            if (ToggleCardsMenuHandler.disableEscapeButton ||
+                !ToggleCardsMenuHandler.cardMenuCanvas.activeInHierarchy)
+            {
+                return !ModOptions.inPauseMenu;
+            }
+
+            ToggleCardsMenuHandler.SetActive(ToggleCardsMenuHandler.cardMenuCanvas.transform, false);
+            if (ToggleCardsMenuHandler.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
+            return false;
+
         }
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace UnboundLib.Utils.UI
 {
@@ -72,7 +73,7 @@ namespace UnboundLib.Utils.UI
             }
             else
             {
-                GameObject.Destroy(modOptionsMenu.GetComponentInChildren<GoBack>(true));
+                Object.Destroy(modOptionsMenu.GetComponentInChildren<GoBack>(true));
             }
             modOptionsMenu.transform.Find("Group/Back").gameObject.GetComponent<Button>().onClick.AddListener(() => { showingModOptions = false; });
 
@@ -102,11 +103,11 @@ namespace UnboundLib.Utils.UI
                 () =>
                 {
                     ToggleCardsMenuHandler.SetActive(
-                        ToggleCardsMenuHandler.toggleCardsCanvas.transform, true);
+                        ToggleCardsMenuHandler.cardMenuCanvas.transform, true);
                 });
 
             // Create toggle levels button
-            MenuHandler.CreateButton("Toggle Levels", modOptionsMenu,
+            MenuHandler.CreateButton("Toggle Maps", modOptionsMenu,
                 () => { ToggleLevelMenuHandler.instance.SetActive(true); });
 
             // Create menu's for mods with new UI
@@ -123,11 +124,13 @@ namespace UnboundLib.Utils.UI
 
                 void disableOldMenu()
                 {
-                    if (GUIListeners.ContainsKey(menu.menuName))
+                    if (!GUIListeners.ContainsKey(menu.menuName))
                     {
-                        GUIListeners[menu.menuName].guiEnabled = false;
-                        showModUi = false;
+                        return;
                     }
+
+                    GUIListeners[menu.menuName].guiEnabled = false;
+                    showModUi = false;
                 }
 
                 mmenu.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(disableOldMenu);
@@ -160,11 +163,13 @@ namespace UnboundLib.Utils.UI
 
                 void disableOldMenu()
                 {
-                    if (GUIListeners.ContainsKey(menu.name))
+                    if (!GUIListeners.ContainsKey(menu.name))
                     {
-                        GUIListeners[menu.name].guiEnabled = false;
-                        showModUi = false;
+                        return;
                     }
+
+                    GUIListeners[menu.name].guiEnabled = false;
+                    showModUi = false;
                 }
 
                 menu.GetComponentInChildren<GoBack>(true).goBackEvent.AddListener(disableOldMenu);
