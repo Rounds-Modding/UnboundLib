@@ -25,7 +25,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "2.12.0";
+        public const string Version = "3.0.0";
 
         internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, stability, menus, syncing, extra player colors, disconnect handling, game mode framework)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)", "willuwontu (Custom cards, ping UI)" }, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
@@ -181,7 +181,7 @@ namespace UnboundLib
             GameModeManager.AddHook(GameModeHooks.HookGameStart, this.CloseLobby);
 
             // Load toggleUI asset bundle
-            toggleUI = AssetUtils.LoadAssetBundleFromResources("toggle ui", typeof(ToggleLevelMenuHandler).Assembly);
+            toggleUI = AssetUtils.LoadAssetBundleFromResources("togglemenuui", typeof(ToggleLevelMenuHandler).Assembly);
 
             // Load toggleUI asset bundle
             linkAssets = AssetUtils.LoadAssetBundleFromResources("unboundlinks", typeof(Unbound).Assembly);
@@ -320,7 +320,7 @@ namespace UnboundLib
 
             GameManager.lockInput = ModOptions.showModUi ||
                                     DevConsole.isTyping ||
-                                    ToggleLevelMenuHandler.instance.levelMenuCanvas.activeInHierarchy ||
+                                    ToggleLevelMenuHandler.instance.mapMenuCanvas.activeInHierarchy ||
 
                                     (UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group") &&
                                      UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Options(Clone)/Group")
