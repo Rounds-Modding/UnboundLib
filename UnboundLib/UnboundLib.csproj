@@ -1,156 +1,143 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{2F32C3B2-635E-40DE-869E-6BC48A85989E}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>UnboundLib</RootNamespace>
-    <AssemblyName>UnboundLib</AssemblyName>
-    <Authors>RoundsModding</Authors>
-    <TargetFramework>net461</TargetFramework>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <TargetFrameworkProfile />
-  </PropertyGroup>
+	<PropertyGroup>
+		<Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+		<Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+		<ProjectGuid>{2F32C3B2-635E-40DE-869E-6BC48A85989E}</ProjectGuid>
+		<OutputType>Library</OutputType>
+		<RootNamespace>UnboundLib</RootNamespace>
+		<AssemblyName>UnboundLib</AssemblyName>
+		<Authors>RoundsModding</Authors>
+		<TargetFramework>net461</TargetFramework>
+		<FileAlignment>512</FileAlignment>
+		<Deterministic>true</Deterministic>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<TargetFrameworkProfile />
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugSymbols>false</DebugSymbols>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DebugType>none</DebugType>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <GenerateNuspecDependsOn>$(GenerateNuspecDependsOn);ReadPackageVersionFromOutputAssembly</GenerateNuspecDependsOn>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageOutputPath>$(SolutionDir)/release</PackageOutputPath>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<DebugSymbols>false</DebugSymbols>
+		<Optimize>true</Optimize>
+		<OutputPath>bin\Release\</OutputPath>
+		<DebugType>none</DebugType>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<GenerateNuspecDependsOn>$(GenerateNuspecDependsOn);ReadPackageVersionFromOutputAssembly</GenerateNuspecDependsOn>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageOutputPath>$(SolutionDir)/release</PackageOutputPath>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <DefineConstants>DEBUG</DefineConstants>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DebugType>portable</DebugType>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  
-  <PropertyGroup>
-    <RoundsFolder>C:\Program Files (x86)\Steam\steamapps\common\ROUNDS</RoundsFolder>
-    <IndirectBuildTask>true</IndirectBuildTask>
-    <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
-    <LangVersion>7.1</LangVersion>
-    <EnableNETAnalyzers>false</EnableNETAnalyzers>
-    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DebugSymbols>true</DebugSymbols>
+		<DefineConstants>DEBUG</DefineConstants>
+		<Optimize>false</Optimize>
+		<OutputPath>bin\Debug\</OutputPath>
+		<DebugType>portable</DebugType>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="Assets\modoptionsui" />
-    <None Remove="Assets\togglemenuui" />
-    <None Remove="Assets\unboundlinks" />
-    <None Remove="Assets\unboundui" />
-    <None Remove="UnboundLib.csproj.user.dist" />
-    <None Remove="PostBuild.msbuild" />
-    <None Remove="unboundlinks" />
-    <None Include="..\README.md" />
-    <None Include="..\.gitignore" />
-  </ItemGroup>
+	<PropertyGroup>
+		<RoundsFolder>C:\Program Files (x86)\Steam\steamapps\common\ROUNDS</RoundsFolder>
+		<IndirectBuildTask>true</IndirectBuildTask>
+		<DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+		<LangVersion>7.1</LangVersion>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="Assets\modoptionsui" />
-    <EmbeddedResource Include="Assets\togglemenuui" />
-    <EmbeddedResource Include="Assets\unboundlinks" />
-    <EmbeddedResource Include="Assets\unboundui" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="UnboundLib.csproj.user.dist" />
+		<None Remove="PostBuild.msbuild" />
+		<None Remove="unboundlinks" />
+		<None Include="..\README.md" />
+		<None Include="..\.gitignore" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>..\Assemblies\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="BepInEx">
-      <HintPath>..\Assemblies\BepInEx.dll</HintPath>
-    </Reference>
-    <Reference Include="MMHOOK_Assembly-CSharp">
-      <HintPath>..\Assemblies\MMHOOK_Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Photon3Unity3D">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\Photon3Unity3D.dll</HintPath>
-    </Reference>
-    <Reference Include="PhotonRealtime">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\PhotonRealtime.dll</HintPath>
-    </Reference>
-    <Reference Include="PhotonUnityNetworking">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\PhotonUnityNetworking.dll</HintPath>
-    </Reference>
-    <Reference Include="PhotonUnityNetworking.Utilities">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\PhotonUnityNetworking.Utilities.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.TextMeshPro">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\Unity.TextMeshPro.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AnimationModule">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.AssetBundleModule">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.InputModule">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.InputModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.ParticleSystemModule">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.SpriteMaskModule">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.SpriteMaskModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UIElementsModule">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UIModule">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.UIModule.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="..\AssetsEmbedded\unboundui" />
+		<EmbeddedResource Include="..\AssetsEmbedded\modoptionsui" />
+		<EmbeddedResource Include="..\AssetsEmbedded\toggle ui" />
+		<EmbeddedResource Include="..\AssetsEmbedded\unboundlinks" />
+	</ItemGroup>
 
-  <Target Name="ReadPackageVersionFromOutputAssembly" DependsOnTargets="Build" Outputs="$(PackageVersion)">
-    <GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
-      <Output TaskParameter="Assemblies" ItemName="PackAssembly" />
-    </GetAssemblyIdentity>
-    <PropertyGroup>
-      <PackageVersion>%(PackAssembly.Version)</PackageVersion>
-    </PropertyGroup>
-  </Target>
-  
-  <Target Name="PostBuildTaskWin" Condition="'$(OS)' == 'Windows_NT'" DependsOnTargets="Build" AfterTargets="Build">
-    <CallTarget Targets="ReadPackageVersionFromOutputAssembly">
-      <Output TaskParameter="TargetOutputs" PropertyName="PackageVersion" />
-    </CallTarget>
-    <Exec Command="powershell.exe -ExecutionPolicy RemoteSigned -File &quot;$(SolutionDir)publish.ps1&quot; -Version &quot;$(PackageVersion.Remove($(PackageVersion.LastIndexOf('.')), 2))&quot; -Target &quot;$(ConfigurationName)&quot; -TargetPath &quot;$(TargetDir.TrimEnd('\'))&quot; -TargetAssembly &quot;$(TargetFileName)&quot; -RoundsPath &quot;$(RoundsFolder.TrimEnd('\'))&quot; -ProjectPath &quot;$(SolutionDir.TrimEnd('\'))&quot;" />
-  </Target>
+	<ItemGroup>
+		<Reference Include="0Harmony">
+			<HintPath>..\Assemblies\0Harmony.dll</HintPath>
+		</Reference>
+		<Reference Include="BepInEx">
+			<HintPath>..\Assemblies\BepInEx.dll</HintPath>
+		</Reference>
+		<Reference Include="MMHOOK_Assembly-CSharp">
+			<HintPath>..\Assemblies\MMHOOK_Assembly-CSharp.dll</HintPath>
+		</Reference>
+		<Reference Include="Assembly-CSharp">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\Assembly-CSharp.dll</HintPath>
+		</Reference>
+		<Reference Include="Photon3Unity3D">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\Photon3Unity3D.dll</HintPath>
+		</Reference>
+		<Reference Include="PhotonRealtime">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\PhotonRealtime.dll</HintPath>
+		</Reference>
+		<Reference Include="PhotonUnityNetworking">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\PhotonUnityNetworking.dll</HintPath>
+		</Reference>
+		<Reference Include="PhotonUnityNetworking.Utilities">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\PhotonUnityNetworking.Utilities.dll</HintPath>
+		</Reference>
+		<Reference Include="Unity.TextMeshPro">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\Unity.TextMeshPro.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AnimationModule">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.AssetBundleModule">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.CoreModule">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.IMGUIModule">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.InputModule">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.InputModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.ParticleSystemModule">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.SpriteMaskModule">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.SpriteMaskModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.TextRenderingModule">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UI">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.UI.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UIElementsModule">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
+		</Reference>
+		<Reference Include="UnityEngine.UIModule">
+			<HintPath>$(RoundsFolder)\Rounds_Data\Managed\UnityEngine.UIModule.dll</HintPath>
+		</Reference>
+	</ItemGroup>
 
-	<Target Name="CopyDLLs" AfterTargets="Build">
-		<Message Text="Executing CopyDLLs task" Importance="High" />
+	<Target Name="ReadPackageVersionFromOutputAssembly" DependsOnTargets="Build" Outputs="$(PackageVersion)">
+		<GetAssemblyIdentity AssemblyFiles="$(TargetPath)">
+			<Output TaskParameter="Assemblies" ItemName="PackAssembly" />
+		</GetAssemblyIdentity>
+		<PropertyGroup>
+			<PackageVersion>%(PackAssembly.Version)</PackageVersion>
+		</PropertyGroup>
+	</Target>
 
-		<Copy SourceFiles="$(TargetDir)$(ProjectName).dll" DestinationFolder="C:\Users\ostas\AppData\Roaming\r2modmanPlus-local\ROUNDS\profiles\MyModdedTesting\BepInEx\plugins\Unknown-UnboundLib\" />
-		<Message Text="Copied build files" Importance="High" />
+	<Target Name="PostBuildTaskWin" Condition="'$(OS)' == 'Windows_NT'" DependsOnTargets="Build" AfterTargets="Build">
+		<CallTarget Targets="ReadPackageVersionFromOutputAssembly">
+			<Output TaskParameter="TargetOutputs" PropertyName="PackageVersion" />
+		</CallTarget>
+		<Exec Command="powershell.exe -ExecutionPolicy RemoteSigned -File &quot;$(SolutionDir)publish.ps1&quot; -Version &quot;$(PackageVersion.Remove($(PackageVersion.LastIndexOf('.')), 2))&quot; -Target &quot;$(ConfigurationName)&quot; -TargetPath &quot;$(TargetDir.TrimEnd('\'))&quot; -TargetAssembly &quot;$(TargetFileName)&quot; -RoundsPath &quot;$(RoundsFolder.TrimEnd('\'))&quot; -ProjectPath &quot;$(SolutionDir.TrimEnd('\'))&quot;" />
 	</Target>
 </Project>

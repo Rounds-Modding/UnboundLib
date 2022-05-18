@@ -172,6 +172,7 @@ namespace UnboundLib.Utils.UI
             redrawAllText = redrawAllButton.GetComponentInChildren<TextMeshProUGUI>();
             redrawAllButton.onClick.AddListener(() =>
             {
+                mapMenuCanvas.SetActive(true);
                 levelsThatNeedToRedrawn.AddRange(redrawAllText.text == "Draw Thumbnails"
                     ? LevelManager.levels.Select(lvlObj => lvlObj.Key)
                     : LevelManager.GetLevelsInCategory(CurrentCategory));
@@ -326,6 +327,7 @@ namespace UnboundLib.Utils.UI
         // Update the visuals of a lvlObj
         public static void UpdateVisualsLevelObj(GameObject lvlObj)
         {
+            if (!LevelManager.levels.ContainsKey(lvlObj.name)) return;
             if (LevelManager.levels[lvlObj.name].enabled)
             {
                 lvlObj.transform.Find("Image").GetComponent<Image>().color = Color.white;
@@ -355,7 +357,6 @@ namespace UnboundLib.Utils.UI
         private IEnumerator LoadScenesForRedrawing(IEnumerable<string> sceneNames)
         {
             isDrawingLevels = true;
-
             foreach (var sceneName in sceneNames)
             {
                 ArtHandler.instance.NextArt();
@@ -366,7 +367,6 @@ namespace UnboundLib.Utils.UI
             levelsThatHaveBeenRedrawn.Clear();
             NetworkConnectionHandler.instance.NetworkRestart();
             isDrawingLevels = false;
-
 
             foreach (var lvl in LevelManager.levels.Where(lvl => lvl.Value.selected))
             {
@@ -383,7 +383,6 @@ namespace UnboundLib.Utils.UI
             {
                 if (obj.name == "UnboundLib Canvas")
                 {
-                    //Destroy(obj.transform.Find("Unbound Text Object")?.gameObject);
                     obj.SetActive(false);
                 }
             }
@@ -392,9 +391,9 @@ namespace UnboundLib.Utils.UI
 
             if (manualRedraw)
             {
-                this.ExecuteAfterSeconds(0.25f, () =>
+                this.ExecuteAfterFrames(5, () =>
                 {
-                    mapMenuCanvas.SetActive(true);
+                    SetActive(true);
                 });
             }
 
@@ -602,6 +601,12 @@ namespace UnboundLib.Utils.UI
 
         public void SetActive(bool active)
         {
+            // Main camera changes when going back to menu and glow disappears if we don't se the camera again to the canvas
+            Camera mainCamera = GameObject.Find("MainCamera").GetComponent<Camera>();
+            Canvas canvas = mapMenuCanvas.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = mainCamera;
+
             //if (PhotonNetwork.IsConnected && !PhotonNetwork.IsMasterClient) return;
             mapMenuCanvas.SetActive(true);
         }

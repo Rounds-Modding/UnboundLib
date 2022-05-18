@@ -36,12 +36,10 @@ namespace UnboundLib.Utils.UI
         private static bool disabled;
 
         private static bool sortedByName = true;
-        
-        internal static Color uncommonColor = new Color(0, 0.5f, 1, 1);
-        internal static Color rareColor = new Color(1, 0.2f, 1, 1);
 
         private static TextMeshProUGUI cardAmountText;
 
+        private static int currentColumnAmount = 5;
         private static string CurrentCategory => (from scroll in ScrollViews where scroll.Value.gameObject.activeInHierarchy select scroll.Key).FirstOrDefault();
 
         // if need to toggle all on or off
@@ -149,7 +147,7 @@ namespace UnboundLib.Utils.UI
                 infoMenu.SetActive(!infoMenu.activeInHierarchy);
             });
 
-            this.ExecuteAfterSeconds(0.65f, () =>
+            this.ExecuteAfterSeconds(0.5f, () =>
             {
                 cardMenuCanvas.SetActive(true);
                 // Create category scrollViews
@@ -177,96 +175,12 @@ namespace UnboundLib.Utils.UI
 
                     if (cardValue != null)
                     {
+                        // UnityEngine.Debug.Log("CardValue not null: " + card.Key);
                         CardInfo cardInfo = cardValue.cardInfo;
                         if (cardInfo != null)
                         {
-                            var cardObject = GetCardVisuals(cardInfo, crdObj); //Instantiate(cardInfo, crdObj.transform);
-                            Transform cardFrontObject = null;
-                            foreach (Transform child in cardObject.transform)
-                            {
-                                foreach (Transform secondChild in child.transform)
-                                {
-                                    foreach (Transform thirdChild in secondChild.transform)
-                                    {
-                                        if (thirdChild.name != "Front") continue;
-                                        cardFrontObject = thirdChild;
-                                    }
-                                }
-                            }
-                            if (cardFrontObject == null) return;
-
-                            var canvasGroups = cardFrontObject.GetComponentsInChildren<CanvasGroup>();
-                            foreach (var canvasGroup in canvasGroups)
-                            {
-                                canvasGroup.alpha = 1;
-                            }
-
-                            // // Creates problems if it's not in the game scene and also is the main cause of lag
-                            GameObject uiParticleObject = FindObjectInChildren(cardFrontObject.gameObject, "UI_ParticleSystem");
-                            if (uiParticleObject != null)
-                            {
-                                // uiParticleObject.SetActive(false);
-                                Destroy(uiParticleObject);
-                            }
-
-                            if (cardInfo.cardArt != null)
-                            {
-                                var artObject = FindObjectInChildren(cardFrontObject.gameObject, "Art");
-                                if (artObject != null)
-                                {
-                                    var cardAnimationHandler = cardObject.AddComponent<CardAnimationHandler>();
-                                    cardAnimationHandler.ToggleAnimation(false);
-                                }
-                            }
-
-                            var backgroundObj = FindObjectInChildren(cardFrontObject.gameObject, "Background");
-                            if (backgroundObj != null)
-                            {
-                                backgroundObj.transform.localScale = new Vector3(1, 1, 1);
-                                var rectTransform = backgroundObj.GetComponent<RectTransform>();
-                                rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-                                rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
-                                rectTransform.sizeDelta = new Vector2(1500f, 1500f);
-
-                                var imageComponent = backgroundObj.gameObject.GetComponentInChildren<Image>(true);
-                                if (imageComponent != null)
-                                {
-                                    imageComponent.preserveAspect = true;
-                                    imageComponent.color = new Color(0.16f, 0.16f, 0.16f, 1f);
-                                }
-
-                                var maskComponent = backgroundObj.gameObject.GetComponentInChildren<Mask>(true);
-                                if (maskComponent != null)
-                                {
-                                    maskComponent.showMaskGraphic = true;
-                                }
-                            }
-
-                            var cardColor = CardChoice.instance.GetCardColor(cardInfo.colorTheme);
-                            var edgePieces = cardFrontObject.GetComponentsInChildren<Image>(true).Where(x => x.gameObject.transform.name.Contains("FRAME")).ToList();
-                            foreach (Image edgePiece in edgePieces)
-                            {
-                                edgePiece.color = cardColor;
-                            }
-                            var textName = cardFrontObject.transform.GetChild(1);
-                            if (textName != null)
-                            {
-                                var textComponent = textName.GetComponent<TextMeshProUGUI>();
-                                if (textComponent != null)
-                                {
-                                    textComponent.text = cardInfo.cardName.ToUpper();
-                                    textComponent.color = cardColor;
-                                }
-                            }
-
-                            if (cardInfo.rarity != CardInfo.Rarity.Common)
-                            {
-                                var colorFromRarity = cardInfo.rarity == CardInfo.Rarity.Uncommon ? uncommonColor : rareColor;
-                                foreach (var imageComponent in FindObjectsInChildren(cardFrontObject.gameObject, "Triangle").Select(triangleObject => triangleObject.GetComponent<Image>()).Where(imageComponent => imageComponent != null))
-                                {
-                                    imageComponent.color = colorFromRarity;
-                                }
-                            }
+                            // UnityEngine.Debug.Log("CardInfo not null: " + card.Key);
+                            SetupCardVisuals(cardInfo, crdObj); //Instantiate(cardInfo, crdObj.transform);
                         }
                     }
 
@@ -300,7 +214,7 @@ namespace UnboundLib.Utils.UI
                     UpdateVisualsCardObj(crdObj, cardValue.config.Value);
                 }
 
-                ChangeCardColumnAmountMenus(5);
+                UpdateCardColumnAmountMenus();
 
                 var viewingText = cardMenuCanvas.transform.Find("CardMenu/Top/Viewing").gameObject.GetComponentInChildren<TextMeshProUGUI>();
 
@@ -401,12 +315,83 @@ namespace UnboundLib.Utils.UI
             });
         }
 
-        private static GameObject GetCardVisuals(Component card, GameObject parent)
+        private static List<Transform> GetAllChildren(Transform parent, List<Transform> transformList = null)
         {
-            GameObject cardObj = Instantiate(card.gameObject, parent.gameObject.transform);
-            cardObj.SetActive(true);
-            cardObj.GetComponentInChildren<CardVisuals>().firstValueToSet = true;
-            RectTransform rect = cardObj.GetOrAddComponent<RectTransform>();
+            if (transformList == null) transformList = new List<Transform>();
+
+            foreach (Transform child in parent)
+            {
+                transformList.Add(child);
+                GetAllChildren(child, transformList);
+            }
+            return transformList;
+        }
+
+        private static void SetupCardVisuals(CardInfo cardInfo, GameObject parent)
+        {
+            GameObject cardObject = Instantiate(cardInfo.gameObject, parent.gameObject.transform);
+            cardObject.AddComponent<MenuCard>();
+            cardObject.SetActive(true);
+
+            GameObject cardFrontObject = FindObjectInChildren(cardObject, "Front");
+            if (cardFrontObject == null) return;
+
+            GameObject back = FindObjectInChildren(cardObject, "Back");
+            Destroy(back);
+
+            foreach (CardVisuals componentsInChild in cardObject.GetComponentsInChildren<CardVisuals>())
+            {
+                componentsInChild.firstValueToSet = true;
+            }
+
+            FindObjectInChildren(cardObject, "BlockFront")?.SetActive(false);
+
+            var canvasGroups = cardObject.GetComponentsInChildren<CanvasGroup>();
+            foreach (var canvasGroup in canvasGroups)
+            {
+                canvasGroup.alpha = 1;
+            }
+
+            // // Creates problems if it's not in the game scene and also is the main cause of lag
+            GameObject uiParticleObject = FindObjectInChildren(cardFrontObject.gameObject, "UI_ParticleSystem");
+            if (uiParticleObject != null)
+            {
+                Destroy(uiParticleObject);
+            }
+
+            if (cardInfo.cardArt != null)
+            {
+                var artObject = FindObjectInChildren(cardFrontObject.gameObject, "Art");
+                if (artObject != null)
+                {
+                    var cardAnimationHandler = cardObject.AddComponent<CardAnimationHandler>();
+                    cardAnimationHandler.ToggleAnimation(false);
+                }
+            }
+
+            var backgroundObj = FindObjectInChildren(cardFrontObject.gameObject, "Background");
+            if (backgroundObj == null) return;
+
+            backgroundObj.transform.localScale = new Vector3(1, 1, 1);
+            var rectTransform = backgroundObj.GetComponent<RectTransform>();
+            rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
+            rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            rectTransform.sizeDelta = new Vector2(1500f, 1500f);
+
+            var imageComponent = backgroundObj.gameObject.GetComponentInChildren<Image>(true);
+            if (imageComponent != null)
+            {
+                imageComponent.preserveAspect = true;
+                imageComponent.color = new Color(0.16f, 0.16f, 0.16f, 1f);
+            }
+
+            var maskComponent = backgroundObj.gameObject.GetComponentInChildren<Mask>(true);
+            if (maskComponent != null)
+            {
+                maskComponent.showMaskGraphic = true;
+            }
+
+            RectTransform rect = cardObject.GetOrAddComponent<RectTransform>();
             rect.localScale = 8f * Vector3.one;
             rect.anchorMin = Vector2.zero;
             rect.anchorMax = Vector2.one;
@@ -414,26 +399,40 @@ namespace UnboundLib.Utils.UI
             rect.offsetMax = Vector2.zero;
             rect.pivot = new Vector2(0.5f, 0.5f);
 
-            GameObject back = FindObjectInChildren(cardObj, "Back");
-            try
+            var cardColor = CardChoice.instance.GetCardColor(cardInfo.colorTheme);
+            var edgePieces = cardFrontObject.GetComponentsInChildren<Image>(true)
+                .Where(x => x.gameObject.transform.name.Contains("FRAME")).ToList();
+            foreach (Image edgePiece in edgePieces)
             {
-                Destroy(back);
-            }
-            catch
-            {
-                // ignored
+                edgePiece.color = cardColor;
             }
 
-            FindObjectInChildren(cardObj, "BlockFront")?.SetActive(false);
-
-            var canvasGroups = cardObj.GetComponentsInChildren<CanvasGroup>();
-            foreach (var canvasGroup in canvasGroups)
+            var textName = cardFrontObject.transform.GetChild(1);
+            if (textName != null)
             {
-                canvasGroup.alpha = 1;
+                var textComponent = textName.GetComponent<TextMeshProUGUI>();
+                if (textComponent != null)
+                {
+                    textComponent.text = cardInfo.cardName.ToUpper();
+                    textComponent.color = cardColor;
+                }
             }
 
-            return cardObj;
+            if (cardInfo.rarity == CardInfo.Rarity.Common) return;
+
+            var colorFromRarity = cardInfo.rarity == CardInfo.Rarity.Uncommon
+                ? uncommonColor
+                : rareColor;
+            foreach (var imageComponentLoop in FindObjectsInChildren(cardFrontObject.gameObject,
+                             "Triangle").Select(triangleObject =>
+                             triangleObject.GetComponent<Image>())
+                         .Where(imageComponentLoop => imageComponent != null))
+            {
+                imageComponentLoop.color = colorFromRarity;
+            }
         }
+        internal static Color uncommonColor = new Color(0, 0.5f, 1, 1);
+        internal static Color rareColor = new Color(1, 0.2f, 1, 1);
 
         private static IEnumerable<GameObject> FindObjectsInChildren(GameObject gameObject, string gameObjectName)
         {
@@ -546,7 +545,7 @@ namespace UnboundLib.Utils.UI
                         }
                 }
             }
-
+            currentColumnAmount = amount;
             cardAmountText.text = "Cards Per Line: " + amount;
             foreach (string category in CardManager.categories)
             {
@@ -564,6 +563,11 @@ namespace UnboundLib.Utils.UI
                     rect.localScale = localScale * Vector3.one * 10;
                 }
             }
+        }
+
+        public static void UpdateCardColumnAmountMenus()
+        {
+            ChangeCardColumnAmountMenus(currentColumnAmount);
         }
 
         /// <summary> This is used for opening and closing menus </summary>
@@ -592,7 +596,7 @@ namespace UnboundLib.Utils.UI
         /// <summary>This method allows you to opens the menu with settings from outside unbound</summary>
         /// <param name="escape"> disable closing the menu when you press escape</param>
         /// <param name="toggleAll"> disable the toggleAll button</param>
-        /// <param name="buttonActions"> actions for all the card buttons if null will use current actions</param>
+        /// <param name="buttonActions"> actions for all the cardInfo buttons if null will use current actions</param>
         /// <param name="interactionDisabledCards"> array of cardNames of cards that need their interactivity disabled</param>
         public static void Open(bool escape, bool toggleAll, Action[] buttonActions = null, string[] interactionDisabledCards = null)
         {
@@ -629,7 +633,7 @@ namespace UnboundLib.Utils.UI
                 foreach (var card in interactionDisabledCards)
                 {
                     var obj = GetCardObj(card);
-                    if (obj == null) throw new ArgumentNullException("obj", '"' + card + '"' + " is not a valid card name");
+                    if (obj == null) throw new ArgumentNullException("obj", '"' + card + '"' + " is not a valid cardInfo name");
                     obj.GetComponent<Button>().interactable = false;
                     obj.transform.Find("Darken/Darken").gameObject.SetActive(true);
                 }
