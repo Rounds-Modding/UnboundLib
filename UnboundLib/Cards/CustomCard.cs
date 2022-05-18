@@ -44,6 +44,7 @@ namespace UnboundLib.Cards
                 TextMeshProUGUI modText = modNameObj.gameObject.AddComponent<TextMeshProUGUI>();
                 modText.text = this.GetModName().Sanitize();
                 modNameObj.transform.localEulerAngles = new Vector3(0f, 0f, 135f);
+
                 modNameObj.transform.localScale = new Vector3(1f, 1f, 1f);
                 modNameObj.AddComponent<SetLocalPos>();
                 modText.alignment = TextAlignmentOptions.Bottom;
@@ -128,7 +129,6 @@ namespace UnboundLib.Cards
                 newCardInfo.allowMultiple = true;
                 newCardInfo.cardArt = customCard.GetCardArt();
 
-
                 // Reset stats
                 newCard.GetComponent<CharacterStatModifiers>().health = 1;
 
@@ -146,8 +146,6 @@ namespace UnboundLib.Cards
                     CardManager.cards.Add(newCardInfo.cardName,
                         new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), newCardInfo.cardName, true), newCardInfo));
                 }
-
-
 
                 // Post-creation clean up
                 newCardInfo.ExecuteAfterFrames(5, () =>
