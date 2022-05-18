@@ -34,7 +34,10 @@ namespace UnboundLib.Patches
 
             GameObject back = FindObjectInChildren(cardObject, "Back");
             Object.Destroy(back);
-            
+
+            GameObject damagable = FindObjectInChildren(cardObject, "Damagable");
+            Object.Destroy(damagable);
+
             foreach (CardVisuals cardVisuals in cardObject.GetComponentsInChildren<CardVisuals>())
             {
                 cardVisuals.firstValueToSet = true;
