@@ -78,11 +78,11 @@ namespace UnboundLib.Utils.UI
             var mainCamera = GameObject.Find("MainCamera").GetComponent<Camera>();
 
             // Load assets
-            var mapsMenuCanvas = Unbound.toggleUi.LoadAsset<GameObject>("MapMenuCanvas");
-            mapObj = Unbound.toggleUi.LoadAsset<GameObject>("MapObj");
-            categoryButton = Unbound.toggleUi.LoadAsset<GameObject>("CategoryButton");
-            scrollView = Unbound.toggleUi.LoadAsset<GameObject>("MapScrollView");
-            rightClickMenu = Unbound.toggleUi.LoadAsset<GameObject>("RightClickMenu");
+            var mapsMenuCanvas = Unbound.toggleUI.LoadAsset<GameObject>("MapMenuCanvas");
+            mapObj = Unbound.toggleUI.LoadAsset<GameObject>("MapObj");
+            categoryButton = Unbound.toggleUI.LoadAsset<GameObject>("CategoryButton");
+            scrollView = Unbound.toggleUI.LoadAsset<GameObject>("MapScrollView");
+            rightClickMenu = Unbound.toggleUI.LoadAsset<GameObject>("RightClickMenu");
 
             // Create guiStyle for waiting text
             guiStyle = new GUIStyle { fontSize = 100, normal = { textColor = Color.black } };

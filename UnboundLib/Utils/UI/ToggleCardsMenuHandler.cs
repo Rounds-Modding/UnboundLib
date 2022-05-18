@@ -50,12 +50,12 @@ namespace UnboundLib.Utils.UI
             instance = this;
             var mainCamera = GameObject.Find("MainCamera").GetComponent<Camera>();
 
-            var cardMenu = Unbound.toggleUi.LoadAsset<GameObject>("CardMenuCanvas");
+            var cardMenu = Unbound.toggleUI.LoadAsset<GameObject>("CardMenuCanvas");
 
-            cardObjAsset = Unbound.toggleUi.LoadAsset<GameObject>("CardObj");
+            cardObjAsset = Unbound.toggleUI.LoadAsset<GameObject>("CardObj");
 
-            cardScrollViewAsset = Unbound.toggleUi.LoadAsset<GameObject>("CardScrollView");
-            categoryButtonAsset = Unbound.toggleUi.LoadAsset<GameObject>("CategoryButton");
+            cardScrollViewAsset = Unbound.toggleUI.LoadAsset<GameObject>("CardScrollView");
+            categoryButtonAsset = Unbound.toggleUI.LoadAsset<GameObject>("CategoryButton");
 
             cardMenuCanvas = Instantiate(cardMenu);
             DontDestroyOnLoad(cardMenuCanvas);
