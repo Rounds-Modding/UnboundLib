@@ -25,7 +25,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "3.0.0";
+        public const string Version = "3.0.1";
 
         internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, stability, menus, syncing, extra player colors, disconnect handling, game mode framework)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)", "willuwontu (Custom cards, ping UI)", "otDan (UI)" }, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
@@ -281,9 +281,16 @@ namespace UnboundLib
             });
 
             // fetch card to use as a template for all custom cards
-            templateCard = (from c in CardChoice.instance.cards
+            CardInfo huge = (from c in CardChoice.instance.cards
                             where c.cardName.ToLower() == "huge"
                             select c).FirstOrDefault();
+            templateCard = GameObject.Instantiate(huge.gameObject, Vector3.up * 100f, Quaternion.identity).GetComponent<CardInfo>();
+            templateCard.cardBase = huge.cardBase;
+            templateCard.gameObject.name = "__UNBOUND_TEMPLATE_CARD__";
+            DestroyImmediate(templateCard.transform.GetChild(0).gameObject);
+            templateCard.GetComponent<CharacterStatModifiers>().health = 1f; // remove huge's stats
+            GameObject.DontDestroyOnLoad(templateCard.gameObject);
+
             CardManager.defaultCards = CardChoice.instance.cards;
 
 

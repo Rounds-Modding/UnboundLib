@@ -126,11 +126,7 @@ namespace UnboundLib.Cards
                 newCardInfo.sourceCard = newCardInfo;
                 newCardInfo.rarity = customCard.GetRarity();
                 newCardInfo.colorTheme = customCard.GetTheme();
-                newCardInfo.allowMultiple = true;
                 newCardInfo.cardArt = customCard.GetCardArt();
-
-                // Reset stats
-                newCard.GetComponent<CharacterStatModifiers>().health = 1;
 
                 // Finish initializing
                 PhotonNetwork.PrefabPool.RegisterPrefab(newCard.gameObject.name, newCard);
