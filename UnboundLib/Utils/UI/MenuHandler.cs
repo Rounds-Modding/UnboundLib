@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace UnboundLib.Utils.UI
 {
@@ -32,6 +33,7 @@ namespace UnboundLib.Utils.UI
             if (modOptionsUI == null)
             {
                 UnityEngine.Debug.LogError("Couldn't find ModOptionsUI AssetBundle?");
+                return;
             }
 
             // Get base UI objects
@@ -47,7 +49,7 @@ namespace UnboundLib.Utils.UI
         // Creates a menu and returns its gameObject
         public static GameObject CreateMenu(string Name, UnityAction buttonAction, GameObject parentForButton, int size = 50, bool forceUpper = true, bool setBarHeight = true, GameObject parentForMenu = null,  bool setFontSize = true, int siblingIndex = -1)
         {
-            var obj = parentForMenu is null ? GameObject.Instantiate(menuBase, MainMenuHandler.instance.transform.Find("Canvas/ListSelector")) : GameObject.Instantiate(menuBase, parentForMenu.transform);
+            var obj = parentForMenu is null ? Object.Instantiate(menuBase, MainMenuHandler.instance.transform.Find("Canvas/ListSelector")) : Object.Instantiate(menuBase, parentForMenu.transform);
             obj.name = Name;
             
             // Assign back objects
@@ -62,15 +64,14 @@ namespace UnboundLib.Utils.UI
             else if (parentForButton.transform.Find("Group")) buttonParent = parentForButton.transform.Find("Group");
             
             // Create button to menu
-            var button = GameObject.Instantiate(buttonBase, buttonParent);
+            var button = Object.Instantiate(buttonBase, buttonParent);
             button.GetComponent<ListMenuButton>().setBarHeight = setBarHeight ? size : 0;
             button.name = Name;
             button.GetComponent<RectTransform>().sizeDelta += new Vector2(400, 0);
             if (siblingIndex != -1) button.transform.SetSiblingIndex(siblingIndex);
             button.GetComponent<RectTransform>().sizeDelta = new Vector2(button.GetComponent<RectTransform>().sizeDelta.x, size+12);
             var uGUI = button.GetComponentInChildren<TextMeshProUGUI>();
-            if (forceUpper) uGUI.text = Name.ToUpper();
-            else uGUI.text = Name;
+            uGUI.text = forceUpper ? Name.ToUpper() : Name;
             uGUI.fontSize = setFontSize ? size : 50;
             if (buttonAction == null)
             {
@@ -107,16 +108,9 @@ namespace UnboundLib.Utils.UI
             {
                 parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
             }
-            var textObject = GameObject.Instantiate(textBase, parent.transform);
+            var textObject = Object.Instantiate(textBase, parent.transform);
             uGUI = textObject.GetComponent<TextMeshProUGUI>();
-            if (forceUpper)
-            {
-                uGUI.text = text.ToUpper();
-            }
-            else
-            {
-                uGUI.text = text;
-            }
+            uGUI.text = forceUpper ? text.ToUpper() : text;
             uGUI.fontSizeMax = fontSize;
             uGUI.color = color ?? new Color(0.902f, 0.902f, 0.902f, 1f);
             if (font != null) { uGUI.font = font; }
@@ -132,7 +126,7 @@ namespace UnboundLib.Utils.UI
             {
                 parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
             }
-            var toggleObject = GameObject.Instantiate(toggleBase, parent.transform);
+            var toggleObject = Object.Instantiate(toggleBase, parent.transform);
             var toggle = toggleObject.GetComponent<Toggle>();
             toggle.isOn = value;
             if (onValueChangedAction != null) toggle.onValueChanged.AddListener(onValueChangedAction); 
@@ -154,7 +148,7 @@ namespace UnboundLib.Utils.UI
             {
                 parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
             }
-            var buttonObject = GameObject.Instantiate(buttonBase, parent.transform);
+            var buttonObject = Object.Instantiate(buttonBase, parent.transform);
             var button = buttonObject.GetComponent<Button>();
             if (onClickAction != null) { button.onClick.AddListener(onClickAction); }
             var uGUI = buttonObject.GetComponentInChildren<TextMeshProUGUI>();
@@ -177,7 +171,7 @@ namespace UnboundLib.Utils.UI
             {
                 parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
             }
-            var inputObject = GameObject.Instantiate(inputFieldBase, parent.transform);
+            var inputObject = Object.Instantiate(inputFieldBase, parent.transform);
             var inputField = inputObject.GetComponentInChildren<TMP_InputField>();
             inputField.pointSize = fontSize;
             inputField.onValueChanged.AddListener(onValueChangedAction);
@@ -199,7 +193,7 @@ namespace UnboundLib.Utils.UI
             {
                 parent = parent.transform.Find("Group/Grid/Scroll View/Viewport/Content").gameObject;
             }
-            var sliderObject = GameObject.Instantiate(sliderBase, parent.transform);
+            var sliderObject = Object.Instantiate(sliderBase, parent.transform);
             var pos = sliderObject.transform.Find("GameObject").position;
             pos.x = 0;
             sliderObject.transform.Find("GameObject").position = pos;

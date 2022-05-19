@@ -339,6 +339,9 @@ namespace UnboundLib.Utils.UI
             GameObject back = FindObjectInChildren(cardObject, "Back");
             Destroy(back);
 
+            GameObject damagable = FindObjectInChildren(cardObject, "Damagable");
+            Destroy(damagable);
+
             foreach (CardVisuals componentsInChild in cardObject.GetComponentsInChildren<CardVisuals>())
             {
                 componentsInChild.firstValueToSet = true;
