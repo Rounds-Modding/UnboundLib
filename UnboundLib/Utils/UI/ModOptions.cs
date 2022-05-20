@@ -19,13 +19,13 @@ namespace UnboundLib.Utils.UI
         internal static bool inPauseMenu;
         internal static bool noDeprecatedMods;
 
-        public static ModOptions Instance = new ModOptions();
+        public static ModOptions instance = new ModOptions();
 
         private ModOptions()
         {
             // singleton first time setup
 
-            Instance = this;
+            instance = this;
         }
 
         public static void RegisterGUI(string modName, Action guiAction)
@@ -38,7 +38,7 @@ namespace UnboundLib.Utils.UI
         {
             if (parent == null)
             {
-                parent = Instance.modOptionsMenu;
+                parent = instance.modOptionsMenu;
             }
 
             modMenus.Add(new ModMenu(name, buttonAction, guiAction, parent, showInPauseMenu));
@@ -99,8 +99,7 @@ namespace UnboundLib.Utils.UI
             MenuHandler.CreateButton("Toggle Cards", modOptionsMenu,
                 () =>
                 {
-                    ToggleCardsMenuHandler.SetActive(
-                        ToggleCardsMenuHandler.cardMenuCanvas.transform, true);
+                    ToggleCardsMenuHandler.SetActive(ToggleCardsMenuHandler.instance.cardMenuCanvas.transform, true);
                 });
 
             // Create toggle levels button

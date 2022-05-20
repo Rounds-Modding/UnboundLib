@@ -25,7 +25,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "3.0.1";
+        public const string Version = "3.0.2";
 
         internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, stability, menus, syncing, extra player colors, disconnect handling, game mode framework)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)", "willuwontu (Custom cards, ping UI)", "otDan (UI)" }, "Github", "https://github.com/Rounds-Modding/UnboundLib");
 
@@ -108,7 +108,7 @@ namespace UnboundLib
                 // create unbound text
                 this.StartCoroutine(this.AddTextWhenReady(firstTime ? 4f : 0.1f));
 
-                ModOptions.Instance.CreateModOptions(firstTime);
+                ModOptions.instance.CreateModOptions(firstTime);
                 Credits.Instance.CreateCreditsMenu(firstTime);
                 MainMenuLinks.AddLinks(firstTime);
 
@@ -324,7 +324,6 @@ namespace UnboundLib
                 ModOptions.showModUi = !ModOptions.showModUi;
             }
 
-
             GameManager.lockInput = ModOptions.showModUi ||
                                     DevConsole.isTyping ||
                                     ToggleLevelMenuHandler.instance.mapMenuCanvas.activeInHierarchy ||
@@ -340,7 +339,7 @@ namespace UnboundLib
                                     (
                                     UIHandler.instance.transform.Find("Canvas/EscapeMenu/MOD OPTIONS/Group") &&
                                     UIHandler.instance.transform.Find("Canvas/EscapeMenu/MOD OPTIONS/Group").gameObject.activeInHierarchy) ||
-                                    ToggleCardsMenuHandler.menuOpenFromOutside ||
+                                    ToggleCardsMenuHandler.instance.menuOpenFromOutside ||
                                     lockInputBools.Values.Any(b => b);
         }
 
@@ -441,13 +440,13 @@ namespace UnboundLib
 
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
         {
-            ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent);
+            ModOptions.instance.RegisterMenu(name, buttonAction, guiAction, parent);
         }
 
         // ReSharper disable once MethodOverloadWithOptionalParameter
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null, bool showInPauseMenu = false)
         {
-            ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent, showInPauseMenu);
+            ModOptions.instance.RegisterMenu(name, buttonAction, guiAction, parent, showInPauseMenu);
         }
 
         public static void RegisterGUI(string modName, Action guiAction)

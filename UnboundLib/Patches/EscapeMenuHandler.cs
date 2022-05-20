@@ -11,7 +11,7 @@ namespace UnboundLib.Patches
         [HarmonyPrefix]
         private static bool Update(EscapeMenuHandler __instance)
         {
-            if (Input.GetKeyDown(KeyCode.Escape) && !ToggleCardsMenuHandler.disableEscapeButton)
+            if (Input.GetKeyDown(KeyCode.Escape) && !ToggleCardsMenuHandler.instance.disableEscapeButton)
             {
                 if (ToggleLevelMenuHandler.instance.mapMenuCanvas.transform.Find("MapMenu/InfoMenu").gameObject.activeInHierarchy)
                 {
@@ -20,11 +20,11 @@ namespace UnboundLib.Patches
                     return false;
                 }
                 
-                if (ToggleCardsMenuHandler.cardMenuCanvas.transform.Find("CardMenu/InfoMenu").gameObject.activeInHierarchy)
+                if (ToggleCardsMenuHandler.instance.cardMenuCanvas.transform.Find("CardMenu/InfoMenu").gameObject.activeInHierarchy)
                 {
-                    ToggleCardsMenuHandler.cardMenuCanvas.transform.Find("CardMenu/InfoMenu").gameObject
+                    ToggleCardsMenuHandler.instance.cardMenuCanvas.transform.Find("CardMenu/InfoMenu").gameObject
                         .SetActive(false);
-                    if(ToggleCardsMenuHandler.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
+                    if(ToggleCardsMenuHandler.instance.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
                     return false;
                 }
 
@@ -34,10 +34,10 @@ namespace UnboundLib.Patches
                     return false;
                 }
                 
-                if (!ToggleCardsMenuHandler.disableEscapeButton && ToggleCardsMenuHandler.cardMenuCanvas.activeInHierarchy)
+                if (!ToggleCardsMenuHandler.instance.disableEscapeButton && ToggleCardsMenuHandler.instance.cardMenuCanvas.activeInHierarchy)
                 {
-                    ToggleCardsMenuHandler.SetActive(ToggleCardsMenuHandler.cardMenuCanvas.transform, false);
-                    if(ToggleCardsMenuHandler.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
+                    ToggleCardsMenuHandler.SetActive(ToggleCardsMenuHandler.instance.cardMenuCanvas.transform, false);
+                    if(ToggleCardsMenuHandler.instance.menuOpenFromOutside) ToggleCardsMenuHandler.Close();
                     return false;
                 }
                 

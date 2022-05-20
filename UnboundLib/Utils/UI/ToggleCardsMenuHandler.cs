@@ -12,15 +12,15 @@ namespace UnboundLib.Utils.UI
     {
         public static ToggleCardsMenuHandler instance;
 
-        private static readonly Dictionary<string, Transform> ScrollViews = new Dictionary<string, Transform>();
+        private readonly Dictionary<string, Transform> scrollViews = new Dictionary<string, Transform>();
 
-        public static readonly Dictionary<GameObject, Action> cardObjs = new Dictionary<GameObject, Action>();
-        public static readonly List<Action> defaultCardActions = new List<Action>();
+        public readonly Dictionary<GameObject, Action> cardObjs = new Dictionary<GameObject, Action>();
+        public readonly List<Action> defaultCardActions = new List<Action>();
 
-        private static readonly List<Button> ButtonsToDisable = new List<Button>();
-        private static readonly List<Toggle> TogglesToDisable = new List<Toggle>();
+        private readonly List<Button> buttonsToDisable = new List<Button>();
+        private readonly List<Toggle> togglesToDisable = new List<Toggle>();
 
-        public static GameObject cardMenuCanvas;
+        public GameObject cardMenuCanvas;
 
         private GameObject cardObjAsset;
         private GameObject cardScrollViewAsset;
@@ -29,18 +29,15 @@ namespace UnboundLib.Utils.UI
         private Transform scrollViewTrans;
         private Transform categoryContent;
 
-        public static bool disableEscapeButton;
-
-        public static bool menuOpenFromOutside;
-
-        private static bool disabled;
-
-        private static bool sortedByName = true;
+        public bool disableEscapeButton;
+        public bool menuOpenFromOutside;
+        private bool disabled;
+        private bool sortedByName = true;
 
         private static TextMeshProUGUI cardAmountText;
 
-        private static int currentColumnAmount = 5;
-        private static string CurrentCategory => (from scroll in ScrollViews where scroll.Value.gameObject.activeInHierarchy select scroll.Key).FirstOrDefault();
+        private int currentColumnAmount = 5;
+        private string CurrentCategory => (from scroll in scrollViews where scroll.Value.gameObject.activeInHierarchy select scroll.Key).FirstOrDefault();
 
         // if need to toggle all on or off
         private bool toggledAll;
@@ -73,7 +70,7 @@ namespace UnboundLib.Utils.UI
             var searchBar = cardMenuCanvas.transform.Find("CardMenu/Top/InputField").gameObject;
             searchBar.GetComponent<TMP_InputField>().onValueChanged.AddListener(value =>
             {
-                foreach (var card in ScrollViews.SelectMany(scrollView => scrollView.Value.GetComponentsInChildren<Button>(true)))
+                foreach (var card in scrollViews.SelectMany(scrollView => scrollView.Value.GetComponentsInChildren<Button>(true)))
                 {
                     if (value == "")
                     {
@@ -111,7 +108,7 @@ namespace UnboundLib.Utils.UI
 
             // Create and set toggle all button
             var toggleAllButton = cardMenuCanvas.transform.Find("CardMenu/Top/ToggleAll").GetComponent<Button>();
-            ButtonsToDisable.Add(toggleAllButton);
+            buttonsToDisable.Add(toggleAllButton);
             toggleAllButton.onClick.AddListener(() =>
             {
                 if (CurrentCategory == null) return;
@@ -157,7 +154,7 @@ namespace UnboundLib.Utils.UI
                     scrollView.SetActive(true);
                     SetActive(scrollView.transform, false);
                     scrollView.name = category;
-                    ScrollViews.Add(category, scrollView.transform);
+                    scrollViews.Add(category, scrollView.transform);
                     if (category == "Vanilla")
                     {
                         SetActive(scrollView.transform, true);
@@ -168,7 +165,7 @@ namespace UnboundLib.Utils.UI
                 foreach (var card in CardManager.cards)
                 {
                     Card cardValue = card.Value;
-                    var parentScroll = ScrollViews[cardValue.category].Find("Viewport/Content");
+                    var parentScroll = scrollViews[cardValue.category].Find("Viewport/Content");
                     var crdObj = Instantiate(cardObjAsset, parentScroll);
 
                     crdObj.name = card.Key;
@@ -201,7 +198,7 @@ namespace UnboundLib.Utils.UI
                     cardObjs[crdObj] = CardAction;
                     defaultCardActions.Add(CardAction);
 
-                    ButtonsToDisable.Add(crdObj.GetComponent<Button>());
+                    buttonsToDisable.Add(crdObj.GetComponent<Button>());
 
                     if (cardValue.config.Value)
                     {
@@ -234,18 +231,18 @@ namespace UnboundLib.Utils.UI
                     categoryObj.GetComponentInChildren<TextMeshProUGUI>().text = category;
                     categoryObj.GetComponent<Button>().onClick.AddListener(() =>
                     {
-                        foreach (var scroll in ScrollViews)
+                        foreach (var scroll in scrollViews)
                         {
                             SetActive(scroll.Value, false);
                         }
 
-                        ScrollViews[category].GetComponent<ScrollRect>().normalizedPosition = new Vector2(0, 1);
-                        SetActive(ScrollViews[category].transform, true);
+                        scrollViews[category].GetComponent<ScrollRect>().normalizedPosition = new Vector2(0, 1);
+                        SetActive(scrollViews[category].transform, true);
 
                         viewingText.text = "Viewing: " + category;
                     });
                     var toggle = categoryObj.GetComponentInChildren<Toggle>();
-                    TogglesToDisable.Add(toggle);
+                    togglesToDisable.Add(toggle);
                     toggle.onValueChanged.AddListener(value =>
                     {
                         if (!value)
@@ -262,7 +259,7 @@ namespace UnboundLib.Utils.UI
 
                     void UpdateCategoryVisuals(bool enabledVisuals, bool firstTime = false)
                     {
-                        foreach (var obj in ScrollViews.Where(obj => obj.Key == category))
+                        foreach (var obj in scrollViews.Where(obj => obj.Key == category))
                         {
                             obj.Value.Find("Darken").gameObject.SetActive(!enabledVisuals);
                             if (enabledVisuals)
@@ -479,7 +476,7 @@ namespace UnboundLib.Utils.UI
         {
             foreach (string category in CardManager.categories)
             {
-                Transform categoryMenu = ScrollViews[category].Find("Viewport/Content");
+                Transform categoryMenu = scrollViews[category].Find("Viewport/Content");
 
                 List<Transform> cardsInMenu = new List<Transform>() { };
                 cardsInMenu.AddRange(categoryMenu.Cast<Transform>());
@@ -548,11 +545,11 @@ namespace UnboundLib.Utils.UI
                         }
                 }
             }
-            currentColumnAmount = amount;
+            instance.currentColumnAmount = amount;
             cardAmountText.text = "Cards Per Line: " + amount;
             foreach (string category in CardManager.categories)
             {
-                Transform categoryMenu = ScrollViews[category].Find("Viewport/Content");
+                Transform categoryMenu = instance.scrollViews[category].Find("Viewport/Content");
                 var gridLayout = categoryMenu.gameObject.GetComponent<GridLayoutGroup>();
                 gridLayout.cellSize = cellSize;
                 gridLayout.constraintCount = amount;
@@ -570,7 +567,7 @@ namespace UnboundLib.Utils.UI
 
         public static void UpdateCardColumnAmountMenus()
         {
-            ChangeCardColumnAmountMenus(currentColumnAmount);
+            ChangeCardColumnAmountMenus(instance.currentColumnAmount);
         }
 
         /// <summary> This is used for opening and closing menus </summary>
@@ -578,7 +575,7 @@ namespace UnboundLib.Utils.UI
         {
             // Main camera changes when going back to menu and glow disappears if we don't se the camera again to the canvas
             Camera mainCamera = GameObject.Find("MainCamera").GetComponent<Camera>();
-            Canvas canvas = cardMenuCanvas.GetComponent<Canvas>();
+            Canvas canvas = instance.cardMenuCanvas.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = mainCamera;
 
@@ -589,7 +586,7 @@ namespace UnboundLib.Utils.UI
 
             Unbound.Instance.ExecuteAfterFrames(5, () =>
             {
-                foreach (var card in cardObjs)
+                foreach (var card in instance.cardObjs)
                 {
                     UpdateVisualsCardObj(card.Key, CardManager.cards[card.Key.name].enabled);
                 }
@@ -603,26 +600,26 @@ namespace UnboundLib.Utils.UI
         /// <param name="interactionDisabledCards"> array of cardNames of cards that need their interactivity disabled</param>
         public static void Open(bool escape, bool toggleAll, Action[] buttonActions = null, string[] interactionDisabledCards = null)
         {
-            menuOpenFromOutside = true;
-            SetActive(cardMenuCanvas.transform, true);
-            disableEscapeButton = escape;
+            instance.menuOpenFromOutside = true;
+            SetActive(instance.cardMenuCanvas.transform, true);
+            instance.disableEscapeButton = escape;
             EnableButtonsMethod();
-            cardMenuCanvas.transform.Find("CardMenu/Top/Help")?.gameObject.SetActive(false);
+            instance.cardMenuCanvas.transform.Find("CardMenu/Top/Help")?.gameObject.SetActive(false);
 
-            if (toggleAll) cardMenuCanvas.transform.Find("CardMenu/Top/ToggleAll").gameObject.SetActive(false);
+            if (toggleAll) instance.cardMenuCanvas.transform.Find("CardMenu/Top/ToggleAll").gameObject.SetActive(false);
 
-            foreach (Transform trans in cardMenuCanvas.transform.Find(
+            foreach (Transform trans in instance.cardMenuCanvas.transform.Find(
                 "CardMenu/Top/Categories/ButtonsScroll/Viewport/Content"))
             {
                 trans.Find("Toggle").gameObject.SetActive(false);
             }
-            foreach (Transform trans in cardMenuCanvas.transform.Find(
+            foreach (Transform trans in instance.cardMenuCanvas.transform.Find(
                 "CardMenu/ScrollViews"))
             {
                 trans.Find("Darken").gameObject.SetActive(false);
             }
 
-            foreach (var card in cardObjs)
+            foreach (var card in instance.cardObjs)
             {
                 UpdateVisualsCardObj(card.Key, true);
             }
@@ -642,45 +639,45 @@ namespace UnboundLib.Utils.UI
                 }
             }
 
-            for (int i = 0; i < cardObjs.Keys.Count; i++)
+            for (int i = 0; i < instance.cardObjs.Keys.Count; i++)
             {
                 var buttonEvent = new Button.ButtonClickedEvent();
-                var unityAction = new UnityAction(cardObjs.ElementAt(i).Value);
+                var unityAction = new UnityAction(instance.cardObjs.ElementAt(i).Value);
                 buttonEvent.AddListener(unityAction);
-                cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
+                instance.cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
             }
         }
 
         public static void Close()
         {
-            menuOpenFromOutside = false;
-            SetActive(cardMenuCanvas.transform, false);
-            disableEscapeButton = false;
+            instance.menuOpenFromOutside = false;
+            SetActive(instance.cardMenuCanvas.transform, false);
+            instance.disableEscapeButton = false;
             DisableButtonsMethod();
-            cardMenuCanvas.transform.Find("CardMenu/Top/Help").gameObject.SetActive(true);
-            cardMenuCanvas.transform.Find("CardMenu/Top/ToggleAll").gameObject.SetActive(true);
+            instance.cardMenuCanvas.transform.Find("CardMenu/Top/Help").gameObject.SetActive(true);
+            instance.cardMenuCanvas.transform.Find("CardMenu/Top/ToggleAll").gameObject.SetActive(true);
             ResetCardActions();
-            foreach (Transform trans in cardMenuCanvas.transform.Find(
+            foreach (Transform trans in instance.cardMenuCanvas.transform.Find(
                 "CardMenu/Top/Categories/ButtonsScroll/Viewport/Content"))
             {
                 trans.Find("Toggle").gameObject.SetActive(true);
             }
-            foreach (var card in cardObjs)
+            foreach (var card in instance.cardObjs)
             {
                 UpdateVisualsCardObj(card.Key, CardManager.cards[card.Key.name].enabled);
             }
-            foreach (Transform trans in cardMenuCanvas.transform.Find(
+            foreach (Transform trans in instance.cardMenuCanvas.transform.Find(
                 "CardMenu/ScrollViews"))
             {
                 trans.Find("Darken").gameObject.SetActive(!CardManager.categoryBools[trans.name].Value);
             }
 
-            for (int i = 0; i < cardObjs.Keys.Count; i++)
+            for (int i = 0; i < instance.cardObjs.Keys.Count; i++)
             {
                 var buttonEvent = new Button.ButtonClickedEvent();
-                var unityAction = new UnityAction(cardObjs.ElementAt(i).Value);
+                var unityAction = new UnityAction(instance.cardObjs.ElementAt(i).Value);
                 buttonEvent.AddListener(unityAction);
-                cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
+                instance.cardObjs.ElementAt(i).Key.GetComponent<Button>().onClick = buttonEvent;
             }
         }
 
@@ -691,32 +688,32 @@ namespace UnboundLib.Utils.UI
 
         public static GameObject GetCardObj(string cardName)
         {
-            return cardObjs.FirstOrDefault(obj => obj.Key.name == cardName).Key;
+            return instance.cardObjs.FirstOrDefault(obj => obj.Key.name == cardName).Key;
         }
 
         public static void SetAllButtonActions(Action[] actions)
         {
-            for (var i = 0; i < cardObjs.Count; i++)
+            for (var i = 0; i < instance.cardObjs.Count; i++)
             {
-                var obj = cardObjs.ElementAt(i).Key;
-                cardObjs[obj] = actions[i];
+                var obj = instance.cardObjs.ElementAt(i).Key;
+                instance.cardObjs[obj] = actions[i];
             }
         }
 
         public static void ResetCardActions()
         {
-            for (var i = 0; i < cardObjs.Count; i++)
+            for (var i = 0; i < instance.cardObjs.Count; i++)
             {
-                var obj = cardObjs.ElementAt(i).Key;
-                cardObjs[obj] = defaultCardActions[i];
+                var obj = instance.cardObjs.ElementAt(i).Key;
+                instance.cardObjs[obj] = instance.defaultCardActions[i];
             }
         }
 
         public static int GetActionIndex(GameObject cardObj)
         {
-            for (var i = 0; i < cardObjs.Count; i++)
+            for (var i = 0; i < instance.cardObjs.Count; i++)
             {
-                var obj = cardObjs.ElementAt(i).Key;
+                var obj = instance.cardObjs.ElementAt(i).Key;
                 if (obj == cardObj)
                 {
                     return i;
@@ -728,33 +725,33 @@ namespace UnboundLib.Utils.UI
 
         private static void EnableButtonsMethod()
         {
-            foreach (var button in ButtonsToDisable)
+            foreach (var button in instance.buttonsToDisable)
             {
                 button.interactable = true;
             }
-            foreach (var toggle in TogglesToDisable)
+            foreach (var toggle in instance.togglesToDisable)
             {
                 toggle.interactable = true;
             }
-            disabled = false;
+            instance.disabled = false;
         }
 
         private static void DisableButtonsMethod()
         {
-            foreach (var button in ButtonsToDisable)
+            foreach (var button in instance.buttonsToDisable)
             {
                 button.interactable = false;
             }
-            foreach (var toggle in TogglesToDisable)
+            foreach (var toggle in instance.togglesToDisable)
             {
                 toggle.interactable = false;
             }
-            disabled = true;
+            instance.disabled = true;
         }
 
         internal static void RestoreCardToggleVisuals()
         {
-            foreach (GameObject cardObj in cardObjs.Keys)
+            foreach (GameObject cardObj in instance.cardObjs.Keys)
             {
                 UpdateVisualsCardObj(cardObj, CardManager.cards[cardObj.name].config.Value);
             }
