@@ -41,7 +41,7 @@ namespace UnboundLib.Utils
         
         public static Dictionary<string, Card> cards = new Dictionary<string, Card>();
 
-        private static List<Action<CardInfo[]>> firstStartCallbacks = new List<Action<CardInfo[]>>() { };
+        private static readonly List<Action<CardInfo[]>> FirstStartCallbacks = new List<Action<CardInfo[]>>();
 
         public void Start()
         {
@@ -63,21 +63,18 @@ namespace UnboundLib.Utils
             cards = cards.Keys.OrderBy(k => k).ToDictionary(k => k, k => cards[k]);
             
             // Set categories
-            foreach (var card in cards)
+            foreach (var card in cards.Where(card => !categories.Contains(card.Value.category)))
             {
-                if(!categories.Contains(card.Value.category))
-                {
-                    categories.Add(card.Value.category);
-                }
+                categories.Add(card.Value.category);
             }
-                    
+
             // Populate the categoryBools dictionary
             foreach (var category in categories)
             {
                 categoryBools.Add(category, Unbound.config.Bind("Card categories", category, true));
             }
 
-            foreach (Action<CardInfo[]> callback in firstStartCallbacks)
+            foreach (Action<CardInfo[]> callback in FirstStartCallbacks)
             {
                 callback(allCards);
             }
@@ -86,7 +83,7 @@ namespace UnboundLib.Utils
 
         public static void RestoreCardToggles()
         {
-            foreach (Card card in CardManager.cards.Values)
+            foreach (Card card in cards.Values)
             {
                 if (card.config.Value)
                 {
@@ -101,7 +98,7 @@ namespace UnboundLib.Utils
 
         public static void AddAllCardsCallback(Action<CardInfo[]> callback)
         {
-            firstStartCallbacks.Add(callback);
+            FirstStartCallbacks.Add(callback);
         }
         
         internal static void CardsChanged(object sender, NotifyCollectionChangedEventArgs args)
@@ -143,11 +140,13 @@ namespace UnboundLib.Utils
                 inactiveCards.Remove(card);
             }
 
-            cards[card.cardName].enabled = true;
+            if (!cards.ContainsKey(card.gameObject.name)) return;
+
+            cards[card.gameObject.name].enabled = true;
 
             if (saved)
             {
-                cards[card.cardName].config.Value = true;
+                cards[card.gameObject.name].config.Value = true;
             }
         }
 
@@ -168,32 +167,34 @@ namespace UnboundLib.Utils
             if (!inactiveCards.Contains(card))
             {
                 inactiveCards.Add(card);
-                inactiveCards.Sort((x, y) => string.Compare(x.cardName, y.cardName));
+                inactiveCards.Sort((x, y) => string.CompareOrdinal(x.cardName, y.cardName));
             }
 
-            cards[card.cardName].enabled = false;
+            if (!cards.ContainsKey(card.gameObject.name)) return;
+
+            cards[card.gameObject.name].enabled = false;
 
             if (saved)
             {
-                cards[card.cardName].config.Value = false;
+                cards[card.gameObject.name].config.Value = false;
             }
         }
 
         public static void EnableCategory(string categoryName)
         {
             if(categoryBools.ContainsKey(categoryName)) categoryBools[categoryName].Value = true;
-            foreach (string cardname in CardManager.GetCardsInCategory(categoryName))
+            foreach (string cardname in GetCardsInCategory(categoryName))
             {
-                CardManager.EnableCard(CardManager.cards[cardname].cardInfo, true);
+                EnableCard(cards[cardname].cardInfo, true);
             }
         }
 
         public static void DisableCategory(string categoryName)
         {
             if(categoryBools.ContainsKey(categoryName)) categoryBools[categoryName].Value = false;
-            foreach (string cardname in CardManager.GetCardsInCategory(categoryName))
+            foreach (string cardname in GetCardsInCategory(categoryName))
             {
-                CardManager.DisableCard(CardManager.cards[cardname].cardInfo, true);
+                DisableCard(cards[cardname].cardInfo, true);
             }
         }
         
@@ -215,25 +216,25 @@ namespace UnboundLib.Utils
 
         public static void OnLeftRoomAction()
         {
-            CardManager.RestoreCardToggles();
+            RestoreCardToggles();
             ToggleCardsMenuHandler.RestoreCardToggleVisuals();
 
             /*
             foreach (var card in previousActiveCards)
             {
                 EnableCard(card);
-                foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
+                foreach (var obj in ToggleCardsMenuHandler.cardObjects.Where(c => c.Key.name == card.cardName))
                 {
-                    ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, cards[card.cardName].enabledWithoutSaving);
+                    ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, cards[card.cardName].enabledWithoutSaving);
                 }
             }*/
             /*
             foreach (var card in previousInactiveCards)
             {
                 DisableCard(card);
-                foreach (var obj in ToggleCardsMenuHandler.cardObjs.Where(c => c.Key.name == card.cardName))
+                foreach (var obj in ToggleCardsMenuHandler.cardObjects.Where(c => c.Key.name == card.cardName))
                 {
-                    ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, cards[card.cardName].enabledWithoutSaving);
+                    ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, cards[card.cardName].enabledWithoutSaving);
                 }
             }*/
             /*
@@ -261,7 +262,7 @@ namespace UnboundLib.Utils
                 {
                     if (!PhotonNetwork.IsMasterClient)
                     {
-                        NetworkingManager.RPC_Others(typeof(CardManager), nameof(RPC_CardHandshake), (object)cards.Keys.ToArray());
+                        NetworkingManager.RPC_Others(typeof(CardManager), nameof(RPC_CardHandshake), (object) cards.Keys.ToArray());
                     }
                 }
             });
@@ -282,23 +283,22 @@ namespace UnboundLib.Utils
                 {
                     DisableCard(card, false);
                     disabledCards.Add(card.cardName);
-                    foreach (var obj in ToggleCardsMenuHandler.instance.cardObjs.Where(c => c.Key.name == card.cardName))
+                    foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == card.cardName))
                     {
-                        ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, false);
+                        ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, false);
                     }
                 }
-
             }
 
             if (disabledCards.Count != 0)
             {
                 Unbound.BuildModal()
                     .Title("These cards have been disabled because someone didn't have them")
-                    .Message(String.Join(", ", disabledCards.ToArray()))
+                    .Message(string.Join(", ", disabledCards.ToArray()))
                     .CancelButton("Copy", () =>
                     {
                         Unbound.BuildInfoPopup("Copied Message!");
-                        GUIUtility.systemCopyBuffer = String.Join(", ", disabledCards.ToArray());
+                        GUIUtility.systemCopyBuffer = string.Join(", ", disabledCards.ToArray());
                     })
                     .CancelButton("Cancel", () => { })
                     .Show();
@@ -319,24 +319,23 @@ namespace UnboundLib.Utils
                 if (cardsArray.Contains(card.cardName))
                 {
                     EnableCard(card, false);
-                    foreach (var obj in ToggleCardsMenuHandler.instance.cardObjs.Where(c => c.Key.name == card.cardName))
+                    foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == card.cardName))
                     {
-                        ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, true);
+                        ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, true);
                     }
                 }
                 else
                 {
                     DisableCard(card, false);
-                    foreach (var obj in ToggleCardsMenuHandler.instance.cardObjs.Where(c => c.Key.name == card.cardName))
+                    foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == card.cardName))
                     {
-                        ToggleCardsMenuHandler.UpdateVisualsCardObj(obj.Key, false);
+                        ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, false);
                     }
                 }
             }
         }
 
         #endregion
-        
     }
     
     public class Card
@@ -349,7 +348,7 @@ namespace UnboundLib.Utils
         public Card(string category, ConfigEntry<bool> config, CardInfo cardInfo)
         {
             this.category = category;
-            this.enabled = config.Value;
+            enabled = config.Value;
             this.cardInfo = cardInfo;
             this.config = config;
         }

@@ -139,7 +139,7 @@ namespace UnboundLib.Cards
                     CardManager.activeCards = new ObservableCollection<CardInfo>(CardManager.activeCards.OrderBy(i => i.cardName));
                     CardManager.activeCards.CollectionChanged += CardManager.CardsChanged;
                     // Register card with the toggle menu
-                    CardManager.cards.Add(newCardInfo.cardName,
+                    CardManager.cards.Add(newCard.gameObject.name,
                         new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), newCardInfo.cardName, true), newCardInfo));
                 }
 

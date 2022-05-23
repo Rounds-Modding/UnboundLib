@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UnboundLib
+namespace UnboundLib.Utils.UI
 {
     [RequireComponent(typeof(VerticalLayoutGroup), typeof(ContentSizeFitter), typeof(CanvasGroup))]
     public class InfoPopup : Image

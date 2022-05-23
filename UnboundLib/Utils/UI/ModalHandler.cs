@@ -1,9 +1,9 @@
-﻿using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
+﻿using TMPro;
+using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
-namespace UnboundLib
+namespace UnboundLib.Utils.UI
 {
     public class ModalHandler : MonoBehaviour
     {
