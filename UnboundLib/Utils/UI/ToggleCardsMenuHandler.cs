@@ -122,20 +122,20 @@ namespace UnboundLib.Utils.UI
                 var cardsInCategory = CardManager.GetCardsInCategory(CurrentCategory);
                 if (toggledAll)
                 {
-                    var objs = GetCardObjects(cardsInCategory);
-                    foreach (var obj in objs)
+                    var objectsInCategory = GetCardObjects(cardsInCategory);
+                    foreach (var cardObject in objectsInCategory)
                     {
-                        CardManager.cards[obj.name].enabled = false;
-                        cardObjects[obj].Invoke();
+                        CardManager.cards[cardObject.name].enabled = false;
+                        cardObjects[cardObject].Invoke();
                     }
                 }
                 else
                 {
-                    var objs = GetCardObjects(cardsInCategory);
-                    foreach (var obj in objs)
+                    var objectsInCategory = GetCardObjects(cardsInCategory);
+                    foreach (var cardObject in objectsInCategory)
                     {
-                        CardManager.cards[obj.name].enabled = true;
-                        cardObjects[obj].Invoke();
+                        CardManager.cards[cardObject.name].enabled = true;
+                        cardObjects[cardObject].Invoke();
                     }
                 }
             });
@@ -315,18 +315,18 @@ namespace UnboundLib.Utils.UI
 
                     void UpdateCategoryVisuals(bool enabledVisuals, bool firstTime = false)
                     {
-                        foreach (var obj in scrollViews.Where(obj => obj.Key == category))
+                        foreach (var cardObject in scrollViews.Where(obj => obj.Key == category))
                         {
-                            obj.Value.Find("Darken").gameObject.SetActive(!enabledVisuals);
+                            cardObject.Value.Find("Darken").gameObject.SetActive(!enabledVisuals);
                             if (enabledVisuals)
                             {
                                 CardManager.categoryBools[category].Value = true;
                                 if (firstTime) { continue; }
-                                foreach (Transform trs in obj.Value.Find("Viewport/Content"))
+                                foreach (Transform cardTransform in cardObject.Value.Find("Viewport/Content"))
                                 {
-                                    if (!trs.Find("Darken/Darken").gameObject.activeInHierarchy)
+                                    if (!cardTransform.Find("Darken/Darken").gameObject.activeInHierarchy)
                                     {
-                                        CardManager.EnableCard(CardManager.GetCardInfoWithName(trs.name));
+                                        CardManager.EnableCard(CardManager.GetCardInfoWithName(cardTransform.name));
                                     }
                                 }
                             }
@@ -334,11 +334,11 @@ namespace UnboundLib.Utils.UI
                             {
                                 CardManager.categoryBools[category].Value = false;
                                 if (firstTime) { continue; }
-                                foreach (Transform trs in obj.Value.Find("Viewport/Content"))
+                                foreach (Transform cardTransform in cardObject.Value.Find("Viewport/Content"))
                                 {
-                                    if (!trs.Find("Darken/Darken").gameObject.activeInHierarchy)
+                                    if (!cardTransform.Find("Darken/Darken").gameObject.activeInHierarchy)
                                     {
-                                        CardManager.DisableCard(CardManager.GetCardInfoWithName(trs.name));
+                                        CardManager.DisableCard(CardManager.GetCardInfoWithName(cardTransform.name));
                                     }
                                 }
                             }
@@ -346,9 +346,9 @@ namespace UnboundLib.Utils.UI
                         if (!firstTime)
                         {
                             string[] cardsInCategory = CardManager.GetCardsInCategory(category);
-                            foreach (GameObject cardObj in cardObjects.Keys.Where(o => cardsInCategory.Contains(o.name)))
+                            foreach (GameObject cardObject in cardObjects.Keys.Where(o => cardsInCategory.Contains(o.name)))
                             {
-                                UpdateVisualsCardObject(cardObj, enabledVisuals);
+                                UpdateVisualsCardObject(cardObject, enabledVisuals);
                             }
                         }
 

@@ -15,7 +15,7 @@ namespace UnboundLib.Utils
     {
         public CardManager instance;
         
-        // A string array of all cards
+        // A string array of all cardInfos
         internal static CardInfo[] allCards
         {
             get
@@ -23,7 +23,7 @@ namespace UnboundLib.Utils
                 List<CardInfo> _allCards = new List<CardInfo>();
                 _allCards.AddRange(activeCards);
                 _allCards.AddRange(inactiveCards);
-                _allCards.Sort((x, y) => string.CompareOrdinal(x.cardName, y.cardName));
+                _allCards.Sort((x, y) => string.CompareOrdinal(x.gameObject.name, y.gameObject.name));
                 return _allCards.ToArray();
             }
         }
@@ -47,7 +47,7 @@ namespace UnboundLib.Utils
         {
             instance = this;
             
-            // store default cards
+            // store default cardInfos
             defaultCards = (CardInfo[]) CardChoice.instance.cards.Clone();
             
             // Make activeCardsCollection and add defaultCards to it
@@ -59,7 +59,7 @@ namespace UnboundLib.Utils
 
         public static void FirstTimeStart()
         {
-            // Sort cards
+            // Sort cardInfos
             cards = cards.Keys.OrderBy(k => k).ToDictionary(k => k, k => cards[k]);
             
             // Set categories
@@ -119,9 +119,9 @@ namespace UnboundLib.Utils
             return cards.ContainsKey(cardName) ? cards[cardName].cardInfo : null;
         }
 
-        public static void EnableCards(CardInfo[] cards, bool saved = true)
+        public static void EnableCards(CardInfo[] cardInfos, bool saved = true)
         {
-            foreach (var card in cards)
+            foreach (var card in cardInfos)
             {
                 EnableCard(card, saved);
             }
@@ -132,7 +132,7 @@ namespace UnboundLib.Utils
             if (!activeCards.Contains(card))
             {
                 activeCards.Add(card);
-                activeCards = new ObservableCollection<CardInfo>(activeCards.OrderBy(i => i.cardName));
+                activeCards = new ObservableCollection<CardInfo>(activeCards.OrderBy(i => i.gameObject.name));
                 activeCards.CollectionChanged += CardsChanged;
             }
             if (inactiveCards.Contains(card))
@@ -150,33 +150,33 @@ namespace UnboundLib.Utils
             }
         }
 
-        public static void DisableCards(CardInfo[] cards, bool saved = true)
+        public static void DisableCards(CardInfo[] cardInfos, bool saved = true)
         {
-            foreach (var card in cards)
+            foreach (var card in cardInfos)
             {
                 DisableCard(card, saved);
             }
         }
         
-        public static void DisableCard(CardInfo card, bool saved = true)
+        public static void DisableCard(CardInfo cardInfo, bool saved = true)
         {
-            if (activeCards.Contains(card))
+            if (activeCards.Contains(cardInfo))
             {
-                activeCards.Remove(card);
+                activeCards.Remove(cardInfo);
             }
-            if (!inactiveCards.Contains(card))
+            if (!inactiveCards.Contains(cardInfo))
             {
-                inactiveCards.Add(card);
-                inactiveCards.Sort((x, y) => string.CompareOrdinal(x.cardName, y.cardName));
+                inactiveCards.Add(cardInfo);
+                inactiveCards.Sort((x, y) => string.CompareOrdinal(x.gameObject.name, y.gameObject.name));
             }
 
-            if (!cards.ContainsKey(card.gameObject.name)) return;
+            if (!cards.ContainsKey(cardInfo.gameObject.name)) return;
 
-            cards[card.gameObject.name].enabled = false;
+            cards[cardInfo.gameObject.name].enabled = false;
 
             if (saved)
             {
-                cards[card.gameObject.name].config.Value = false;
+                cards[cardInfo.gameObject.name].config.Value = false;
             }
         }
 
@@ -218,46 +218,15 @@ namespace UnboundLib.Utils
         {
             RestoreCardToggles();
             ToggleCardsMenuHandler.RestoreCardToggleVisuals();
-
-            /*
-            foreach (var card in previousActiveCards)
-            {
-                EnableCard(card);
-                foreach (var obj in ToggleCardsMenuHandler.cardObjects.Where(c => c.Key.name == card.cardName))
-                {
-                    ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, cards[card.cardName].enabledWithoutSaving);
-                }
-            }*/
-            /*
-            foreach (var card in previousInactiveCards)
-            {
-                DisableCard(card);
-                foreach (var obj in ToggleCardsMenuHandler.cardObjects.Where(c => c.Key.name == card.cardName))
-                {
-                    ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, cards[card.cardName].enabledWithoutSaving);
-                }
-            }*/
-            /*
-            previousActiveCards.Clear();
-            previousInactiveCards.Clear();
-        */
         }
 
         public static void OnJoinedRoomAction()
         {
-            /*
-            foreach (var card in activeCards)
-            {
-                previousActiveCards.Add(card);
-            }
-            previousInactiveCards.AddRange(inactiveCards);
-            */
-
             CardChoice.instance.cards = activeCards.ToArray();
 
             Unbound.Instance.ExecuteAfterSeconds(1.5f, () =>
             {
-                // send available card pool to the master client
+                // send available cardInfo pool to the master client
                 for (int i = 0; i < 2; i++)
                 {
                     if (!PhotonNetwork.IsMasterClient)
@@ -276,24 +245,24 @@ namespace UnboundLib.Utils
 
             List<string> disabledCards = new List<string>();
             
-            // disable any cards which aren't shared by other players
+            // disable any cardInfos which aren't shared by other players
             foreach (var card in cards.Values.Select(card => card.cardInfo))
             {
-                if (!cardsArray.Contains(card.cardName))
+                string cardObjectName = card.gameObject.name;
+                if (cardsArray.Contains(cardObjectName)) continue;
+                
+                DisableCard(card, false);
+                disabledCards.Add(cardObjectName);
+                foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == cardObjectName))
                 {
-                    DisableCard(card, false);
-                    disabledCards.Add(card.cardName);
-                    foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == card.cardName))
-                    {
-                        ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, false);
-                    }
+                    ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, false);
                 }
             }
 
             if (disabledCards.Count != 0)
             {
                 Unbound.BuildModal()
-                    .Title("These cards have been disabled because someone didn't have them")
+                    .Title("These cardInfos have been disabled because someone didn't have them")
                     .Message(string.Join(", ", disabledCards.ToArray()))
                     .CancelButton("Copy", () =>
                     {
@@ -304,22 +273,22 @@ namespace UnboundLib.Utils
                     .Show();
             }
 
-            // reply to all users with new list of valid cards
-            NetworkingManager.RPC_Others(typeof(CardManager), nameof(RPC_HostCardHandshakeResponse), (object)activeCards.Select(c => c.cardName).ToArray());
+            // reply to all users with new list of valid cardInfos
+            NetworkingManager.RPC_Others(typeof(CardManager), nameof(RPC_HostCardHandshakeResponse), (object) activeCards.Select(c => c.gameObject.name).ToArray());
         }
 
         // This gets executed on everyone except the master client
         [UnboundRPC]
         private static void RPC_HostCardHandshakeResponse(string[] cardsArray)
         {
-            // enable and disable only cards that the host has specified are allowed
-
+            // enable and disable only cardInfos that the host has specified are allowed
             foreach (var card in cards.Values.Select(card => card.cardInfo))
             {
-                if (cardsArray.Contains(card.cardName))
+                string cardObjectName = card.gameObject.name;
+                if (cardsArray.Contains(cardObjectName))
                 {
                     EnableCard(card, false);
-                    foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == card.cardName))
+                    foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == cardObjectName))
                     {
                         ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, true);
                     }
@@ -327,7 +296,7 @@ namespace UnboundLib.Utils
                 else
                 {
                     DisableCard(card, false);
-                    foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == card.cardName))
+                    foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == cardObjectName))
                     {
                         ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, false);
                     }

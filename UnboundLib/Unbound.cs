@@ -38,19 +38,17 @@ namespace UnboundLib
         {
             get
             {
-                if (_canvas == null)
-                {
-                    _canvas = new GameObject("UnboundLib Canvas").AddComponent<Canvas>();
-                    _canvas.gameObject.AddComponent<GraphicRaycaster>();
-                    _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                    _canvas.pixelPerfect = false;
-                    DontDestroyOnLoad(_canvas);
-                }
+                if (_canvas != null) return _canvas;
+                _canvas = new GameObject("UnboundLib Canvas").AddComponent<Canvas>();
+                _canvas.gameObject.AddComponent<GraphicRaycaster>();
+                _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                _canvas.pixelPerfect = false;
+                DontDestroyOnLoad(_canvas);
                 return _canvas;
             }
         }
 
-        struct NetworkEventType
+        private struct NetworkEventType
         {
             public const string
                 StartHandshake = "ModLoader_HandshakeStart",
@@ -94,7 +92,7 @@ namespace UnboundLib
             On.MainMenuHandler.Awake += (orig, self) =>
             {
                 // reapply cards and levels
-                this.ExecuteAfterSeconds(0.1f, () =>
+                this.ExecuteAfterFrames(5, () =>
                 {
                     MapManager.instance.levels = LevelManager.activeLevels.ToArray();
                     // THIS IS BROKEN
@@ -104,9 +102,8 @@ namespace UnboundLib
 
                 });
 
-
                 // create unbound text
-                this.StartCoroutine(this.AddTextWhenReady(firstTime ? 4f : 0.1f));
+                StartCoroutine(AddTextWhenReady(firstTime ? 2f : 0.1f));
 
                 ModOptions.instance.CreateModOptions(firstTime);
                 Credits.Instance.CreateCreditsMenu(firstTime);
@@ -166,7 +163,6 @@ namespace UnboundLib
                 self.StartCoroutine(ArmsRaceStartCoroutine(orig, self));
             };
 
-
             // // apply cards and levels on game start
             // IEnumerator ResetCardsAndLevelsOnStart(IGameModeHandler gm)
             // {
@@ -178,7 +174,7 @@ namespace UnboundLib
             GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.DisableSyncModUi(SyncModClients.uiParent));
 
             // hook for closing ongoing lobbies
-            GameModeManager.AddHook(GameModeHooks.HookGameStart, this.CloseLobby);
+            GameModeManager.AddHook(GameModeHooks.HookGameStart, CloseLobby);
 
             // Load toggleUI asset bundle
             toggleUI = AssetUtils.LoadAssetBundleFromResources("togglemenuui", typeof(ToggleLevelMenuHandler).Assembly);
@@ -195,15 +191,14 @@ namespace UnboundLib
             gameObject.AddComponent<ToggleCardsMenuHandler>();
         }
 
-        private IEnumerator CloseLobby(IGameModeHandler gm)
+        private static IEnumerator CloseLobby(IGameModeHandler gm)
         {
-            if (PhotonNetwork.IsMasterClient && !PhotonNetwork.OfflineMode)
-            {
-                PhotonNetwork.CurrentRoom.IsVisible = false;
-                PhotonNetwork.CurrentRoom.IsOpen = false;
-            }
+            if (!PhotonNetwork.IsMasterClient || PhotonNetwork.OfflineMode) yield break;
+            PhotonNetwork.CurrentRoom.IsVisible = false;
+            PhotonNetwork.CurrentRoom.IsOpen = false;
             yield break;
         }
+
         private IEnumerator AddTextWhenReady(float delay = 0f, float maxTimeToWait = 10f)
         {
             if (delay > 0f) { yield return new WaitForSecondsRealtime(delay); }
@@ -226,8 +221,8 @@ namespace UnboundLib
             text.transform.SetAsFirstSibling();
             text.rectTransform.localScale = Vector3.one;
             text.rectTransform.localPosition = new Vector3(0, 350, text.rectTransform.localPosition.z);
-
         }
+
         private void Awake()
         {
             if (Instance == null)
@@ -273,11 +268,9 @@ namespace UnboundLib
                 //CardChoice.instance.cards = CardManager.activeCards.ToArray();
                 MapManager.instance.levels = LevelManager.activeLevels.ToArray();
 
-                if (data.Length > 0)
-                {
-                    GameModeManager.SetGameMode((string) data[0], false);
-                    GameModeManager.CurrentHandler.SetSettings((GameSettings) data[1]);
-                }
+                if (data.Length <= 0) return;
+                GameModeManager.SetGameMode((string) data[0], false);
+                GameModeManager.CurrentHandler.SetSettings((GameSettings) data[1]);
             });
 
             // fetch card to use as a template for all custom cards
@@ -350,20 +343,16 @@ namespace UnboundLib
             GUILayout.BeginVertical();
 
             bool showingSpecificMod = false;
-            foreach (var md in ModOptions.GUIListeners.Keys)
+            foreach (ModOptions.GUIListener data in ModOptions.GUIListeners.Keys.Select(md => ModOptions.GUIListeners[md]).Where(data => data.guiEnabled))
             {
-                var data = ModOptions.GUIListeners[md];
-                if (data.guiEnabled)
+                if (GUILayout.Button("<- Back"))
                 {
-                    if (GUILayout.Button("<- Back"))
-                    {
-                        data.guiEnabled = false;
-                    }
-                    GUILayout.Label(data.modName + " Options");
-                    showingSpecificMod = true;
-                    data.guiAction?.Invoke();
-                    break;
+                    data.guiEnabled = false;
                 }
+                GUILayout.Label(data.modName + " Options");
+                showingSpecificMod = true;
+                data.guiAction?.Invoke();
+                break;
             }
 
             if (showingSpecificMod) return;
@@ -375,18 +364,14 @@ namespace UnboundLib
             // }
 
             GUILayout.Label("Mod Options:");
-            foreach (var md in ModOptions.GUIListeners.Keys)
+            foreach (ModOptions.GUIListener data in ModOptions.GUIListeners.Keys.Select(md => ModOptions.GUIListeners[md]).Where(data => GUILayout.Button(data.modName)))
             {
-                var data = ModOptions.GUIListeners[md];
-                if (GUILayout.Button(data.modName))
-                {
-                    data.guiEnabled = true;
-                }
+                data.guiEnabled = true;
             }
             GUILayout.EndVertical();
         }
 
-        private void LoadAssets()
+        private static void LoadAssets()
         {
             UIAssets = AssetUtils.LoadAssetBundleFromResources("unboundui", typeof(Unbound).Assembly);
             if (UIAssets != null)
@@ -396,7 +381,7 @@ namespace UnboundLib
             }
         }
 
-        private void OnJoinedRoomAction()
+        private static void OnJoinedRoomAction()
         {
             //if (!PhotonNetwork.OfflineMode)
             //   CardChoice.instance.cards = CardManager.defaultCards;
@@ -408,7 +393,7 @@ namespace UnboundLib
                 handshake?.Invoke();
             }
         }
-        private void OnLeftRoomAction()
+        private static void OnLeftRoomAction()
         {
             OnLeftRoom?.Invoke();
         }
