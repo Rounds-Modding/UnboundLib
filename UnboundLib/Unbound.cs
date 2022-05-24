@@ -175,7 +175,7 @@ namespace UnboundLib
             //     yield break;
             // }
             // GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsAndLevelsOnStart);
-            GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.disableSyncModUI(SyncModClients.uiParent));
+            GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.DisableSyncModUi(SyncModClients.uiParent));
 
             // hook for closing ongoing lobbies
             GameModeManager.AddHook(GameModeHooks.HookGameStart, this.CloseLobby);
