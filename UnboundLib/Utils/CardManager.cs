@@ -224,15 +224,12 @@ namespace UnboundLib.Utils
         {
             CardChoice.instance.cards = activeCards.ToArray();
 
-            Unbound.Instance.ExecuteAfterSeconds(1.5f, () =>
+            Unbound.Instance.ExecuteAfterFrames(45, () =>
             {
                 // send available cardInfo pool to the master client
-                for (int i = 0; i < 2; i++)
+                if (!PhotonNetwork.IsMasterClient)
                 {
-                    if (!PhotonNetwork.IsMasterClient)
-                    {
-                        NetworkingManager.RPC_Others(typeof(CardManager), nameof(RPC_CardHandshake), (object) cards.Keys.ToArray());
-                    }
+                    NetworkingManager.RPC_Others(typeof(CardManager), nameof(RPC_CardHandshake), (object) cards.Keys.ToArray());
                 }
             });
         }
@@ -244,16 +241,13 @@ namespace UnboundLib.Utils
             if (!PhotonNetwork.IsMasterClient) return;
 
             List<string> disabledCards = new List<string>();
-            
+
             // disable any cardInfos which aren't shared by other players
-            foreach (var card in cards.Values.Select(card => card.cardInfo))
+            foreach (var cardName in cards.Keys.Where(cardName => !cardsArray.Contains(cardName)))
             {
-                string cardObjectName = card.gameObject.name;
-                if (cardsArray.Contains(cardObjectName)) continue;
-                
-                DisableCard(card, false);
-                disabledCards.Add(cardObjectName);
-                foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == cardObjectName))
+                DisableCard(cards[cardName].cardInfo, false);
+                disabledCards.Add(cardName);
+                foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == cardName))
                 {
                     ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, false);
                 }
@@ -262,7 +256,7 @@ namespace UnboundLib.Utils
             if (disabledCards.Count != 0)
             {
                 Unbound.BuildModal()
-                    .Title("These cardInfos have been disabled because someone didn't have them")
+                    .Title("These cards have been disabled because someone didn't have them")
                     .Message(string.Join(", ", disabledCards.ToArray()))
                     .CancelButton("Copy", () =>
                     {
