@@ -40,7 +40,8 @@ namespace UnboundLib.Utils.UI
         private static TextMeshProUGUI cardAmountText;
 
         private int currentColumnAmount = 5;
-        private string CurrentCategory => (from scroll in scrollViews where scroll.Value.gameObject.activeInHierarchy select scroll.Key).FirstOrDefault();
+        private string currentCategory = "Vanilla";
+        private string currentSearch = "";
 
         // if need to toggle all on or off
         private bool toggledAll;
@@ -74,15 +75,15 @@ namespace UnboundLib.Utils.UI
             var searchBar = cardMenuCanvas.transform.Find("CardMenu/Top/InputField").gameObject;
             searchBar.GetComponent<TMP_InputField>().onValueChanged.AddListener(value =>
             {
-                foreach (var card in scrollViews.SelectMany(scrollView => scrollView.Value.GetComponentsInChildren<Button>(true)))
+                currentSearch = value;
+                foreach (var card in scrollViews[currentCategory].GetComponentsInChildren<Button>(true))
                 {
-                    if (value == "")
+                    var active = ActiveOnSearch(card.gameObject.name);
+                    card.gameObject.SetActive(active);
+                    if (active)
                     {
-                        card.gameObject.SetActive(true);
-                        continue;
+                        UpdateVisualsCardObject(card.gameObject);
                     }
-
-                    card.gameObject.SetActive(card.name.ToUpper().Contains(value.ToUpper()));
                 }
             });
 
@@ -115,11 +116,11 @@ namespace UnboundLib.Utils.UI
             buttonsToDisable.Add(toggleAllButton);
             toggleAllButton.onClick.AddListener(() =>
             {
-                if (CurrentCategory == null) return;
+                if (currentCategory == null) return;
 
                 toggledAll = !toggledAll;
 
-                var cardsInCategory = CardManager.GetCardsInCategory(CurrentCategory);
+                var cardsInCategory = CardManager.GetCardsInCategory(currentCategory);
                 if (toggledAll)
                 {
                     var objectsInCategory = GetCardObjects(cardsInCategory);
@@ -290,11 +291,8 @@ namespace UnboundLib.Utils.UI
                         scrollViews[category].GetComponent<ScrollRect>().normalizedPosition = new Vector2(0, 1);
                         SetActive(scrollViews[category].transform, true);
 
-                        if (cardVisualsCoroutine != null)
-                        {
-                            Unbound.Instance.StopCoroutine(cardVisualsCoroutine);
-                        }
-                        cardVisualsCoroutine =  Unbound.Instance.StartCoroutine(EnableCardsInCategory(category));
+                        // cardVisualsCoroutine = Unbound.Instance.StartCoroutine(EnableCardsInCategory(category));
+                        currentCategory = category;
                     });
 
                     var toggle = categoryObj.GetComponentInChildren<Toggle>();
@@ -369,6 +367,13 @@ namespace UnboundLib.Utils.UI
             });
         }
 
+        private bool ActiveOnSearch(string cardName)
+        {
+            var result = cardName.Contains("__") ? cardName.Split(new[] { "__" }, StringSplitOptions.None) : new[] { cardName };
+            var process = result.Length > 2 ? result[2] : result[0];
+            return currentSearch == "" || process.ToUpper().Contains(currentSearch.ToUpper());
+        }
+
         private void DisableCards()
         {
             foreach (GameObject cardObject in CardManager.categories.SelectMany(category => cardObjectsInCategory[category]))
@@ -391,7 +396,12 @@ namespace UnboundLib.Utils.UI
             if (!cardObjectsInCategory.ContainsKey(category)) yield break;
             foreach (GameObject cardObject in cardObjectsInCategory[category])
             {
-                cardObject.SetActive(true);
+                var active = ActiveOnSearch(cardObject.name);
+                cardObject.gameObject.SetActive(active);
+                if (active)
+                {
+                    UpdateVisualsCardObject(cardObject);
+                }
                 UpdateVisualsCardObject(cardObject);
                 yield return new WaitForEndOfFrame();
             }
@@ -660,6 +670,7 @@ namespace UnboundLib.Utils.UI
                         }
                 }
             }
+
             instance.currentColumnAmount = amount;
             cardAmountText.text = "Cards Per Line: " + amount;
             foreach (string category in CardManager.categories)
@@ -688,16 +699,33 @@ namespace UnboundLib.Utils.UI
         /// <summary> This is used for opening and closing menus </summary>
         public static void SetActive(Transform trans, bool active)
         {
-            // Main camera changes when going back to menu and glow disappears if we don't se the camera again to the canvas
-            Camera mainCamera = GameObject.Find("MainCamera").GetComponent<Camera>();
-            Canvas canvas = instance.cardMenuCanvas.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceCamera;
-            canvas.worldCamera = mainCamera;
-
-            if (trans.gameObject != null)
+            if (active)
             {
-                trans.gameObject.SetActive(active);
+                // Main camera changes when going back to menu and glow disappears if we don't se the camera again to the canvas
+                Camera mainCamera = GameObject.Find("MainCamera").GetComponent<Camera>();
+                Canvas canvas = instance.cardMenuCanvas.GetComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceCamera;
+                canvas.worldCamera = mainCamera;
             }
+
+            if (trans.gameObject != null) trans.gameObject.SetActive(active);
+
+            Unbound.Instance.ExecuteAfterFrames(1, () =>
+            {
+                if (active)
+                {
+                    if (instance.cardVisualsCoroutine != null)
+                    {
+                        Unbound.Instance.StopCoroutine(instance.cardVisualsCoroutine);
+                    }
+
+                    instance.cardVisualsCoroutine = Unbound.Instance.StartCoroutine(instance.currentCategory != null ? instance.EnableCardsInCategory(instance.currentCategory) : instance.EnableCardsInCategory("Vanilla"));
+                }
+                else
+                {
+                    instance.DisableCardsInCategory(instance.currentCategory ?? "Vanilla");
+                }
+            });
         }
 
         /// <summary>This method allows you to opens the menu with settings from outside unbound</summary>
