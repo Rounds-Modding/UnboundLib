@@ -19,8 +19,8 @@ namespace UnboundLib.GameModes
 
         private static Dictionary<string, IGameModeHandler> handlers = new Dictionary<string, IGameModeHandler>();
         private static Dictionary<string, Type> gameModes = new Dictionary<string, Type>();
-        private static Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>> hooks = new Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>>();
-        private static Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>> onceHooks = new Dictionary<string, List<Func<IGameModeHandler, IEnumerator>>>();
+        private static Dictionary<string, List<GameModeHooks.Hook>> hooks = new Dictionary<string, List<GameModeHooks.Hook>>();
+        private static Dictionary<string, List<GameModeHooks.Hook>> onceHooks = new Dictionary<string, List<GameModeHooks.Hook>>();
 
         private static bool firstTime = true;
 
@@ -200,16 +200,14 @@ namespace UnboundLib.GameModes
         {
             key = key.ToLower();
 
-            List<Func<IGameModeHandler, IEnumerator>> hooks;
-            List<Func<IGameModeHandler, IEnumerator>> onceHooks;
-            GameModeManager.hooks.TryGetValue(key, out hooks);
-            GameModeManager.onceHooks.TryGetValue(key, out onceHooks);
+            GameModeManager.hooks.TryGetValue(key, out List<GameModeHooks.Hook> hooks);
+            GameModeManager.onceHooks.TryGetValue(key, out List<GameModeHooks.Hook> onceHooks);
 
             if (hooks != null && CurrentHandler != null)
             {
-                foreach (var hook in hooks)
+                foreach (var hook in hooks.OrderByDescending(h => h.Priority))
                 {
-                    yield return ErrorTolerantHook(key, hook(CurrentHandler));
+                    yield return ErrorTolerantHook(key, hook.Action(CurrentHandler));
                 }
             }
 
@@ -252,6 +250,13 @@ namespace UnboundLib.GameModes
         /// </summary>
         public static void AddOnceHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
+            AddOnceHook(key, action, GameModeHooks.Priority.Normal);
+        }
+        /// <summary>
+        ///     Adds a hook that is automatically removed after it's triggered once.
+        /// </summary>
+        public static void AddOnceHook(string key, Func<IGameModeHandler, IEnumerator> action, int priority)
+        {
             if (action == null)
             {
                 return;
@@ -262,17 +267,21 @@ namespace UnboundLib.GameModes
 
             if (!onceHooks.ContainsKey(key))
             {
-                onceHooks.Add(key, new List<Func<IGameModeHandler, IEnumerator>> { action });
+                onceHooks.Add(key, new List<GameModeHooks.Hook>{ new GameModeHooks.Hook(action, priority) });
             }
             else
             {
-                onceHooks[key].Add(action);
+                onceHooks[key].Add(new GameModeHooks.Hook(action, priority));
             }
 
             AddHook(key, action);
         }
 
         public static void AddHook(string key, Func<IGameModeHandler, IEnumerator> action)
+        {
+            AddHook(key, action, GameModeHooks.Priority.Normal);
+        }
+        public static void AddHook(string key, Func<IGameModeHandler, IEnumerator> action, int priority)
         {
             if (action == null)
             {
@@ -284,17 +293,21 @@ namespace UnboundLib.GameModes
 
             if (!hooks.ContainsKey(key))
             {
-                hooks.Add(key, new List<Func<IGameModeHandler, IEnumerator>> { action });
+                hooks.Add(key, new List<GameModeHooks.Hook> { new GameModeHooks.Hook(action, priority) });
             }
             else
             {
-                hooks[key].Add(action);
+                hooks[key].Add(new GameModeHooks.Hook(action, priority));
             }
+        }
+        public static void RemoveHook(string key, GameModeHooks.Hook hook)
+        {
+            hooks[key.ToLower()].Remove(hook);
         }
 
         public static void RemoveHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
-            hooks[key.ToLower()].Remove(action);
+            hooks[key.ToLower()].Remove(hooks[key.ToLower()].Where(h => h.Action == action).FirstOrDefault());
         }
 
         public static T GetGameMode<T>(string gameModeId) where T : Component
