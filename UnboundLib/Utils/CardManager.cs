@@ -127,26 +127,31 @@ namespace UnboundLib.Utils
             }
         }
 
-        public static void EnableCard(CardInfo card, bool saved = true)
+        public static void EnableCard(CardInfo cardInfo, bool saved = true)
         {
-            if (!activeCards.Contains(card))
+            if (!activeCards.Contains(cardInfo))
             {
-                activeCards.Add(card);
+                activeCards.Add(cardInfo);
                 activeCards = new ObservableCollection<CardInfo>(activeCards.OrderBy(i => i.gameObject.name));
                 activeCards.CollectionChanged += CardsChanged;
             }
-            if (inactiveCards.Contains(card))
+            if (inactiveCards.Contains(cardInfo))
             {
-                inactiveCards.Remove(card);
+                inactiveCards.Remove(cardInfo);
             }
 
-            if (!cards.ContainsKey(card.gameObject.name)) return;
-
-            cards[card.gameObject.name].enabled = true;
+            string cardName = cardInfo.gameObject.name;
+            if (!cardName[0].Equals('_'))
+            {
+                cardName = cardInfo.cardName;
+            }
+            if (!cards.ContainsKey(cardName)) return;
+            
+            cards[cardName].enabled = true;
 
             if (saved)
             {
-                cards[card.gameObject.name].config.Value = true;
+                cards[cardName].config.Value = true;
             }
         }
 
@@ -169,14 +174,19 @@ namespace UnboundLib.Utils
                 inactiveCards.Add(cardInfo);
                 inactiveCards.Sort((x, y) => string.CompareOrdinal(x.gameObject.name, y.gameObject.name));
             }
+            
+            string cardName = cardInfo.gameObject.name;
+            if (!cardName[0].Equals('_'))
+            {
+                cardName = cardInfo.cardName;
+            }
+            if (!cards.ContainsKey(cardName)) return;
 
-            if (!cards.ContainsKey(cardInfo.gameObject.name)) return;
-
-            cards[cardInfo.gameObject.name].enabled = false;
+            cards[cardName].enabled = false;
 
             if (saved)
             {
-                cards[cardInfo.gameObject.name].config.Value = false;
+                cards[cardName].config.Value = false;
             }
         }
 
@@ -249,7 +259,7 @@ namespace UnboundLib.Utils
                 disabledCards.Add(cardName);
                 foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == cardName))
                 {
-                    ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, false);
+                    ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key);
                 }
             }
 
@@ -284,7 +294,7 @@ namespace UnboundLib.Utils
                     EnableCard(card, false);
                     foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == cardObjectName))
                     {
-                        ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, true);
+                        ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key);
                     }
                 }
                 else
@@ -292,7 +302,7 @@ namespace UnboundLib.Utils
                     DisableCard(card, false);
                     foreach (var obj in ToggleCardsMenuHandler.instance.cardObjects.Where(c => c.Key.name == cardObjectName))
                     {
-                        ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key, false);
+                        ToggleCardsMenuHandler.UpdateVisualsCardObject(obj.Key);
                     }
                 }
             }

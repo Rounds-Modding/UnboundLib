@@ -186,16 +186,16 @@ namespace UnboundLib.Utils.UI
 
                     void CardAction()
                     {
-                        if (cardValue.enabled)
+                        bool cardEnabled = cardValue.enabled;
+                        if (cardEnabled)
                         {
                             CardManager.DisableCard(cardValue.cardInfo);
-                            UpdateVisualsCardObject(cardObject, false);
                         }
                         else
                         {
                             CardManager.EnableCard(cardValue.cardInfo);
-                            UpdateVisualsCardObject(cardObject, true);
                         }
+                        UpdateVisualsCardObject(cardObject);
                     }
 
                     cardObjects[cardObject] = CardAction;
@@ -211,57 +211,9 @@ namespace UnboundLib.Utils.UI
                     {
                         CardManager.DisableCard(cardValue.cardInfo);
                     }
-                    UpdateVisualsCardObject(cardObject, cardValue.config.Value);
+                    UpdateVisualsCardObject(cardObject);
                 }
                 UpdateCardColumnAmountMenus();
-
-                //TODO Temp version for all category
-                // foreach (var card in CardManager.cards)
-                // {
-                //     Card cardValue = card.Value;
-                //     if (cardValue == null) continue;
-                //     var parentScroll = scrollViews["All"].Find("Viewport/Content");
-                //     var cardObject = Instantiate(cardObjAsset, parentScroll);
-                //     cardObject.name = card.Key;
-                //     CardInfo cardInfo = cardValue.cardInfo;
-                //     if (cardInfo == null) continue;
-                //     SetupCardVisuals(cardInfo, cardObject);
-                //     cardObject.SetActive(false);
-                //     if (!cardObjectsInCategory.ContainsKey("All"))
-                //     {
-                //         cardObjectsInCategory.Add("All", new List<GameObject>());
-                //     }
-                //     cardObjectsInCategory["All"].Add(cardObject);
-                //
-                //     void CardAction()
-                //     {
-                //         if (cardValue.enabled)
-                //         {
-                //             CardManager.DisableCard(cardValue.cardInfo);
-                //             UpdateVisualsCardObject(cardObject, false);
-                //         }
-                //         else
-                //         {
-                //             CardManager.EnableCard(cardValue.cardInfo);
-                //             UpdateVisualsCardObject(cardObject, true);
-                //         }
-                //     }
-                //
-                //     cardObjects[cardObject] = CardAction;
-                //     defaultCardActions.Add(CardAction);
-                //
-                //     buttonsToDisable.Add(cardObject.GetComponent<Button>());
-                //
-                //     if (cardValue.config.Value)
-                //     {
-                //         CardManager.EnableCard(cardValue.cardInfo);
-                //     }
-                //     else
-                //     {
-                //         CardManager.DisableCard(cardValue.cardInfo);
-                //     }
-                //     UpdateVisualsCardObject(cardObject, cardValue.config.Value);
-                // }
 
                 var viewingText = cardMenuCanvas.transform.Find("CardMenu/Top/Viewing").gameObject.GetComponentInChildren<TextMeshProUGUI>();
 
@@ -346,7 +298,7 @@ namespace UnboundLib.Utils.UI
                             string[] cardsInCategory = CardManager.GetCardsInCategory(category);
                             foreach (GameObject cardObject in cardObjects.Keys.Where(o => cardsInCategory.Contains(o.name)))
                             {
-                                UpdateVisualsCardObject(cardObject, enabledVisuals);
+                                UpdateVisualsCardObject(cardObject);
                             }
                         }
 
@@ -398,10 +350,6 @@ namespace UnboundLib.Utils.UI
             {
                 var active = ActiveOnSearch(cardObject.name);
                 cardObject.gameObject.SetActive(active);
-                if (active)
-                {
-                    UpdateVisualsCardObject(cardObject);
-                }
                 UpdateVisualsCardObject(cardObject);
                 yield return new WaitForEndOfFrame();
             }
@@ -419,6 +367,7 @@ namespace UnboundLib.Utils.UI
             GameObject cardFrontObject = FindObjectInChildren(cardObject, "Front");
             if (cardFrontObject == null) return;
 
+            // cardInfo.gameObject.name = parent.name;
             GameObject back = FindObjectInChildren(cardObject, "Back");
             Destroy(back);
 
@@ -533,31 +482,6 @@ namespace UnboundLib.Utils.UI
         public static void UpdateVisualsCardObject(GameObject cardObject)
         {
             if (CardManager.cards[cardObject.name].enabled)
-            {
-                cardObject.transform.Find("Darken/Darken").gameObject.SetActive(false);
-                foreach (CurveAnimation curveAnimation in cardObject.GetComponentsInChildren<CurveAnimation>())
-                {
-                    if (curveAnimation.gameObject.activeInHierarchy)
-                    {
-                        curveAnimation.PlayIn();
-                    }
-                }
-            }
-            else
-            {
-                cardObject.transform.Find("Darken/Darken").gameObject.SetActive(true);
-                foreach (CurveAnimation curveAnimation in cardObject.GetComponentsInChildren<CurveAnimation>())
-                {
-                    if (!curveAnimation.gameObject.activeInHierarchy) continue;
-                    curveAnimation.PlayIn();
-                    curveAnimation.PlayOut();
-                }
-            }
-        }
-
-        public static void UpdateVisualsCardObject(GameObject cardObject, bool cardEnabled)
-        {
-            if (cardEnabled)
             {
                 cardObject.transform.Find("Darken/Darken").gameObject.SetActive(false);
                 foreach (CurveAnimation curveAnimation in cardObject.GetComponentsInChildren<CurveAnimation>())

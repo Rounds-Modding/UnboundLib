@@ -136,11 +136,11 @@ namespace UnboundLib.Cards
                 {
                     // Add this card to the list of all custom cards
                     CardManager.activeCards.Add(newCardInfo);
-                    CardManager.activeCards = new ObservableCollection<CardInfo>(CardManager.activeCards.OrderBy(i => i.cardName));
+                    CardManager.activeCards = new ObservableCollection<CardInfo>(CardManager.activeCards.OrderBy(i => i.gameObject.name));
                     CardManager.activeCards.CollectionChanged += CardManager.CardsChanged;
                     // Register card with the toggle menu
                     CardManager.cards.Add(newCard.gameObject.name,
-                        new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), newCardInfo.cardName, true), newCardInfo));
+                        new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), newCard.gameObject.name, true), newCardInfo));
                 }
 
                 // Post-creation clean up
