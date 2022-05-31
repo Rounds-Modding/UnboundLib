@@ -19,7 +19,7 @@ namespace UnboundLib.Cards
             }
             else
             {
-                data.Add(teamId, new List<string>() { cardName });
+                data.Add(teamId, new List<string>{ cardName });
             }
         }
 

@@ -73,12 +73,9 @@ namespace UnboundLib.Utils
             }
 
             // Populate the categories list
-            foreach (var level in levels.Values)
+            foreach (var level in levels.Values.Where(level => !categories.Contains(level.category)))
             {
-                if (!categories.Contains(level.category))
-                {
-                    categories.Add(level.category);
-                }
+                categories.Add(level.category);
             }
 
             // Populate the categoryBools dictionary
@@ -144,11 +141,9 @@ namespace UnboundLib.Utils
             }
 
 
-            if (saved)
-            {
-                levels[levelName].enabled = true;
-                Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = true;
-            }
+            if (!saved) return;
+            levels[levelName].enabled = true;
+            Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = true;
         }
 
         public static void DisableLevels(string[] levelNames, bool saved = true)
@@ -169,15 +164,12 @@ namespace UnboundLib.Utils
             if (!inactiveLevels.Contains(levelName))
             {
                 inactiveLevels.Add(levelName);
-                inactiveLevels.Sort((x, y) => string.CompareOrdinal(x, y));
+                inactiveLevels.Sort(string.CompareOrdinal);
             }
 
-
-            if (saved)
-            {
-                levels[levelName].enabled = false;
-                Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = false;
-            }
+            if (!saved) return;
+            levels[levelName].enabled = false;
+            Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = false;
         }
 
 
@@ -234,10 +226,7 @@ namespace UnboundLib.Utils
 
         public static string GetVisualName(string path)
         {
-            var visualName = path
-                .Replace(" ", "")
-                .Replace("Assets", "")
-                .Replace(".unity", "");
+            var visualName = path.Replace(" ", "").Replace("Assets", "").Replace(".unity", "");
             visualName = Regex.Replace(visualName, "/.*/", string.Empty);
             visualName = visualName.Replace("/", "_");
             visualName = visualName.Replace("\\", "_");
@@ -303,33 +292,18 @@ namespace UnboundLib.Utils
                 var bestMatches = 0f;
 
                 // parse message
-                var formattedMessage = message.ToUpper()
-                    .Replace(" ", "_")
-                    .Replace("/", "");
-
+                var formattedMessage = message.ToUpper().Replace(" ", "_").Replace("/", "");
                 for (var i = 0; i < currentLevels.Length; i++)
                 {
-                    var text = currentLevels[i].ToUpper()
-                        .Replace(" ", "")
-                        .Replace("ASSETS", "")
-                        .Replace(".UNITY", "");
+                    var text = currentLevels[i].ToUpper().Replace(" ", "").Replace("ASSETS", "").Replace(".UNITY", "");
                     text = Regex.Replace(text, "/.*/", string.Empty);
                     text = text.Replace("/", "");
 
-                    var currentMatches = 0f;
-                    for (int j = 0; j < formattedMessage.Length; j++)
-                    {
-                        if (text.Length > j && formattedMessage[j] == text[j])
-                        {
-                            currentMatches += 1f / formattedMessage.Length;
-                        }
-                    }
+                    var currentMatches = formattedMessage.Where((t, j) => text.Length > j && t == text[j]).Sum(t => 1f / formattedMessage.Length);
                     currentMatches -= Mathf.Abs(formattedMessage.Length - text.Length) * 0.001f;
-                    if (currentMatches > 0.1f && currentMatches > bestMatches)
-                    {
-                        bestMatches = currentMatches;
-                        levelId = i;
-                    }
+                    if (!(currentMatches > 0.1f) || !(currentMatches > bestMatches)) continue;
+                    bestMatches = currentMatches;
+                    levelId = i;
                 }
                 if (levelId != -1)
                 {
@@ -400,29 +374,26 @@ namespace UnboundLib.Utils
             List<string> disabledLevels = new List<string>();
 
             // disable any levels which aren't shared by other players
-            foreach (var c in allLevels)
+            foreach (var map in allLevels)
             {
-                if (!levels.Contains(c))
+                if (levels.Contains(map)) continue;
+                DisableLevel(map, false);
+                disabledLevels.Add(map);
+                foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == map))
                 {
-                    DisableLevel(c, false);
-                    disabledLevels.Add(c);
-                    foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == c))
-                    {
-                        ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
-                    }
+                    ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
                 }
-                //c.SetValue(levels.Contains(c.info.cardName) && c.isEnabled.Value);
             }
 
             if (disabledLevels.Count != 0)
             {
                 Unbound.BuildModal()
                     .Title("These levels have been disabled because someone didn't have them")
-                    .Message(String.Join(", ", disabledLevels.ToArray()))
+                    .Message(string.Join(", ", disabledLevels.ToArray()))
                     .CancelButton("Copy", () =>
                     {
                         Unbound.BuildInfoPopup("Copied Message!");
-                        GUIUtility.systemCopyBuffer = String.Join(", ", disabledLevels.ToArray());
+                        GUIUtility.systemCopyBuffer = string.Join(", ", disabledLevels.ToArray());
                     })
                     .CancelButton("Cancel", () => { })
                     .Show();
@@ -432,26 +403,25 @@ namespace UnboundLib.Utils
             NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_HostMapHandshakeResponse), (object) activeLevels.Select(c => c).ToArray());
         }
 
-
         [UnboundRPC]
         private static void RPC_HostMapHandshakeResponse(string[] levels)
         {
             // enable and disable only levels that the host has specified are allowed
-            foreach (var c in allLevels)
+            foreach (var map in allLevels)
             {
                 //c.SetValue(cards.Contains(c.info.cardName));
-                if (levels.Contains(c))
+                if (levels.Contains(map))
                 {
-                    EnableLevel(c);
-                    foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == c))
+                    EnableLevel(map);
+                    foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == map))
                     {
                         ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
                     }
                 }
                 else
                 {
-                    DisableLevel(c);
-                    foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == c))
+                    DisableLevel(map);
+                    foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == map))
                     {
                         ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
                     }
@@ -477,7 +447,6 @@ namespace UnboundLib.Utils
             this.category = category;
         }
     }
-
     public class Category
     {
         public string name;

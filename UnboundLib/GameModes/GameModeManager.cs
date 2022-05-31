@@ -8,6 +8,7 @@ using ExitGames.Client.Photon;
 using System.Linq;
 using System.Collections.ObjectModel;
 using TMPro;
+using Object = UnityEngine.Object;
 
 namespace UnboundLib.GameModes
 {
@@ -32,13 +33,7 @@ namespace UnboundLib.GameModes
 
         public static string CurrentHandlerID { get; private set; }
 
-        public static IGameModeHandler CurrentHandler
-        {
-            get
-            {
-                return CurrentHandlerID == null ? null : handlers[CurrentHandlerID];
-            }
-        }
+        public static IGameModeHandler CurrentHandler => CurrentHandlerID == null ? null : handlers[CurrentHandlerID];
 
         internal static void Init()
         {
@@ -52,32 +47,29 @@ namespace UnboundLib.GameModes
 
             SceneManager.sceneLoaded += (scene, mode) =>
             {
-                if (scene.name == "Main")
+                if (scene.name != "Main") return;
+                
+                // rename test gamemode object to SandboxID
+                GetGameMode<GM_Test>("Test").name = $"[GameMode] {SandBoxID}";
+
+                SetupUI();
+
+                // Add game modes back when the main scene is reloaded
+                foreach (var id in handlers.Keys)
                 {
-
-                    // rename test gamemode object to SandboxID
-                    GetGameMode<GM_Test>("Test").name = $"[GameMode] {SandBoxID}";
-
-
-                    SetupUI();
-
-                    // Add game modes back when the main scene is reloaded
-                    foreach (var id in handlers.Keys)
+                    if (id != ArmsRaceID && id != SandBoxID)
                     {
-                        if (id != ArmsRaceID && id != SandBoxID)
-                        {
-                            AddGameMode(id, gameModes[id]);
-                        }
-                        handlers[id].SetActive(false);
+                        AddGameMode(id, gameModes[id]);
                     }
-
-                    SetGameMode(null);
+                    handlers[id].SetActive(false);
                 }
+
+                SetGameMode(null);
             };
         }
+
         internal static void SetupUI()
         {
-
             // have to do this every time the scene is reloaded
 
             // Make existing UI buttons use our GameModeHandler logic
@@ -88,7 +80,8 @@ namespace UnboundLib.GameModes
                 var origGroupGo = origGameModeGo.transform.Find("Group");
                 var characterSelectGo_ = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/CharacterSelect");
             
-                var newLocalMenu = Utils.UI.MenuHandler.CreateMenu("LOCAL", () => {MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group/Local").GetComponent<Button>().onClick.Invoke();}, 
+                var newLocalMenu = Utils.UI.MenuHandler.CreateMenu("LOCAL", 
+                    () => { MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group/Local").GetComponent<Button>().onClick.Invoke(); }, 
                     MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 
                     60, true, false, null, true, 1);
 
@@ -96,7 +89,7 @@ namespace UnboundLib.GameModes
 
                 content.GetComponent<VerticalLayoutGroup>().spacing = 60;
 
-                UnityEngine.GameObject.DestroyImmediate(origGameModeGo.gameObject);
+                UnityEngine.Object.DestroyImmediate(origGameModeGo.gameObject);
 
                 // do not destroy local button since RWF relies on it
                 MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group/Local").gameObject.SetActive(false);
@@ -107,10 +100,13 @@ namespace UnboundLib.GameModes
                 newSandboxGo.name = "Test";
             
                 // Select the local button so selection doesn't look weird
-                Unbound.Instance.ExecuteAfterSeconds(1.5f, () => {GameObject.Find("Game/UI/UI_MainMenu/Canvas/ListSelector/Main/Group/LOCAL").GetComponent<ListMenuButton>().OnPointerEnter(null);});
+                Unbound.Instance.ExecuteAfterFrames(15, () =>
+                {
+                    GameObject.Find("Game/UI/UI_MainMenu/Canvas/ListSelector/Main/Group/LOCAL").GetComponent<ListMenuButton>().OnPointerEnter(null);
+                });
 
                 // finally, restore the main menu button order
-                Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.5f : 0.01f, () =>
+                Unbound.Instance.ExecuteAfterFrames(5, () =>
                 {
                     Transform group = MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group");
                     group.Find("LOCAL")?.SetAsLastSibling();
@@ -139,8 +135,8 @@ namespace UnboundLib.GameModes
             var qMatchGo = onlineGo.transform.Find("Quick")?.gameObject;
             var tMatchGo = onlineGo.transform.Find("Twitch")?.gameObject;
 
-            if (qMatchGo != null) { GameObject.DestroyImmediate(qMatchGo); }
-            if (tMatchGo != null) { GameObject.DestroyImmediate(tMatchGo); }
+            if (qMatchGo != null) { Object.DestroyImmediate(qMatchGo); }
+            if (tMatchGo != null) { Object.DestroyImmediate(tMatchGo); }
 
             // restore GoBack target
             characterSelectGo.transform.GetChild(0).GetComponent<GoBack>().target = gameModeGo.GetComponent<ListMenuPage>();
@@ -156,7 +152,7 @@ namespace UnboundLib.GameModes
             }
             for (int i = 0; i < objsToDestroy.Count(); i++)
             {
-                UnityEngine.GameObject.DestroyImmediate(objsToDestroy[i]);
+                UnityEngine.Object.DestroyImmediate(objsToDestroy[i]);
             }
 
             var characterSelectPage = characterSelectGo.GetComponent<ListMenuPage>();
@@ -213,15 +209,13 @@ namespace UnboundLib.GameModes
                 }
             }
 
-            if (onceHooks != null && CurrentHandler != null)
+            if (onceHooks == null || CurrentHandler == null) yield break;
+            foreach (var hook in onceHooks)
             {
-                foreach (var hook in onceHooks)
-                {
-                    RemoveHook(key, hook);
-                }
-
-                GameModeManager.onceHooks.Remove(key);
+                RemoveHook(key, hook);
             }
+
+            GameModeManager.onceHooks.Remove(key);
         }
 
         private static IEnumerator ErrorTolerantHook(string key, IEnumerator hook)
@@ -341,17 +335,14 @@ namespace UnboundLib.GameModes
 
                 if (setActive)
                 {
-                    CurrentHandler.SetActive(true);
+                    CurrentHandler?.SetActive(true);
                 }
 
                 var pmPlayerDied = (Action<Player, int>) pm.GetFieldValue("PlayerDiedAction");
                 pm.SetPropertyValue("PlayerJoinedAction", Delegate.Combine(pm.PlayerJoinedAction, new Action<Player>(CurrentHandler.PlayerJoined)));
                 pm.SetFieldValue("PlayerDiedAction", Delegate.Combine(pmPlayerDied, new Action<Player, int>(CurrentHandler.PlayerDied)));
 
-                if (OnGameModeChanged != null)
-                {
-                    OnGameModeChanged(CurrentHandler);
-                }
+                OnGameModeChanged?.Invoke(CurrentHandler);
             }
         }
 
@@ -393,7 +384,7 @@ namespace UnboundLib.GameModes
             // do not destroy the sandbox or versus gamemodes
             if (id == SandBoxID || id == ArmsRaceID) { return; }
             var gameMode = GameObject.Find("/Game/Code/Game Modes").transform.Find($"[GameMode] {id}")?.gameObject;
-            if (gameMode != null) { UnityEngine.GameObject.Destroy(gameMode); }
+            if (gameMode != null) { UnityEngine.Object.Destroy(gameMode); }
         }
     }
 }

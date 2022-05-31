@@ -174,7 +174,7 @@ namespace UnboundLib.Utils
                 inactiveCards.Add(cardInfo);
                 inactiveCards.Sort((x, y) => string.CompareOrdinal(x.gameObject.name, y.gameObject.name));
             }
-            
+
             string cardName = cardInfo.gameObject.name;
             if (!cardName[0].Equals('_'))
             {

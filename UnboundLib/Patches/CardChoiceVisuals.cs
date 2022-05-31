@@ -20,17 +20,15 @@ namespace UnboundLib.Patches
 
             int colorIdx = -1;
 
-            var m_GetPlayerSkinColors = UnboundLib.ExtensionMethods.GetMethodInfo(typeof(PlayerSkinBank), nameof(PlayerSkinBank.GetPlayerSkinColors));
-            var m_getColorID = UnboundLib.ExtensionMethods.GetMethodInfo(typeof(CardChoiceVisuals_Patch_Show), nameof(CardChoiceVisuals_Patch_Show.GetColorIDFromPlayerID));
+            var m_GetPlayerSkinColors = ExtensionMethods.GetMethodInfo(typeof(PlayerSkinBank), nameof(PlayerSkinBank.GetPlayerSkinColors));
+            var m_getColorID = ExtensionMethods.GetMethodInfo(typeof(CardChoiceVisuals_Patch_Show), nameof(GetColorIDFromPlayerID));
 
             // replace GetPlayerSkinColors(playerID) with GetPlayerSkinColors(player.colorID()) always
             for (int i = 1; i < instructions.Count() - 1; i++)
             {
-                if (codes[i].opcode == OpCodes.Ldarg_1 && codes[i - 1].opcode == OpCodes.Ldarg_0 && codes[i + 1].Calls(m_GetPlayerSkinColors))
-                {
-                    colorIdx = i + 1;
-                    break;
-                }
+                if (codes[i].opcode != OpCodes.Ldarg_1 || codes[i - 1].opcode != OpCodes.Ldarg_0 || !codes[i + 1].Calls(m_GetPlayerSkinColors)) continue;
+                colorIdx = i + 1;
+                break;
             }
             if (colorIdx == -1)
             {

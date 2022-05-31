@@ -16,18 +16,7 @@ namespace UnboundLib.Patches
         internal static Type GetMethodNestedType(string method)
         {
             var nestedTypes = typeof(GM_ArmsRace).GetNestedTypes(BindingFlags.Instance | BindingFlags.NonPublic);
-            Type nestedType = null;
-
-            foreach (var type in nestedTypes)
-            {
-                if (type.Name.Contains(method))
-                {
-                    nestedType = type;
-                    break;
-                }
-            }
-
-            return nestedType;
+            return nestedTypes.FirstOrDefault(type => type.Name.Contains(method));
         }
 
         internal static IEnumerator TriggerPlayerPickStart()
@@ -390,12 +379,11 @@ namespace UnboundLib.Patches
             // Do not call GameOver in RPCA_NextRound. We move game over check to RoundTransition to handle triggers better.
             var list = instructions.ToList();
             var newInstructions = new List<CodeInstruction>();
-
-            var m_gameOver = ExtensionMethods.GetMethodInfo(typeof(GM_ArmsRace), "GameOver");
+            var mGameOver = ExtensionMethods.GetMethodInfo(typeof(GM_ArmsRace), "GameOver");
 
             for (int i = 0; i < list.Count; i++)
             {
-                if (list[i].opcode == OpCodes.Ldarg_2 && list[i + 1].Calls(m_gameOver))
+                if (list[i].opcode == OpCodes.Ldarg_2 && list[i + 1].Calls(mGameOver))
                 {
                     newInstructions.Add(list[i]);
                     newInstructions.Add(new CodeInstruction(OpCodes.Ldarg_1));

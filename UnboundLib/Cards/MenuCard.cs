@@ -18,7 +18,8 @@ namespace UnboundLib.Cards
                 scaleShake = GetComponentInChildren<ScaleShake>();
                 return;
             }
-            if (scaleShake.targetScale == 1f) return;
+
+            if (scaleShake.targetScale <= 1f) return;
             scaleShake.targetScale = 1f;
         }
     }

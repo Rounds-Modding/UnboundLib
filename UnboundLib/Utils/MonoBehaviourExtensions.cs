@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Photon.Pun;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using UnboundLib.Networking;
 using UnityEngine;
-using Photon.Pun;
 
-namespace UnboundLib
+namespace UnboundLib.Utils
 {
     // stolen from RWF
-
     public static class MonoBehaviourExtensions
     {
         private static readonly ConditionalWeakTable<MonoBehaviour, HashSet<Tuple<int, string>>> pendingRequests = new ConditionalWeakTable<MonoBehaviour, HashSet<Tuple<int, string>>>();
@@ -79,4 +79,3 @@ namespace UnboundLib
         }
     }
 }
-

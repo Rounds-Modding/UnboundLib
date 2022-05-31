@@ -36,19 +36,11 @@ namespace UnboundLib.Patches
 
             for (int i = 0; i < list.Count; i++)
             {
-                if (
-                    list[i].LoadsField(f_pmInstance) &&
-                    list[i + 2].OperandIs(m_playerDied) &&
-                    list[i + 4].Calls(m_addPlayerDied)
-                )
+                if (list[i].LoadsField(f_pmInstance) && list[i + 2].OperandIs(m_playerDied) && list[i + 4].Calls(m_addPlayerDied))
                 {
                     i += 4;
                 }
-                else if (
-                  list[i].LoadsField(f_pmInstance) &&
-                  list[i + 2].Calls(m_getPlayerJoinedAction) &&
-                  list[i + 8].Calls(m_setPlayerJoinedAction)
-              )
+                else if (list[i].LoadsField(f_pmInstance) && list[i + 2].Calls(m_getPlayerJoinedAction) && list[i + 8].Calls(m_setPlayerJoinedAction))
                 {
                     i += 8;
                 }

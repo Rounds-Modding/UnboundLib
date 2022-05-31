@@ -7,24 +7,12 @@ namespace UnboundLib.Utils.UI
 {
     public class ModalHandler : MonoBehaviour
     {
-        private Text title
-        {
-            get { return transform.Find("Foreground/Title Bar/Title").GetComponent<Text>(); }
-        }
-        private TextMeshProUGUI content
-        {
-            get { return transform.Find("Foreground/Content/Text").GetComponent<TextMeshProUGUI>(); }
-        }
-        private GameObject confirmButton
-        {
-            get { return transform.Find("Foreground/Buttons/Got It").gameObject; }
-        }
-        private GameObject cancelButton
-        {
-            get { return transform.Find("Foreground/Buttons/Whatever").gameObject; }
-        }
+        private Text title => transform.Find("Foreground/Title Bar/Title").GetComponent<Text>();
+        private TextMeshProUGUI content => transform.Find("Foreground/Content/Text").GetComponent<TextMeshProUGUI>();
+        private GameObject confirmButton => transform.Find("Foreground/Buttons/Got It").gameObject;
+        private GameObject cancelButton => transform.Find("Foreground/Buttons/Whatever").gameObject;
 
-        void Start()
+        private void Start()
         {
             // automatically destroy the modal 1 second after it's been dismissed
             confirmButton.GetComponent<Button>().onClick.AddListener(() => Destroy(gameObject, 1f));
@@ -51,7 +39,7 @@ namespace UnboundLib.Utils.UI
             SetupButton(cancelButton, text, action);
             return this;
         }
-        private void SetupButton(GameObject root, string text, UnityAction action)
+        private static void SetupButton(GameObject root, string text, UnityAction action)
         {
             root.GetComponent<Button>().onClick.AddListener(action);
             foreach (var t in root.GetComponentsInChildren<TextMeshProUGUI>())

@@ -47,7 +47,7 @@ namespace UnboundLib.Utils.UI
         internal void CreateModOptions(bool firstTime)
         {
             // create mod options
-            Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.2f : 0, () =>
+            Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.1f : 0, () =>
             {
                 CreatModOptionsMenu(MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, null, false);
                 CreatModOptionsMenu(UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main").gameObject, UIHandler.instance.transform.Find("Canvas/EscapeMenu").gameObject, true);
@@ -77,7 +77,7 @@ namespace UnboundLib.Utils.UI
             if (!pauseMenu)
             {
                 // Fix main menu layout
-                void fixMainMenuLayout()
+                void FixMainMenuLayout()
                 {
                     var mainMenu = MainMenuHandler.instance.transform.Find("Canvas/ListSelector");
                     var logo = mainMenu.Find("Main/Group/Rounds_Logo2_White").gameObject.AddComponent<LayoutElement>();
@@ -91,7 +91,7 @@ namespace UnboundLib.Utils.UI
                 var visibleObj = new GameObject("visible");
                 var visible = visibleObj.AddComponent<ActionOnBecameVisible>();
                 visibleObj.AddComponent<SpriteRenderer>();
-                visible.visibleAction += fixMainMenuLayout;
+                visible.visibleAction += FixMainMenuLayout;
                 visibleObj.transform.parent = parent.transform;
             }
 
