@@ -13,15 +13,12 @@ namespace UnboundLib.Networking
         public Dictionary<int, bool> ConnectedPlayers = new Dictionary<int, bool>();
         public Dictionary<int, int> PlayerPings = new Dictionary<int, int>();
         public Action<int, int> PingUpdateAction;
-
         public static PingMonitor instance;
-
         private int pingUpdate;
 
         private void Start()
         {
             if (PhotonNetwork.OfflineMode || PhotonNetwork.CurrentRoom == null) return;
-
             foreach (var player in PhotonNetwork.CurrentRoom.Players.Values)
             {
                 ConnectedPlayers.Add(player.ActorNumber, true);
@@ -44,7 +41,6 @@ namespace UnboundLib.Networking
         {
             // We only check ping if connected to a room.
             if (PhotonNetwork.OfflineMode) return;
-            
             pingUpdate++;
             // We want to check our ping every 25 frames, roughly every 2 secs.
             if (pingUpdate <= 25) return;
@@ -67,7 +63,7 @@ namespace UnboundLib.Networking
             }
 
             // Run an RPC after a half second, to give the client time to connect to the lobby completely.
-            this.ExecuteAfterSeconds(0.5f, () =>
+            this.ExecuteAfterFrames(15, () =>
             {
                 NetworkingManager.RPC_Others(typeof(PingMonitor), nameof(RPCA_UpdatePings));
                 RPCA_UpdatePings();
@@ -121,7 +117,7 @@ namespace UnboundLib.Networking
         public Player[] GetPlayersByOwnerActorNumber(int actorNumber)
         {
             // Get each player with the same actor number
-            var players = PlayerManager.instance.players.Where((player) => player.data.view.OwnerActorNr == actorNumber).ToArray();
+            var players = PlayerManager.instance.players.Where(player => player.data.view.OwnerActorNr == actorNumber).ToArray();
 
             // If it's not an empty array, return it or default to null.
             return players.Length > 0 ? players : null;
@@ -129,15 +125,14 @@ namespace UnboundLib.Networking
 
         public PingColor GetPingColors(int ping)
         {
-            var gradient = GetColorGradient(Normalize(ping, 60, 200, 0, 1));
+            var gradient = GetColorGradient(Normalize(ping, 40, 220, 0, 1));
             PingColor result = new PingColor("#" + ColorUtility.ToHtmlStringRGB(gradient));
-
             return result;
         }
 
         private static float Normalize(float val, float valmin, float valmax, float min, float max)
         {
-            return (((val - valmin) / (valmax - valmin)) * (max - min)) + min;
+            return ((val - valmin) / (valmax - valmin) * (max - min)) + min;
         }
 
         private static Color GetColorGradient(float percentage)
@@ -149,11 +144,10 @@ namespace UnboundLib.Networking
             colorKeys[0].time = 0;
             colorKeys[1].color = Color.yellow;
             colorKeys[1].time = 0.5f;
-            colorKeys[2].color = Color.green;
+            colorKeys[2].color = Color.red;
             colorKeys[2].time = 1;
 
             gradient.SetKeys(colorKeys, new GradientAlphaKey[3]);
-
             return gradient.Evaluate(percentage);
         }
 
