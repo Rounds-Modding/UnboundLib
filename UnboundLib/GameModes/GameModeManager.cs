@@ -89,7 +89,7 @@ namespace UnboundLib.GameModes
 
                 content.GetComponent<VerticalLayoutGroup>().spacing = 60;
 
-                UnityEngine.Object.DestroyImmediate(origGameModeGo.gameObject);
+                Object.DestroyImmediate(origGameModeGo.gameObject);
 
                 // do not destroy local button since RWF relies on it
                 MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group/Local").gameObject.SetActive(false);
@@ -152,7 +152,7 @@ namespace UnboundLib.GameModes
             }
             for (int i = 0; i < objsToDestroy.Count(); i++)
             {
-                UnityEngine.Object.DestroyImmediate(objsToDestroy[i]);
+                Object.DestroyImmediate(objsToDestroy[i]);
             }
 
             var characterSelectPage = characterSelectGo.GetComponent<ListMenuPage>();
@@ -384,7 +384,7 @@ namespace UnboundLib.GameModes
             // do not destroy the sandbox or versus gamemodes
             if (id == SandBoxID || id == ArmsRaceID) { return; }
             var gameMode = GameObject.Find("/Game/Code/Game Modes").transform.Find($"[GameMode] {id}")?.gameObject;
-            if (gameMode != null) { UnityEngine.Object.Destroy(gameMode); }
+            if (gameMode != null) { Object.Destroy(gameMode); }
         }
     }
 }

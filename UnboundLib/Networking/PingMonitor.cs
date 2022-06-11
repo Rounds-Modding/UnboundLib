@@ -42,7 +42,7 @@ namespace UnboundLib.Networking
             // We only check ping if connected to a room.
             if (PhotonNetwork.OfflineMode) return;
             pingUpdate++;
-            // We want to check our ping every 25 frames, roughly every 2 secs.
+            // We want to check our ping every 25 frames.
             if (pingUpdate <= 25) return;
             pingUpdate = 0;
             RPCA_UpdatePings();

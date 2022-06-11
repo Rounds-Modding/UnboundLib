@@ -226,7 +226,10 @@ namespace UnboundLib.Utils
 
         public static string GetVisualName(string path)
         {
-            var visualName = path.Replace(" ", "").Replace("Assets", "").Replace(".unity", "");
+            var visualName = path
+                .Replace(" ", "")
+                .Replace("Assets", "")
+                .Replace(".unity", "");
             visualName = Regex.Replace(visualName, "/.*/", string.Empty);
             visualName = visualName.Replace("/", "_");
             visualName = visualName.Replace("\\", "_");
@@ -292,14 +295,26 @@ namespace UnboundLib.Utils
                 var bestMatches = 0f;
 
                 // parse message
-                var formattedMessage = message.ToUpper().Replace(" ", "_").Replace("/", "");
+                var formattedMessage = message.ToUpper()
+                    .Replace(" ", "_")
+                    .Replace("/", "");
                 for (var i = 0; i < currentLevels.Length; i++)
                 {
-                    var text = currentLevels[i].ToUpper().Replace(" ", "").Replace("ASSETS", "").Replace(".UNITY", "");
+                    var text = currentLevels[i].ToUpper()
+                        .Replace(" ", "")
+                        .Replace("ASSETS", "")
+                        .Replace(".UNITY", "");
                     text = Regex.Replace(text, "/.*/", string.Empty);
                     text = text.Replace("/", "");
 
-                    var currentMatches = formattedMessage.Where((t, j) => text.Length > j && t == text[j]).Sum(t => 1f / formattedMessage.Length);
+                    var currentMatches = 0f;
+                    for (int j = 0; j < formattedMessage.Length; j++)
+                    {
+                        if (text.Length > j && formattedMessage[j] == text[j])
+                        {
+                            currentMatches += 1f / formattedMessage.Length;
+                        }
+                    }
                     currentMatches -= Mathf.Abs(formattedMessage.Length - text.Length) * 0.001f;
                     if (!(currentMatches > 0.1f) || !(currentMatches > bestMatches)) continue;
                     bestMatches = currentMatches;

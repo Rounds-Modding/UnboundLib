@@ -24,9 +24,9 @@ namespace UnboundLib.Utils.UI
                 links.transform.position += new Vector3(0f, 0f, 100f);
 
                 Link discordLink = links.transform.GetChild(0).gameObject.AddComponent<Link>();
-                discordLink.link = "https://discord.gg/zUtsjXWeWk";
+                discordLink._Links = "https://discord.gg/zUtsjXWeWk";
                 Link thunderstoreLink = links.transform.GetChild(1).gameObject.AddComponent<Link>();
-                thunderstoreLink.link = "https://rounds.thunderstore.io/?ordering=most-downloaded";
+                thunderstoreLink._Links = "https://rounds.thunderstore.io/?ordering=most-downloaded";
                 return links;
             }
         }
@@ -48,7 +48,7 @@ namespace UnboundLib.Utils.UI
 
     public class Link : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
     {
-        public string link = "";
+        public string _Links = "";
         private const float HoverScale = 1.05f;
         private const float ClickScale = 0.95f;
         private Vector3 defaultScale;
@@ -70,7 +70,7 @@ namespace UnboundLib.Utils.UI
         {
             if (inBounds && pressed)
             {
-                Application.OpenURL(link);
+                Application.OpenURL(_Links);
             }
             pressed = false;
             if (!inBounds)
@@ -123,12 +123,12 @@ namespace UnboundLib.Utils.UI
 
         private void LateUpdate()
         {
-            // is the cursor in the correct region (above the text area) and furthermore, in the link region?
+            // is the cursor in the correct region (above the text area) and furthermore, in the _Links region?
             var isHoveringOver = TMP_TextUtilities.IsIntersectingRectTransform(pTextMeshPro.rectTransform, Input.mousePosition, pCamera);
             int linkIndex = isHoveringOver ? TMP_TextUtilities.FindIntersectingLink(pTextMeshPro, Input.mousePosition, pCamera)
                 : -1;
 
-            // Clear previous link selection if one existed.
+            // Clear previous _Links selection if one existed.
             if (pCurrentLink != -1 && linkIndex != pCurrentLink)
             {
                 // Debug.Log("Clear old selection");
@@ -137,7 +137,7 @@ namespace UnboundLib.Utils.UI
                 pCurrentLink = -1;
             }
 
-            // Handle new link selection.
+            // Handle new _Links selection.
             if (linkIndex == -1 || linkIndex == pCurrentLink) return;
             
             // Debug.Log("New selection");
@@ -145,7 +145,7 @@ namespace UnboundLib.Utils.UI
             if (doesColorChangeOnHover)
                 pOriginalVertexColors = SetLinkToColor(linkIndex, (_linkIdx, _vertIdx) => hoverColor);
 
-            // Debug.Log(string.Format("isHovering: {0}, link: {1}", isHoveringOver, linkIndex));
+            // Debug.Log(string.Format("isHovering: {0}, _Links: {1}", isHoveringOver, linkIndex));
         }
 
         public void OnPointerClick(PointerEventData eventData)
@@ -155,11 +155,11 @@ namespace UnboundLib.Utils.UI
             int linkIndex = TMP_TextUtilities.FindIntersectingLink(pTextMeshPro, Input.mousePosition, pCamera);
             if (linkIndex == -1) return;
 
-            // was a link clicked?
+            // was a _Links clicked?
             TMP_LinkInfo linkInfo = pTextMeshPro.textInfo.linkInfo[linkIndex];
 
             // Debug.Log(string.Format("id: {0}, text: {1}", linkInfo.GetLinkID(), linkInfo.GetLinkText()));
-            // open the link id as a url, which is the metadata we added in the text field
+            // open the _Links id as a url, which is the metadata we added in the text field
             Application.OpenURL(linkInfo.GetLinkID());
         }
 
@@ -170,7 +170,7 @@ namespace UnboundLib.Utils.UI
             var oldVertColors = new List<Color32[]>(); // store the old character colors
 
             for (int i = 0; i < linkInfo.linkTextLength; i++)
-            { // for each character in the link string
+            { // for each character in the _Links string
                 int characterIndex = linkInfo.linkTextfirstCharacterIndex + i; // the character index into the entire text
                 var charInfo = pTextMeshPro.textInfo.characterInfo[characterIndex];
                 int meshIndex = charInfo.materialReferenceIndex; // Get the index of the material / sub text object used by this character.

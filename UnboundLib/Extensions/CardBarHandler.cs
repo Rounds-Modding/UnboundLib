@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using UnityEngine.UI.ProceduralImage;
-using UnboundLib;
 using System.Collections.Generic;
 
 namespace UnboundLib.Extensions
@@ -11,6 +10,7 @@ namespace UnboundLib.Extensions
         {
             while (instance.transform.childCount > 3)
             {
+
                 Object.DestroyImmediate(instance.transform.GetChild(3).gameObject);
             }
 

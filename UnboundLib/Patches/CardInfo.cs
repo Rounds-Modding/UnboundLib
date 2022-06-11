@@ -14,9 +14,6 @@ namespace UnboundLib.Patches
     [HarmonyPatch(typeof(CardInfo), "Awake")]
     public class CardInfoPatch
     {
-        internal static Color uncommonColor = new Color(0, 0.5f, 1, 1);
-        internal static Color rareColor = new Color(1, 0.2f, 1, 1);
-
         static Exception Finalizer(Exception __exception)
         {
             return __exception is NullReferenceException ? null : __exception;

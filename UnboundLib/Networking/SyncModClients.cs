@@ -358,7 +358,7 @@ namespace UnboundLib.Networking
 
         private void Update()
         {
-            if (!(Time.time > startTime + delay)) return;
+            if(Time.time <= startTime + delay) return;
             
             if (update)
             {
@@ -429,13 +429,13 @@ namespace UnboundLib.Networking
         private void Start()
         {
             guiStyleFore = new GUIStyle
-                {
-                    richText = true,
-                    normal = {textColor = Color.white},
-                    alignment = TextAnchor.UpperLeft,
-                    wordWrap = false,
-                    stretchWidth = true
-                };
+            {
+                richText = true,
+                normal = { textColor = Color.white },
+                alignment = TextAnchor.UpperLeft,
+                wordWrap = false,
+                stretchWidth = true
+            };
             var background = new Texture2D(1, 1);
             background.SetPixel(0,0, Color.gray);
             background.Apply();

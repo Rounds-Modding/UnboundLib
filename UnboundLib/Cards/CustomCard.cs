@@ -38,9 +38,10 @@ namespace UnboundLib.Cards
             GameObject modNameObj = new GameObject("ModNameText");
             // find bottom left edge object
             RectTransform[] allChildrenRecursive = gameObject.GetComponentsInChildren<RectTransform>();
-            GameObject bottomLeftCorner = allChildrenRecursive.FirstOrDefault(obj => obj.gameObject.name == "EdgePart (2)")?.gameObject;
-            if (bottomLeftCorner != null)
+            var edgeTransform = allChildrenRecursive.FirstOrDefault(obj => obj.gameObject.name == "EdgePart (2)");
+            if (edgeTransform != null)
             {
+                GameObject bottomLeftCorner = edgeTransform.gameObject;
                 modNameObj.gameObject.transform.SetParent(bottomLeftCorner.transform);
             }
 
@@ -48,7 +49,7 @@ namespace UnboundLib.Cards
             modText.text = GetModName().Sanitize();
             modNameObj.transform.localEulerAngles = new Vector3(0f, 0f, 135f);
 
-            modNameObj.transform.localScale = new Vector3(1f, 1f, 1f);
+            modNameObj.transform.localScale = Vector3.one;
             modNameObj.AddComponent<SetLocalPos>();
             modText.alignment = TextAlignmentOptions.Bottom;
             modText.alpha = 0.1f;
@@ -234,7 +235,10 @@ namespace UnboundLib.Cards
 
         private static void ResetOnlyCharacterStatModifiersStats(CharacterStatModifiers characterStatModifiers)
         {
-            foreach (var attachedObject in characterStatModifiers.objectsAddedToPlayer) Destroy(attachedObject);
+            for (int i = 0; i < characterStatModifiers.objectsAddedToPlayer.Count; i++)
+            {
+                GameObject.Destroy(characterStatModifiers.objectsAddedToPlayer[i]);
+            }
             characterStatModifiers.objectsAddedToPlayer.Clear();
             characterStatModifiers.sizeMultiplier = 1f;
             characterStatModifiers.health = 1f;

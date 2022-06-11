@@ -71,11 +71,11 @@ namespace UnboundLib.Utils.UI
                     creditsMenus[modName] = MenuHandler.CreateMenu(modName, null, CreditsMenu, 30);
                 }
 
-                // add link to modding discord
+                // add _Links to modding discord
                 MenuHandler.CreateText(" ", CreditsMenu, out TextMeshProUGUI _, 60);
-                MenuHandler.CreateText("<link=\"https://discord.gg/Fyr3YnWduJ\">" + "ROUNDS MODDING COMMUNITY" + "</link>", CreditsMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
-                // add link to Thunderstore
-                MenuHandler.CreateText("<link=\"https://rounds.thunderstore.io/?ordering=most-downloaded\"> " + "THUNDERSTORE.IO" + "</link>", CreditsMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
+                MenuHandler.CreateText("<_Links=\"https://discord.gg/Fyr3YnWduJ\">" + "ROUNDS MODDING COMMUNITY" + "</_Links>", CreditsMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
+                // add _Links to Thunderstore
+                MenuHandler.CreateText("<_Links=\"https://rounds.thunderstore.io/?ordering=most-downloaded\"> " + "THUNDERSTORE.IO" + "</_Links>", CreditsMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
 
                 // add credits for each mod
 
@@ -110,7 +110,7 @@ namespace UnboundLib.Utils.UI
                 if (i < credits.linkURLs.Length) { linkURL = credits.linkURLs[i]; }
                 if (linkText != "") 
                 {
-                    MenuHandler.CreateText("<link=\"" + linkURL + "\">" + linkText.ToUpper() + "</link>", parentMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
+                    MenuHandler.CreateText("<_Links=\"" + linkURL + "\">" + linkText.ToUpper() + "</_Links>", parentMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
                 }
             }
 

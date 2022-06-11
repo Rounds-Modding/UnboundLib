@@ -237,7 +237,9 @@ namespace UnboundLib
             {
                 if (PhotonNetwork.IsMasterClient)
                 {
-                    NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake, GameModeManager.CurrentHandlerID, GameModeManager.CurrentHandler?.Settings);
+                    NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake,
+                        GameModeManager.CurrentHandlerID,
+                        GameModeManager.CurrentHandler?.Settings);
                 }
                 else
                 {
@@ -258,12 +260,9 @@ namespace UnboundLib
 
             // fetch card to use as a template for all custom cards
             CardInfo huge = CardChoice.instance.cards.FirstOrDefault(c => c.cardName.ToLower() == "huge");
-            if (huge != null)
-            {
-                templateCard = Instantiate(huge.gameObject, Vector3.up * 100f, Quaternion.identity)
-                    .GetComponent<CardInfo>();
-                templateCard.cardBase = huge.cardBase;
-            }
+            templateCard = Instantiate(huge.gameObject, Vector3.up * 100f, Quaternion.identity)
+                .GetComponent<CardInfo>();
+            templateCard.cardBase = huge.cardBase;
 
             templateCard.gameObject.name = "__UNBOUND_TEMPLATE_CARD__";
             DestroyImmediate(templateCard.transform.GetChild(0).gameObject);
@@ -345,9 +344,12 @@ namespace UnboundLib
             GUILayout.Label("UnboundLib Options\nThis menu is deprecated");
 
             GUILayout.Label("Mod Options:");
-            foreach (ModOptions.GUIListener data in ModOptions.GUIListeners.Keys.Select(md => ModOptions.GUIListeners[md]).Where(data => GUILayout.Button(data.modName)))
+            foreach (var data in ModOptions.GUIListeners.Values)
             {
-                data.guiEnabled = true;
+                if (GUILayout.Button(data.modName))
+                {
+                    data.guiEnabled = true;
+                }
             }
             GUILayout.EndVertical();
         }

@@ -186,8 +186,7 @@ namespace UnboundLib.Utils.UI
 
                     void CardAction()
                     {
-                        bool cardEnabled = cardValue.enabled;
-                        if (cardEnabled)
+                        if (cardValue.enabled)
                         {
                             CardManager.DisableCard(cardValue.cardInfo);
                         }
