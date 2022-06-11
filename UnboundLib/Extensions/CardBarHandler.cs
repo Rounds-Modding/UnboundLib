@@ -11,18 +11,18 @@ namespace UnboundLib.Extensions
         {
             while (instance.transform.childCount > 3)
             {
-                GameObject.DestroyImmediate(instance.transform.GetChild(3).gameObject);
+                Object.DestroyImmediate(instance.transform.GetChild(3).gameObject);
             }
 
             int numPlayers = PlayerManager.instance.players.Count;
             var barGo = instance.transform.GetChild(0).gameObject;
 
-            var deltaY = -50;
+            const int deltaY = -50;
             var cardBars = new List<CardBar>();
 
             for (int i = 0; i < numPlayers; i++)
             {
-                var newBarGo = GameObject.Instantiate(barGo, instance.transform);
+                var newBarGo = Object.Instantiate(barGo, instance.transform);
                 newBarGo.SetActive(true);
                 newBarGo.name = "Bar" + (i + 1);
                 newBarGo.transform.localScale = Vector3.one;

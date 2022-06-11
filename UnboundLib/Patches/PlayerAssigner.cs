@@ -55,8 +55,6 @@ namespace UnboundLib.Patches
                     yield return ins;
                 }
             }
-
-            
         }
     }
 }

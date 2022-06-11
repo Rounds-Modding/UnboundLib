@@ -5,7 +5,6 @@ namespace UnboundLib.Utils.UI
 {
     public class ActionOnBecameVisible : MonoBehaviour
     {
-
         public Action visibleAction = () => { };
 
         private void OnBecameVisible()
