@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 using UnboundLib.Networking;
 using UnityEngine;
 
-namespace UnboundLib.Utils
+namespace UnboundLib
 {
     // stolen from RWF
     public static class MonoBehaviourExtensions

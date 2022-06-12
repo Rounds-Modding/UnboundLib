@@ -3,9 +3,10 @@ using Photon.Pun;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnboundLib.Networking;
 using UnityEngine;
 
-namespace UnboundLib.Networking
+namespace UnboundLib
 {
     [DisallowMultipleComponent]
     public class PingMonitor : MonoBehaviourPunCallbacks

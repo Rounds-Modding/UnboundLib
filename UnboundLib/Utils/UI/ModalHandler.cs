@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace UnboundLib.Utils.UI
+namespace UnboundLib
 {
     public class ModalHandler : MonoBehaviour
     {
