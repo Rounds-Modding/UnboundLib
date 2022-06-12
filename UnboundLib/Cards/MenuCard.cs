@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace UnboundLib.Utils.UI
+namespace UnboundLib.Cards
 {
     internal class MenuCard : MonoBehaviour
     {
@@ -18,7 +18,8 @@ namespace UnboundLib.Utils.UI
                 scaleShake = GetComponentInChildren<ScaleShake>();
                 return;
             }
-            if (scaleShake.targetScale == 1f) return;
+
+            if (scaleShake.targetScale <= 1f) return;
             scaleShake.targetScale = 1f;
         }
     }

@@ -50,7 +50,7 @@ namespace UnboundLib.Utils.UI
         private readonly List<string> levelsThatNeedToRedrawn = new List<string>();
         private readonly List<string> levelsThatHaveBeenRedrawn = new List<string>();
 
-        // List of every lvlObj
+        // List of every mapObject
         public readonly List<GameObject> lvlObjs = new List<GameObject>();
 
         // Right click menu variables
@@ -214,20 +214,20 @@ namespace UnboundLib.Utils.UI
                     }
 
                     var parentScroll = ScrollViews[level.Value.category].Find("Viewport/Content");
-                    var lvlObj = Instantiate(mapObj, parentScroll);
-                    lvlObj.SetActive(true);
+                    var mapObject = Instantiate(mapObj, parentScroll);
+                    mapObject.SetActive(true);
 
-                    lvlObj.name = level.Key;
+                    mapObject.name = level.Key;
 
-                    lvlObj.GetComponentInChildren<TextMeshProUGUI>().text = LevelManager.GetVisualName(level.Key);
-                    lvlObj.AddComponent<LvlObj>();
-                    lvlObj.GetComponent<Button>().onClick.AddListener(() =>
+                    mapObject.GetComponentInChildren<TextMeshProUGUI>().text = LevelManager.GetVisualName(level.Key);
+                    mapObject.AddComponent<LvlObj>();
+                    mapObject.GetComponent<Button>().onClick.AddListener(() =>
                     {
                         if (Input.GetKey(KeyCode.LeftShift))
                         {
                             level.Value.selected = !level.Value.selected;
 
-                            UpdateVisualsLevelObj(lvlObj);
+                            UpdateVisualsLevelObj(mapObject);
                             return;
                         }
 
@@ -235,25 +235,25 @@ namespace UnboundLib.Utils.UI
                         {
                             LevelManager.DisableLevel(level.Key);
                             level.Value.enabled = false;
-                            UpdateVisualsLevelObj(lvlObj);
+                            UpdateVisualsLevelObj(mapObject);
                         }
                         else
                         {
                             LevelManager.EnableLevel(level.Key);
                             level.Value.enabled = true;
-                            UpdateVisualsLevelObj(lvlObj);
+                            UpdateVisualsLevelObj(mapObject);
                         }
                     });
-                    buttonsToDisable.Add(lvlObj.GetComponent<Button>());
+                    buttonsToDisable.Add(mapObject.GetComponent<Button>());
 
-                    lvlObjs.Add(lvlObj);
-                    UpdateVisualsLevelObj(lvlObj);
+                    lvlObjs.Add(mapObject);
+                    UpdateVisualsLevelObj(mapObject);
                     if (!Unbound.config.Bind("Levels: " + level.Value.category, LevelManager.GetVisualName(level.Key), true).Value)
                     {
                         LevelManager.DisableLevel(level.Key);
-                        UpdateVisualsLevelObj(lvlObj);
+                        UpdateVisualsLevelObj(mapObject);
                     }
-                    UpdateImage(lvlObj, Path.Combine(Path.Combine(Paths.ConfigPath, "LevelImages"), LevelManager.GetVisualName(level.Key) + ".png"));
+                    UpdateImage(mapObject, Path.Combine(Path.Combine(Paths.ConfigPath, "LevelImages"), LevelManager.GetVisualName(level.Key) + ".png"));
                 }
 
                 var viewingText = mapMenuCanvas.transform.Find("MapMenu/Top/Viewing").gameObject.GetComponentInChildren<TextMeshProUGUI>();
@@ -324,7 +324,7 @@ namespace UnboundLib.Utils.UI
             });
         }
 
-        // Update the visuals of a lvlObj
+        // Update the visuals of a mapObject
         public static void UpdateVisualsLevelObj(GameObject lvlObj)
         {
             if (!LevelManager.levels.ContainsKey(lvlObj.name)) return;
@@ -342,12 +342,12 @@ namespace UnboundLib.Utils.UI
             }
         }
 
-        // Update the image of a lvlObj
-        private static void UpdateImage(GameObject lvlObj, string imagePath)
+        // Update the image of a mapObject
+        private static void UpdateImage(GameObject mapObject, string imagePath)
         {
             if (!File.Exists(imagePath)) return;
 
-            var image = lvlObj.transform.Find("Image").gameObject;
+            var image = mapObject.transform.Find("Image").gameObject;
             var fileData = File.ReadAllBytes(imagePath);
             var img = new Texture2D(1, 1);
             img.LoadImage(fileData);
@@ -368,15 +368,15 @@ namespace UnboundLib.Utils.UI
             NetworkConnectionHandler.instance.NetworkRestart();
             isDrawingLevels = false;
 
-            foreach (var lvl in LevelManager.levels.Where(lvl => lvl.Value.selected))
+            foreach (var map in LevelManager.levels.Where(lvl => lvl.Value.selected))
             {
-                lvl.Value.selected = false;
+                map.Value.selected = false;
             }
 
-            foreach (var lvlObj in lvlObjs)
+            foreach (var mapObject in lvlObjs)
             {
-                UpdateVisualsLevelObj(lvlObj);
-                UpdateImage(lvlObj, Path.Combine(Path.Combine(Paths.ConfigPath, "LevelImages"), LevelManager.GetVisualName(lvlObj.name) + ".png"));
+                UpdateVisualsLevelObj(mapObject);
+                UpdateImage(mapObject, Path.Combine(Path.Combine(Paths.ConfigPath, "LevelImages"), LevelManager.GetVisualName(mapObject.name) + ".png"));
             }
 
             foreach (var obj in mapMenuCanvas.scene.GetRootGameObjects())
@@ -552,7 +552,7 @@ namespace UnboundLib.Utils.UI
 #endif
         }
 
-        // This is executed when right Clicking on a lvlObj
+        // This is executed when right Clicking on a mapObject
         public void RightClickedAt(Vector2 position, GameObject obj)
         {
             if (GameManager.instance.isPlaying) return;

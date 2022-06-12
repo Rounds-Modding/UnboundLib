@@ -119,6 +119,7 @@ namespace UnboundLib.Utils.UI
 
             return textObject;
         }
+
         // Creates a UI Toggle
         public static GameObject CreateToggle(bool value, string text, GameObject parent, UnityAction<bool> onValueChangedAction = null, int fontSize = 60, bool forceUpper = true, Color? color = null, TMP_FontAsset font = null, Material fontMaterial = null, TextAlignmentOptions? alignmentOptions = null)
         {
@@ -221,7 +222,6 @@ namespace UnboundLib.Utils.UI
             slider.value = defaultValue;
             slider.transform.Find("Fill Area/Fill").GetComponent<Image>().color = sliderColor ?? new Color(0.902f, 0.902f, 0.902f, 1f);
             
-            
             inputField.text = slider.value.ToString();
             var slider1 = slider;
             inputField.onValueChanged.AddListener(arg1 =>
@@ -241,7 +241,6 @@ namespace UnboundLib.Utils.UI
             
             return sliderObject;
         }
-
 
         public static TextMeshProUGUI CreateTextAt(string text, Vector2 position)
         {

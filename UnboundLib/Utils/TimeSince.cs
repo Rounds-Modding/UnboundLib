@@ -9,14 +9,11 @@ namespace UnboundLib.Utils
 
         public static implicit operator float(TimeSince ts) => Time.realtimeSinceStartup - ts.time;
 
-        public static implicit operator TimeSince(float ts) => new TimeSince()
-        {
-            time = Time.realtimeSinceStartup - ts
-        };
+        public static implicit operator TimeSince(float ts) => new TimeSince { time = Time.realtimeSinceStartup - ts };
 
         public float Absolute => this.time;
 
-        public float Relative => (float) this;
+        public float Relative => this;
 
         public override string ToString() => string.Format("{0}", (object) this.Relative);
 

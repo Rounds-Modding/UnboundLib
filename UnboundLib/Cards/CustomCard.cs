@@ -18,9 +18,9 @@ namespace UnboundLib.Cards
         public ApplyCardStats cardStats;
         public CharacterStatModifiers statModifiers;
         public Block block;
-        private bool isPrefab = false;
+        private bool isPrefab;
 
-        void Awake()
+        private void Awake()
         {
             cardInfo = GetComponent<CardInfo>();
             gun = GetComponent<Gun>();
@@ -30,29 +30,32 @@ namespace UnboundLib.Cards
             SetupCard(cardInfo, gun, cardStats, statModifiers, block);
         }
 
-        void Start()
+        private void Start()
         {
-            if (!isPrefab)
+            if (isPrefab) return;
+            // add mod name text
+            // create blank object for text, and attach it to the canvas
+            GameObject modNameObj = new GameObject("ModNameText");
+            // find bottom left edge object
+            RectTransform[] allChildrenRecursive = gameObject.GetComponentsInChildren<RectTransform>();
+            var edgeTransform = allChildrenRecursive.FirstOrDefault(obj => obj.gameObject.name == "EdgePart (2)");
+            if (edgeTransform != null)
             {
-                // add mod name text
-                // create blank object for text, and attach it to the canvas
-                GameObject modNameObj = new GameObject("ModNameText");
-                // find bottom left edge object
-                RectTransform[] allChildrenRecursive = this.gameObject.GetComponentsInChildren<RectTransform>();
-                GameObject BottomLeftCorner = allChildrenRecursive.Where(obj => obj.gameObject.name == "EdgePart (2)").FirstOrDefault().gameObject;
-                modNameObj.gameObject.transform.SetParent(BottomLeftCorner.transform);
-                TextMeshProUGUI modText = modNameObj.gameObject.AddComponent<TextMeshProUGUI>();
-                modText.text = this.GetModName().Sanitize();
-                modNameObj.transform.localEulerAngles = new Vector3(0f, 0f, 135f);
-
-                modNameObj.transform.localScale = new Vector3(1f, 1f, 1f);
-                modNameObj.AddComponent<SetLocalPos>();
-                modText.alignment = TextAlignmentOptions.Bottom;
-                modText.alpha = 0.1f;
-                modText.fontSize = 54;
-
-                this.Callback();
+                GameObject bottomLeftCorner = edgeTransform.gameObject;
+                modNameObj.gameObject.transform.SetParent(bottomLeftCorner.transform);
             }
+
+            TextMeshProUGUI modText = modNameObj.gameObject.AddComponent<TextMeshProUGUI>();
+            modText.text = GetModName().Sanitize();
+            modNameObj.transform.localEulerAngles = new Vector3(0f, 0f, 135f);
+
+            modNameObj.transform.localScale = Vector3.one;
+            modNameObj.AddComponent<SetLocalPos>();
+            modText.alignment = TextAlignmentOptions.Bottom;
+            modText.alpha = 0.1f;
+            modText.fontSize = 54;
+
+            Callback();
         }
 
         protected abstract string GetTitle();
@@ -61,21 +64,30 @@ namespace UnboundLib.Cards
         protected abstract CardInfo.Rarity GetRarity();
         protected abstract GameObject GetCardArt();
         protected abstract CardThemeColor.CardThemeColorType GetTheme();
-        public virtual void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers)
-        {
 
-        }
+        public virtual void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers) { }
+
         public virtual void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers, Block block)
         {
             SetupCard(cardInfo, gun, cardStats, statModifiers);
         }
+
         public abstract void OnAddCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats);
-        public virtual void OnRemoveCard()
+
+        public virtual void OnReassignCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
+        {
+            OnReassignCard();
+        }
+        public virtual void OnReassignCard()
         { }
+
+        public virtual void OnRemoveCard() { }
+
         public virtual void OnRemoveCard(Player player, Gun gun, GunAmmo gunAmmo, CharacterData data, HealthHandler health, Gravity gravity, Block block, CharacterStatModifiers characterStats)
         {
             OnRemoveCard();
         }
+
         /// <summary>
         /// Returns if the card should be enabled when built. Cards that are not enabled do not appear in the Toggle Cards menu, nor can be spawned in game by any regular means
         /// </summary>
@@ -83,6 +95,7 @@ namespace UnboundLib.Cards
         {
             return true;
         }
+
         /// <summary>
         /// Returns the name of the mod this card is from. Should be unique.
         /// </summary>
@@ -90,6 +103,7 @@ namespace UnboundLib.Cards
         {
             return "Modded";
         }
+
         /// <summary>
         /// A callback method that is called each time the card is spawned in and fully instantiated
         /// </summary>
@@ -102,6 +116,7 @@ namespace UnboundLib.Cards
         {
             BuildCard<T>(null);
         }
+
         public static void BuildCard<T>(Action<CardInfo> callback) where T : CustomCard
         {
             Unbound.Instance.ExecuteAfterFrames(2, () =>
@@ -119,7 +134,7 @@ namespace UnboundLib.Cards
                 customCard.isPrefab = true;
 
                 // Apply card data
-                newCardInfo.cardStats = customCard.GetStats() ?? new CardInfoStat[0];
+                newCardInfo.cardStats = customCard.GetStats() ?? Array.Empty<CardInfoStat>();
                 newCardInfo.cardName = customCard.GetTitle();
                 newCard.gameObject.name = $"__{customCard.GetModName()}__{customCard.GetTitle()}".Sanitize();
                 newCardInfo.cardDestription = customCard.GetDescription();
@@ -136,11 +151,11 @@ namespace UnboundLib.Cards
                 {
                     // Add this card to the list of all custom cards
                     CardManager.activeCards.Add(newCardInfo);
-                    CardManager.activeCards = new ObservableCollection<CardInfo>(CardManager.activeCards.OrderBy(i => i.cardName));
+                    CardManager.activeCards = new ObservableCollection<CardInfo>(CardManager.activeCards.OrderBy(i => i.gameObject.name));
                     CardManager.activeCards.CollectionChanged += CardManager.CardsChanged;
                     // Register card with the toggle menu
-                    CardManager.cards.Add(newCardInfo.cardName,
-                        new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), newCardInfo.cardName, true), newCardInfo));
+                    CardManager.cards.Add(newCard.gameObject.name,
+                        new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), newCard.gameObject.name, true), newCardInfo));
                 }
 
                 // Post-creation clean up
@@ -158,6 +173,7 @@ namespace UnboundLib.Cards
                 DestroyImmediate(t.transform.GetChild(0).gameObject);
             }
         }
+
         private static void ResetOnlyGunStats(Gun gun)
         {
             gun.isReloading = false;
@@ -213,7 +229,7 @@ namespace UnboundLib.Cards
             gun.isProjectileGun = false;
             gun.defaultCooldown = 1f;
             gun.attackSpeedMultiplier = 1f;
-            gun.objectsToSpawn = new ObjectsToSpawn[0];
+            gun.objectsToSpawn = Array.Empty<ObjectsToSpawn>();
             gun.projectileColor = Color.black;
         }
 
@@ -221,7 +237,7 @@ namespace UnboundLib.Cards
         {
             for (int i = 0; i < characterStatModifiers.objectsAddedToPlayer.Count; i++)
             {
-                GameObject.Destroy(characterStatModifiers.objectsAddedToPlayer[i]);
+                Destroy(characterStatModifiers.objectsAddedToPlayer[i]);
             }
             characterStatModifiers.objectsAddedToPlayer.Clear();
             characterStatModifiers.sizeMultiplier = 1f;
@@ -261,16 +277,15 @@ namespace UnboundLib.Cards
             block.delayOtherActions = false;
         }
 
-        class SetLocalPos : MonoBehaviour
+        private class SetLocalPos : MonoBehaviour
         {
             private readonly Vector3 localpos = new Vector3(-50f, -50f, 0f);
-            void Update()
+
+            private void Update()
             {
-                if (gameObject.transform.localPosition != localpos)
-                {
-                    gameObject.transform.localPosition = localpos;
-                    Destroy(this, 1f);
-                }
+                if (gameObject.transform.localPosition == localpos) return;
+                gameObject.transform.localPosition = localpos;
+                Destroy(this, 1f);
             }
         }
 

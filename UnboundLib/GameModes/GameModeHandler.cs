@@ -66,19 +66,22 @@ namespace UnboundLib.GameModes
         public virtual void PlayerLeft(Player leftPlayer)
         {
             List<Player> remainingPlayers = PlayerManager.instance.players.Where(p => p != leftPlayer).ToList();
-            int playersAlive = remainingPlayers.Where(p => !p.data.dead).Count();
+            int playersAlive = remainingPlayers.Count(p => !p.data.dead);
 
             if (!leftPlayer.data.dead)
             {
                 try
                 {
-                    this.PlayerDied(leftPlayer, playersAlive);
+                    PlayerDied(leftPlayer, playersAlive);
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
             }
 
             // get new playerIDs
-            Dictionary<Player, int> newPlayerIDs = new Dictionary<Player, int>() { };
+            Dictionary<Player, int> newPlayerIDs = new Dictionary<Player, int>();
             int playerID = 0;
             foreach (Player player in remainingPlayers.OrderBy(p => p.playerID))
             {
@@ -89,11 +92,12 @@ namespace UnboundLib.GameModes
             // fix cardbars by reassigning CardBarHandler.cardBars
             // this leaves the disconnected player(s)' bar unchanged, since removing it can cause issues with other mods
             List<CardBar> cardBars = ((CardBar[]) CardBarHandler.instance.GetFieldValue("cardBars")).ToList();
-            List<CardBar> newCardBars = new List<CardBar>() { };
-            foreach (Player player in newPlayerIDs.Keys.OrderBy(p => newPlayerIDs[p]))
-            {
-                newCardBars.Add(cardBars[player.playerID]);
-            }
+            List<CardBar> newCardBars = new List<CardBar>();
+            newCardBars.AddRange(
+                from p in newPlayerIDs.Keys
+                orderby newPlayerIDs[p]
+                select cardBars[p.playerID]
+            );
             CardBarHandler.instance.SetFieldValue("cardBars", newCardBars.ToArray());
 
             // reassign playerIDs
@@ -103,7 +107,7 @@ namespace UnboundLib.GameModes
             }
 
             // reassign teamIDs
-            Dictionary<int, List<Player>> teams = new Dictionary<int, List<Player>>() { };
+            Dictionary<int, List<Player>> teams = new Dictionary<int, List<Player>>();
             foreach (Player player in remainingPlayers.OrderBy(p=>p.teamID).ThenBy(p=>p.playerID))
             {
                 if (!teams.ContainsKey(player.teamID)) { teams[player.teamID] = new List<Player>() { }; }
