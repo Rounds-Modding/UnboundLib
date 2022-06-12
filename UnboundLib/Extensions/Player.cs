@@ -30,7 +30,10 @@ namespace UnboundLib.Extensions
             {
                 data.Add(player, value);
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+                // ignored
+            }
         }
 
         public static int colorID(this Player instance) => instance != null ? (instance.GetAdditionalData().colorID != -1 ? instance.GetAdditionalData().colorID : instance.teamID) : 0;
@@ -93,7 +96,10 @@ namespace UnboundLib.Extensions
                     main.startColor = startColor;
                 }
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
         }
     }
 }

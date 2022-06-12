@@ -51,10 +51,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\AssetsEmbedded\unboundui" />
-    <EmbeddedResource Include="..\AssetsEmbedded\modoptionsui" />
-    <EmbeddedResource Include="..\AssetsEmbedded\toggle ui" />
-    <EmbeddedResource Include="..\AssetsEmbedded\unboundlinks" />
+    <EmbeddedResource Include="..\AssetsEmbedded\unboundui" Link="Assets\unboundui" />
+    <EmbeddedResource Include="..\AssetsEmbedded\modoptionsui" Link="Assets\modoptionsui" />
+    <EmbeddedResource Include="..\AssetsEmbedded\unboundlinks" Link="Assets\unboundlinks" />
     <EmbeddedResource Include="Assets\togglemenuui" />
   </ItemGroup>
 

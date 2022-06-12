@@ -32,7 +32,10 @@ namespace UnboundLib.Extensions
             {
                 data.Add(instance, value);
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+                // ignored
+            }
         }
     }
 }

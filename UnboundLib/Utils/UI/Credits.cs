@@ -35,7 +35,7 @@ namespace UnboundLib.Utils.UI
         }
         internal void CreateCreditsMenu(bool firstTime)
         {
-            Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.2f : 0f, () =>
+            Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.1f : 0f, () =>
             {
                 // Create credits menu
                 CreditsMenu = MenuHandler.CreateMenu("CREDITS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, null,true, 5);
@@ -71,11 +71,11 @@ namespace UnboundLib.Utils.UI
                     creditsMenus[modName] = MenuHandler.CreateMenu(modName, null, CreditsMenu, 30);
                 }
 
-                // add link to modding discord
+                // add _Links to modding discord
                 MenuHandler.CreateText(" ", CreditsMenu, out TextMeshProUGUI _, 60);
-                MenuHandler.CreateText("<link=\"https://discord.gg/Fyr3YnWduJ\">" + "ROUNDS MODDING COMMUNITY" + "</link>", CreditsMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
-                // add link to Thunderstore
-                MenuHandler.CreateText("<link=\"https://rounds.thunderstore.io/?ordering=most-downloaded\"> " + "THUNDERSTORE.IO" + "</link>", CreditsMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
+                MenuHandler.CreateText("<_Links=\"https://discord.gg/Fyr3YnWduJ\">" + "ROUNDS MODDING COMMUNITY" + "</_Links>", CreditsMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
+                // add _Links to Thunderstore
+                MenuHandler.CreateText("<_Links=\"https://rounds.thunderstore.io/?ordering=most-downloaded\"> " + "THUNDERSTORE.IO" + "</_Links>", CreditsMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
 
                 // add credits for each mod
 
@@ -110,7 +110,7 @@ namespace UnboundLib.Utils.UI
                 if (i < credits.linkURLs.Length) { linkURL = credits.linkURLs[i]; }
                 if (linkText != "") 
                 {
-                    MenuHandler.CreateText("<link=\"" + linkURL + "\">" + linkText.ToUpper() + "</link>", parentMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
+                    MenuHandler.CreateText("<_Links=\"" + linkURL + "\">" + linkText.ToUpper() + "</_Links>", parentMenu, out TextMeshProUGUI _, 30, false).AddComponent<OpenHyperlinks>();
                 }
             }
 
@@ -119,24 +119,24 @@ namespace UnboundLib.Utils.UI
 
     public class ModCredits
     {
-        public string modName = "";
+        public string modName;
         public string[] credits = null;
-        public string[] linkTexts = new string[] { "" };
-        public string[] linkURLs = new string[] { "" };
+        public string[] linkTexts;
+        public string[] linkURLs;
 
         public ModCredits(string modName = "", string[] credits = null,  string[] linkTexts = null, string[] linkURLs = null)
         {
             this.modName = modName;
             this.credits = credits;
-            this.linkTexts = linkTexts ?? new string[] { "" };
-            this.linkURLs = linkURLs ?? new string[] { "" };
+            this.linkTexts = linkTexts ?? new[] { "" };
+            this.linkURLs = linkURLs ?? new[] { "" };
         }
         public ModCredits(string modName = "", string[] credits = null, string linkText = "", string linkURL = "")
         {
             this.modName = modName;
             this.credits = credits;
-            linkTexts = new string[] { linkText };
-            linkURLs = new string[] { linkURL };
+            linkTexts = new[] { linkText };
+            linkURLs = new[] { linkURL };
         }
     }
 }

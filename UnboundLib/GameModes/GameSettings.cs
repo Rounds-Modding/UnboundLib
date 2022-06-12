@@ -46,7 +46,7 @@ namespace UnboundLib.GameModes
         }
 
         public void Add(string name, object initialValue = default) {
-            if (!initialValue.GetType().IsSerializable) {
+            if (initialValue != null && !initialValue.GetType().IsSerializable) {
                 throw new ArgumentException($"Setting \"{name}\" must be serializable");
             }
 
@@ -75,26 +75,9 @@ namespace UnboundLib.GameModes
             return values.GetEnumerator();
         }
 
-        public IEnumerable<string> Keys {
-            get {
-                return values.Keys;
-            }
-        }
-
-        public IEnumerable<object> Values {
-            get {
-                return values.Values;
-            }
-        }
-
-        public int Count {
-            get {
-                return values.Count;
-            }
-        }
-
-        public object this[string setting] {
-            get { return values[setting]; }
-        }
+        public IEnumerable<string> Keys => values.Keys;
+        public IEnumerable<object> Values => values.Values;
+        public int Count => values.Count;
+        public object this[string setting] => values[setting];
     }
 }

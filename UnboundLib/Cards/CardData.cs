@@ -8,12 +8,7 @@ namespace UnboundLib.Cards
 
         public static string[] GetCards(int teamId)
         {
-            if (data.TryGetValue(teamId, out var list))
-            {
-                return list.ToArray();
-            }
-
-            return null;
+            return data.TryGetValue(teamId, out var list) ? list.ToArray() : null;
         }
 
         public static void AddCard(int teamId, string cardName)
@@ -24,7 +19,7 @@ namespace UnboundLib.Cards
             }
             else
             {
-                data.Add(teamId, new List<string>() { cardName });
+                data.Add(teamId, new List<string>{ cardName });
             }
         }
 

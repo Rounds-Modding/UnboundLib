@@ -12,8 +12,8 @@ namespace UnboundLib.Patches
     {
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var f_playerID = UnboundLib.ExtensionMethods.GetFieldInfo(typeof(Player), "playerID");
-            var m_colorID = UnboundLib.ExtensionMethods.GetMethodInfo(typeof(PlayerExtensions), nameof(PlayerExtensions.colorID));
+            var f_playerID = ExtensionMethods.GetFieldInfo(typeof(Player), "playerID");
+            var m_colorID = ExtensionMethods.GetMethodInfo(typeof(PlayerExtensions), nameof(PlayerExtensions.colorID));
 
             List<CodeInstruction> ins = instructions.ToList();
 
@@ -22,11 +22,9 @@ namespace UnboundLib.Patches
             for (int i = 0; i < ins.Count(); i++)
             {
                 // we only want to change the first occurence here
-                if (ins[i].LoadsField(f_playerID))
-                {
-                    idx = i;
-                    break;
-                }
+                if (!ins[i].LoadsField(f_playerID)) continue;
+                idx = i;
+                break;
             }
             if (idx == -1)
             {
@@ -43,8 +41,8 @@ namespace UnboundLib.Patches
     {
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var f_playerID = UnboundLib.ExtensionMethods.GetFieldInfo(typeof(Player), "playerID");
-            var m_colorID = UnboundLib.ExtensionMethods.GetMethodInfo(typeof(PlayerExtensions), nameof(PlayerExtensions.colorID));
+            var f_playerID = ExtensionMethods.GetFieldInfo(typeof(Player), "playerID");
+            var m_colorID = ExtensionMethods.GetMethodInfo(typeof(PlayerExtensions), nameof(PlayerExtensions.colorID));
 
             List<CodeInstruction> ins = instructions.ToList();
 
@@ -53,11 +51,9 @@ namespace UnboundLib.Patches
             for (int i = 0; i < ins.Count(); i++)
             {
                 // we only want to change the first occurence here
-                if (ins[i].LoadsField(f_playerID))
-                {
-                    idx = i;
-                    break;
-                }
+                if (!ins[i].LoadsField(f_playerID)) continue;
+                idx = i;
+                break;
             }
             if (idx == -1)
             {
@@ -75,8 +71,8 @@ namespace UnboundLib.Patches
     {
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var f_playerID = UnboundLib.ExtensionMethods.GetFieldInfo(typeof(Player), "playerID");
-            var m_colorID = UnboundLib.ExtensionMethods.GetMethodInfo(typeof(PlayerExtensions), nameof(PlayerExtensions.colorID));
+            var f_playerID = ExtensionMethods.GetFieldInfo(typeof(Player), "playerID");
+            var m_colorID = ExtensionMethods.GetMethodInfo(typeof(PlayerExtensions), nameof(PlayerExtensions.colorID));
 
             foreach (var ins in instructions)
             {

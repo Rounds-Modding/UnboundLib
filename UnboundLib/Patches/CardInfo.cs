@@ -2,8 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Serialization;
-using TMPro;
+using UnboundLib.Cards;
 using UnboundLib.Utils.UI;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,9 +14,6 @@ namespace UnboundLib.Patches
     [HarmonyPatch(typeof(CardInfo), "Awake")]
     public class CardInfoPatch
     {
-        internal static Color uncommonColor = new Color(0, 0.5f, 1, 1);
-        internal static Color rareColor = new Color(1, 0.2f, 1, 1);
-
         static Exception Finalizer(Exception __exception)
         {
             return __exception is NullReferenceException ? null : __exception;

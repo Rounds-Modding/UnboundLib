@@ -15,8 +15,8 @@ namespace UnboundLib.Patches
         }
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            var m_GetPlayerSkinColors = UnboundLib.ExtensionMethods.GetMethodInfo(typeof(PlayerSkinBank), nameof(PlayerSkinBank.GetPlayerSkinColors));
-            var m_getColorID = UnboundLib.ExtensionMethods.GetMethodInfo(typeof(PointVisualizer_Patch_DoShowPoints), nameof(PointVisualizer_Patch_DoShowPoints.GetColorIDFromPlayerID));
+            var m_GetPlayerSkinColors = ExtensionMethods.GetMethodInfo(typeof(PlayerSkinBank), nameof(PlayerSkinBank.GetPlayerSkinColors));
+            var m_getColorID = ExtensionMethods.GetMethodInfo(typeof(PointVisualizer_Patch_DoShowPoints), nameof(GetColorIDFromPlayerID));
 
             foreach (var ins in instructions)
             {
