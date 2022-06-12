@@ -1,8 +1,33 @@
-﻿namespace UnboundLib.GameModes
+﻿using System;
+using System.Collections;
+namespace UnboundLib.GameModes
 {
     // When possible, use these keys when adding game hooks to a game mode
     public static class GameModeHooks
     {
+        public static class Priority
+        {
+            public const int Last = 0;
+            public const int VeryLow = 100;
+            public const int Low = 200;
+            public const int LowerThanNormal = 300;
+            public const int Normal = 400;
+            public const int HigherThanNormal = 500;
+            public const int High = 600;
+            public const int VeryHigh = 700;
+            public const int First = 800;
+        }
+        public class Hook
+        {
+            public Func<IGameModeHandler, IEnumerator> Action;
+            public int Priority;
+            public Hook(Func<IGameModeHandler, IEnumerator> hook, int priority)
+            {
+                this.Action = hook;
+                this.Priority = priority;
+            }
+        }
+
         /// <summary>
         ///     Should be called before the game mode does any initialization.
         /// </summary>
