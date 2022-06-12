@@ -21,9 +21,13 @@ namespace UnboundLib
         {
             Receivers = ReceiverGroup.Others
         };
-        private static SendOptions sendOptions = new SendOptions
+        private static SendOptions reliableSendOptions = new SendOptions
         {
             Reliability = true
+        };
+        private static SendOptions unreliableSendOptions = new SendOptions
+        {
+            Reliability = false
         };
 
         public delegate void PhotonEvent(object[] objects);
@@ -51,7 +55,7 @@ namespace UnboundLib
             var allData = new List<object>();
             allData.Add(eventName);
             allData.AddRange(data);
-            PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), options, sendOptions);
+            PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), options, reliableSendOptions);
         }
         public static void RaiseEvent(string eventName, params object[] data)
         {
@@ -61,7 +65,7 @@ namespace UnboundLib
         {
             RaiseEvent(eventName, raiseEventOptionsOthers, data);
         }
-        public static void RPC(Type targetType, string methodName, RaiseEventOptions options, params object[] data)
+        public static void RPC(Type targetType, string methodName, RaiseEventOptions options, SendOptions sendOptions, params object[] data)
         {
             if (data == null) data = new object[0];
 
@@ -80,13 +84,25 @@ namespace UnboundLib
             allData.AddRange(data);
             PhotonNetwork.RaiseEvent(ModEventCode, allData.ToArray(), options, sendOptions);
         }
+        public static void RPC(Type targetType, string methodName, RaiseEventOptions options, params object[] data)
+        {
+            RPC(targetType, methodName, options, reliableSendOptions, data);
+        }
         public static void RPC(Type targetType, string methodName, params object[] data)
         {
-            RPC(targetType, methodName, raiseEventOptionsAll, data);
+            RPC(targetType, methodName, raiseEventOptionsAll, reliableSendOptions, data);
         }
         public static void RPC_Others(Type targetType, string methodName, params object[] data)
         {
-            RPC(targetType, methodName, raiseEventOptionsOthers, data);
+            RPC(targetType, methodName, raiseEventOptionsOthers, reliableSendOptions, data);
+        }
+        public static void RPC_Unreliable(Type targetType, string methodName, params object[] data)
+        {
+            RPC(targetType, methodName, raiseEventOptionsAll, unreliableSendOptions, data);
+        }
+        public static void RPC_Others_Unreliable(Type targetType, string methodName, params object[] data)
+        {
+            RPC(targetType, methodName, raiseEventOptionsOthers, unreliableSendOptions, data);
         }
 
         public static void OnEvent(EventData photonEvent)
