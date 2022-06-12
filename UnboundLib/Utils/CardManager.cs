@@ -5,6 +5,7 @@ using System.Collections.Specialized;
 using System.Linq;
 using BepInEx.Configuration;
 using Photon.Pun;
+using UnboundLib.Cards;
 using UnboundLib.Networking;
 using UnboundLib.Utils.UI;
 using UnityEngine;
@@ -141,7 +142,7 @@ namespace UnboundLib.Utils
             }
 
             string cardName = cardInfo.gameObject.name;
-            if (!cardName[0].Equals('_'))
+            if (cardInfo.gameObject.GetComponent<CustomCard>() == null)
             {
                 cardName = cardInfo.cardName;
             }
@@ -176,7 +177,7 @@ namespace UnboundLib.Utils
             }
 
             string cardName = cardInfo.gameObject.name;
-            if (!cardName[0].Equals('_'))
+            if (cardInfo.gameObject.GetComponent<CustomCard>() == null)
             {
                 cardName = cardInfo.cardName;
             }

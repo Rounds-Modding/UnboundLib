@@ -237,7 +237,7 @@ namespace UnboundLib.Cards
         {
             for (int i = 0; i < characterStatModifiers.objectsAddedToPlayer.Count; i++)
             {
-                GameObject.Destroy(characterStatModifiers.objectsAddedToPlayer[i]);
+                Destroy(characterStatModifiers.objectsAddedToPlayer[i]);
             }
             characterStatModifiers.objectsAddedToPlayer.Clear();
             characterStatModifiers.sizeMultiplier = 1f;
