@@ -4,7 +4,7 @@
     "website_url": "https://github.com/Rounds-Modding/UnboundLib",
     "description": "This is a helpful utility for ROUNDS modders aimed at simplifying common tasks.",
     "dependencies": [
-    	"BepInEx-BepInExPack_ROUNDS-5.4.1100",
+    	"BepInEx-BepInExPack_ROUNDS-5.4.1900",
     	"willis81808-MMHook-1.0.0"
     ]
 }
