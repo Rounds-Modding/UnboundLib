@@ -25,7 +25,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "3.1.1";
+        public const string Version = "3.1.2";
 
         public static Unbound Instance { get; private set; }
         public static readonly ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
@@ -316,7 +316,7 @@ namespace UnboundLib
                                     (
                                     UIHandler.instance.transform.Find("Canvas/EscapeMenu/MOD OPTIONS/Group") &&
                                     UIHandler.instance.transform.Find("Canvas/EscapeMenu/MOD OPTIONS/Group").gameObject.activeInHierarchy) ||
-                                    ToggleCardsMenuHandler.instance.menuOpenFromOutside ||
+                                    ToggleCardsMenuHandler.menuOpenFromOutside ||
                                     lockInputBools.Values.Any(b => b);
         }
 
