@@ -38,9 +38,9 @@ namespace UnboundLib.Patches
         static void Postfix(GameObject go, PlayerSkin teamColor)
         {
             // if the object to color is a player, make sure any unparented objects (smoke effects) are colored properly as well
-            if (go?.GetComponent<PlayerJump>() != null && go.GetComponent<PlayerJump>().jumpPart.Where(j => j?.gameObject != null).Any())
+            if (go?.GetComponent<PlayerJump>() != null && go.GetComponent<PlayerJump>().jumpPart.Any(j => j?.gameObject != null))
             {
-                SetTeamColor.TeamColorThis(go.GetComponent<PlayerJump>().jumpPart.Where(j => j?.gameObject != null).First().gameObject.transform.parent.gameObject, teamColor);
+                SetTeamColor.TeamColorThis(go.GetComponent<PlayerJump>().jumpPart.First(j => j?.gameObject != null).gameObject.transform.parent.gameObject, teamColor);
             }
         }
     }

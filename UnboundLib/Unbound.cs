@@ -25,12 +25,9 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "3.0.2";
-
-        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[] { "Willis (Creation, design, networking, custom cards, custom maps, and more)", "Tilastokeskus (Custom game modes, networking, structure)", "Pykess (Custom cards, stability, menus, syncing, extra player colors, disconnect handling, game mode framework)", "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)", "willuwontu (Custom cards, ping UI)", "otDan (UI)" }, "Github", "https://github.com/Rounds-Modding/UnboundLib");
+        public const string Version = "3.1.2";
 
         public static Unbound Instance { get; private set; }
-
         public static readonly ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
 
         private Canvas _canvas;
@@ -38,19 +35,17 @@ namespace UnboundLib
         {
             get
             {
-                if (_canvas == null)
-                {
-                    _canvas = new GameObject("UnboundLib Canvas").AddComponent<Canvas>();
-                    _canvas.gameObject.AddComponent<GraphicRaycaster>();
-                    _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                    _canvas.pixelPerfect = false;
-                    DontDestroyOnLoad(_canvas);
-                }
+                if (_canvas != null) return _canvas;
+                _canvas = new GameObject("UnboundLib Canvas").AddComponent<Canvas>();
+                _canvas.gameObject.AddComponent<GraphicRaycaster>();
+                _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                _canvas.pixelPerfect = false;
+                DontDestroyOnLoad(_canvas);
                 return _canvas;
             }
         }
 
-        struct NetworkEventType
+        private struct NetworkEventType
         {
             public const string
                 StartHandshake = "ModLoader_HandshakeStart",
@@ -94,26 +89,23 @@ namespace UnboundLib
             On.MainMenuHandler.Awake += (orig, self) =>
             {
                 // reapply cards and levels
-                this.ExecuteAfterSeconds(0.1f, () =>
+                this.ExecuteAfterFrames(5, () =>
                 {
                     MapManager.instance.levels = LevelManager.activeLevels.ToArray();
-                    // THIS IS BROKEN
-                    //CardChoice.instance.cards = CardManager.activeCards.ToArray();
                     CardManager.RestoreCardToggles();
                     ToggleCardsMenuHandler.RestoreCardToggleVisuals();
 
                 });
 
-
                 // create unbound text
-                this.StartCoroutine(this.AddTextWhenReady(firstTime ? 4f : 0.1f));
+                StartCoroutine(AddTextWhenReady(firstTime ? 2f : 0.1f));
 
-                ModOptions.Instance.CreateModOptions(firstTime);
+                ModOptions.instance.CreateModOptions(firstTime);
                 Credits.Instance.CreateCreditsMenu(firstTime);
                 MainMenuLinks.AddLinks(firstTime);
 
                 var time = firstTime;
-                this.ExecuteAfterSeconds(firstTime ? 0.5f : 0, () =>
+                this.ExecuteAfterSeconds(firstTime ? 0.4f : 0, () =>
                 {
                     var resumeButton = UIHandler.instance.transform.Find("Canvas/EscapeMenu/Main/Group/Resume").gameObject;
                     // Create options button in escapeMenu
@@ -149,7 +141,7 @@ namespace UnboundLib
 
             On.MainMenuHandler.Close += (orig, self) =>
             {
-                if (this.text != null) Destroy(this.text.gameObject);
+                if (text != null) Destroy(text.gameObject);
 
                 orig(self);
             };
@@ -166,19 +158,10 @@ namespace UnboundLib
                 self.StartCoroutine(ArmsRaceStartCoroutine(orig, self));
             };
 
-
-            // // apply cards and levels on game start
-            // IEnumerator ResetCardsAndLevelsOnStart(IGameModeHandler gm)
-            // {
-            //     CardChoice.instance.cards = CardManager.activeCards.ToArray();
-            //     MapManager.instance.levels = LevelManager.activeLevels.ToArray();
-            //     yield break;
-            // }
-            // GameModeManager.AddHook(GameModeHooks.HookInitStart, ResetCardsAndLevelsOnStart);
-            GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.disableSyncModUI(SyncModClients.uiParent));
+            GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.DisableSyncModUi(SyncModClients.uiParent));
 
             // hook for closing ongoing lobbies
-            GameModeManager.AddHook(GameModeHooks.HookGameStart, this.CloseLobby);
+            GameModeManager.AddHook(GameModeHooks.HookGameStart, CloseLobby);
 
             // Load toggleUI asset bundle
             toggleUI = AssetUtils.LoadAssetBundleFromResources("togglemenuui", typeof(ToggleLevelMenuHandler).Assembly);
@@ -195,15 +178,14 @@ namespace UnboundLib
             gameObject.AddComponent<ToggleCardsMenuHandler>();
         }
 
-        private IEnumerator CloseLobby(IGameModeHandler gm)
+        private static IEnumerator CloseLobby(IGameModeHandler gm)
         {
-            if (PhotonNetwork.IsMasterClient && !PhotonNetwork.OfflineMode)
-            {
-                PhotonNetwork.CurrentRoom.IsVisible = false;
-                PhotonNetwork.CurrentRoom.IsOpen = false;
-            }
+            if (!PhotonNetwork.IsMasterClient || PhotonNetwork.OfflineMode) yield break;
+            PhotonNetwork.CurrentRoom.IsVisible = false;
+            PhotonNetwork.CurrentRoom.IsOpen = false;
             yield break;
         }
+
         private IEnumerator AddTextWhenReady(float delay = 0f, float maxTimeToWait = 10f)
         {
             if (delay > 0f) { yield return new WaitForSecondsRealtime(delay); }
@@ -226,8 +208,8 @@ namespace UnboundLib
             text.transform.SetAsFirstSibling();
             text.rectTransform.localScale = Vector3.one;
             text.rectTransform.localPosition = new Vector3(0, 350, text.rectTransform.localPosition.z);
-
         }
+
         private void Awake()
         {
             if (Instance == null)
@@ -251,48 +233,43 @@ namespace UnboundLib
         private void Start()
         {
             // request mod handshake
-            NetworkingManager.RegisterEvent(NetworkEventType.StartHandshake, (data) =>
+            NetworkingManager.RegisterEvent(NetworkEventType.StartHandshake, data =>
             {
                 if (PhotonNetwork.IsMasterClient)
                 {
                     NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake,
-                                                 GameModeManager.CurrentHandlerID,
-                                                 GameModeManager.CurrentHandler?.Settings);
+                        GameModeManager.CurrentHandlerID,
+                        GameModeManager.CurrentHandler?.Settings);
                 }
                 else
                 {
                     NetworkingManager.RaiseEvent(NetworkEventType.FinishHandshake);
                 }
-                //CardChoice.instance.cards = CardManager.defaultCards;
             });
 
             // receive mod handshake
-            NetworkingManager.RegisterEvent(NetworkEventType.FinishHandshake, (data) =>
+            NetworkingManager.RegisterEvent(NetworkEventType.FinishHandshake, data =>
             {
                 // attempt to syncronize levels and cards with other players
-                //CardChoice.instance.cards = CardManager.activeCards.ToArray();
                 MapManager.instance.levels = LevelManager.activeLevels.ToArray();
 
-                if (data.Length > 0)
-                {
-                    GameModeManager.SetGameMode((string) data[0], false);
-                    GameModeManager.CurrentHandler.SetSettings((GameSettings) data[1]);
-                }
+                if (data.Length <= 0) return;
+                GameModeManager.SetGameMode((string) data[0], false);
+                GameModeManager.CurrentHandler.SetSettings((GameSettings) data[1]);
             });
 
             // fetch card to use as a template for all custom cards
-            CardInfo huge = (from c in CardChoice.instance.cards
-                            where c.cardName.ToLower() == "huge"
-                            select c).FirstOrDefault();
-            templateCard = GameObject.Instantiate(huge.gameObject, Vector3.up * 100f, Quaternion.identity).GetComponent<CardInfo>();
+            CardInfo huge = CardChoice.instance.cards.FirstOrDefault(c => c.cardName.ToLower() == "huge");
+            templateCard = Instantiate(huge.gameObject, Vector3.up * 100f, Quaternion.identity)
+                .GetComponent<CardInfo>();
             templateCard.cardBase = huge.cardBase;
+
             templateCard.gameObject.name = "__UNBOUND_TEMPLATE_CARD__";
             DestroyImmediate(templateCard.transform.GetChild(0).gameObject);
             templateCard.GetComponent<CharacterStatModifiers>().health = 1f; // remove huge's stats
-            GameObject.DontDestroyOnLoad(templateCard.gameObject);
+            DontDestroyOnLoad(templateCard.gameObject);
 
             CardManager.defaultCards = CardChoice.instance.cards;
-
 
             // register default cards with toggle menu
             foreach (var card in CardManager.defaultCards)
@@ -324,7 +301,6 @@ namespace UnboundLib
                 ModOptions.showModUi = !ModOptions.showModUi;
             }
 
-
             GameManager.lockInput = ModOptions.showModUi ||
                                     DevConsole.isTyping ||
                                     ToggleLevelMenuHandler.instance.mapMenuCanvas.activeInHierarchy ||
@@ -351,34 +327,25 @@ namespace UnboundLib
             GUILayout.BeginVertical();
 
             bool showingSpecificMod = false;
-            foreach (var md in ModOptions.GUIListeners.Keys)
+            foreach (ModOptions.GUIListener data in ModOptions.GUIListeners.Keys.Select(md => ModOptions.GUIListeners[md]).Where(data => data.guiEnabled))
             {
-                var data = ModOptions.GUIListeners[md];
-                if (data.guiEnabled)
+                if (GUILayout.Button("<- Back"))
                 {
-                    if (GUILayout.Button("<- Back"))
-                    {
-                        data.guiEnabled = false;
-                    }
-                    GUILayout.Label(data.modName + " Options");
-                    showingSpecificMod = true;
-                    data.guiAction?.Invoke();
-                    break;
+                    data.guiEnabled = false;
                 }
+                GUILayout.Label(data.modName + " Options");
+                showingSpecificMod = true;
+                data.guiAction?.Invoke();
+                break;
             }
 
             if (showingSpecificMod) return;
 
             GUILayout.Label("UnboundLib Options\nThis menu is deprecated");
-            // if (GUILayout.Button("Toggle Cards"))
-            // {
-            //     CardToggleMenuHandler.Instance.Show();
-            // }
 
             GUILayout.Label("Mod Options:");
-            foreach (var md in ModOptions.GUIListeners.Keys)
+            foreach (var data in ModOptions.GUIListeners.Values)
             {
-                var data = ModOptions.GUIListeners[md];
                 if (GUILayout.Button(data.modName))
                 {
                     data.guiEnabled = true;
@@ -387,7 +354,7 @@ namespace UnboundLib
             GUILayout.EndVertical();
         }
 
-        private void LoadAssets()
+        private static void LoadAssets()
         {
             UIAssets = AssetUtils.LoadAssetBundleFromResources("unboundui", typeof(Unbound).Assembly);
             if (UIAssets != null)
@@ -397,7 +364,7 @@ namespace UnboundLib
             }
         }
 
-        private void OnJoinedRoomAction()
+        private static void OnJoinedRoomAction()
         {
             //if (!PhotonNetwork.OfflineMode)
             //   CardChoice.instance.cards = CardManager.defaultCards;
@@ -409,7 +376,7 @@ namespace UnboundLib
                 handshake?.Invoke();
             }
         }
-        private void OnLeftRoomAction()
+        private static void OnLeftRoomAction()
         {
             OnLeftRoom?.Invoke();
         }
@@ -441,13 +408,13 @@ namespace UnboundLib
 
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null)
         {
-            ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent);
+            ModOptions.instance.RegisterMenu(name, buttonAction, guiAction, parent);
         }
 
         // ReSharper disable once MethodOverloadWithOptionalParameter
         public static void RegisterMenu(string name, UnityAction buttonAction, Action<GameObject> guiAction, GameObject parent = null, bool showInPauseMenu = false)
         {
-            ModOptions.Instance.RegisterMenu(name, buttonAction, guiAction, parent, showInPauseMenu);
+            ModOptions.instance.RegisterMenu(name, buttonAction, guiAction, parent, showInPauseMenu);
         }
 
         public static void RegisterGUI(string modName, Action guiAction)
@@ -508,5 +475,15 @@ namespace UnboundLib
             return (GameManager.instance && !GameManager.instance.battleOngoing) &&
                    (PhotonNetwork.OfflineMode || !PhotonNetwork.IsConnected);
         }
+
+        internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[]
+        {
+            "Willis (Creation, design, networking, custom cards, custom maps, and more)",
+            "Tilastokeskus (Custom game modes, networking, structure)",
+            "Pykess (Custom cards, stability, menus, syncing, extra player colors, disconnect handling, game mode framework)",
+            "Ascyst (Quickplay)", "Boss Sloth Inc. (Menus, UI, custom maps, modded lobby syncing)",
+            "willuwontu (Custom cards, ping UI)",
+            "otDan (UI)"
+        }, "Github", "https://github.com/Rounds-Modding/UnboundLib");
     }
 }

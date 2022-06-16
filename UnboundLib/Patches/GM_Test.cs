@@ -45,10 +45,10 @@ namespace UnboundLib.Patches
                     i += 4;
                 }
                 else if (
-                  list[i].LoadsField(f_pmInstance) &&
-                  list[i + 2].Calls(m_getPlayerJoinedAction) &&
-                  list[i + 8].Calls(m_setPlayerJoinedAction)
-              )
+                    list[i].LoadsField(f_pmInstance) &&
+                    list[i + 2].Calls(m_getPlayerJoinedAction) &&
+                    list[i + 8].Calls(m_setPlayerJoinedAction)
+                )
                 {
                     i += 8;
                 }
