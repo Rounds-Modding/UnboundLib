@@ -26,6 +26,11 @@ namespace UnboundLib.GameModes
                 this.Action = hook;
                 this.Priority = priority;
             }
+            public Hook(Func<IEnumerator> hook, int priority)
+            {
+                this.Action = (gm) => hook();
+                this.Priority = priority;
+            }
             public Hook(Action<IGameModeHandler> hook, int priority)
             {
                 this.Action = (gm) => ActionHook(hook, gm);

@@ -264,6 +264,28 @@ namespace UnboundLib.GameModes
         /// <summary>
         ///     Adds a hook that is automatically removed after it's triggered once.
         /// </summary>
+        public static void AddOnceHook(string key, Func<IEnumerator> action)
+        {
+            if (action is null)
+            {
+                return;
+            }
+            AddOnceHook(key, action, GameModeHooks.Priority.Normal);
+        }
+        /// <summary>
+        ///     Adds a hook that is automatically removed after it's triggered once.
+        /// </summary>
+        public static void AddOnceHook(string key, Func<IEnumerator> action, int priority)
+        {
+            if (action is null)
+            {
+                return;
+            }
+            AddOnceHook(key, new GameModeHooks.Hook(action, priority));
+        }
+        /// <summary>
+        ///     Adds a hook that is automatically removed after it's triggered once.
+        /// </summary>
         public static void AddOnceHook(string key, Action action)
         {
             if (action is null)
@@ -339,6 +361,22 @@ namespace UnboundLib.GameModes
             AddHook(key, action, GameModeHooks.Priority.Normal);
         }
         public static void AddHook(string key, Func<IGameModeHandler, IEnumerator> action, int priority)
+        {
+            if (action is null)
+            {
+                return;
+            }
+            AddHook(key, new GameModeHooks.Hook(action, priority));
+        }
+        public static void AddHook(string key, Func<IEnumerator> action)
+        {
+            if (action is null)
+            {
+                return;
+            }
+            AddHook(key, action, GameModeHooks.Priority.Normal);
+        }
+        public static void AddHook(string key, Func<IEnumerator> action, int priority)
         {
             if (action is null)
             {
