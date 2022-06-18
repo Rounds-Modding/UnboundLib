@@ -261,38 +261,41 @@ namespace UnboundLib.GameModes
 
             if (!onceHooks.ContainsKey(key))
             {
-                onceHooks.Add(key, new List<GameModeHooks.Hook>{ new GameModeHooks.Hook(action, priority) });
+                onceHooks.Add(key, new List<GameModeHooks.Hook>{ AddHook(key, action, priority) });
             }
             else
             {
-                onceHooks[key].Add(new GameModeHooks.Hook(action, priority));
+                onceHooks[key].Add(AddHook(key, action, priority));
             }
 
-            AddHook(key, action);
+            
         }
 
         public static void AddHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
             AddHook(key, action, GameModeHooks.Priority.Normal);
-        }
-        public static void AddHook(string key, Func<IGameModeHandler, IEnumerator> action, int priority)
+        } 
+        public static GameModeHooks.Hook AddHook(string key, Func<IGameModeHandler, IEnumerator> action, int priority)
         {
             if (action == null)
             {
-                return;
+                return null;
             }
 
             // Case-insensitive keys for QoL
             key = key.ToLower();
 
+            GameModeHooks.Hook hook = new GameModeHooks.Hook(action, priority);
+
             if (!hooks.ContainsKey(key))
             {
-                hooks.Add(key, new List<GameModeHooks.Hook> { new GameModeHooks.Hook(action, priority) });
+                hooks.Add(key, new List<GameModeHooks.Hook> { hook });
             }
             else
             {
-                hooks[key].Add(new GameModeHooks.Hook(action, priority));
+                hooks[key].Add(hook);
             }
+            return hook;
         }
         public static void RemoveHook(string key, GameModeHooks.Hook hook)
         {
