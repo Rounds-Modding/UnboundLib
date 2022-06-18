@@ -48,7 +48,7 @@ namespace UnboundLib.GameModes
             SceneManager.sceneLoaded += (scene, mode) =>
             {
                 if (scene.name != "Main") return;
-                
+
                 // rename test gamemode object to SandboxID
                 GetGameMode<GM_Test>("Test").name = $"[GameMode] {SandBoxID}";
 
@@ -79,10 +79,10 @@ namespace UnboundLib.GameModes
             {
                 var origGroupGo = origGameModeGo.transform.Find("Group");
                 var characterSelectGo_ = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/CharacterSelect");
-            
-                var newLocalMenu = Utils.UI.MenuHandler.CreateMenu("LOCAL", 
-                    () => { MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group/Local").GetComponent<Button>().onClick.Invoke(); }, 
-                    MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 
+
+                var newLocalMenu = Utils.UI.MenuHandler.CreateMenu("LOCAL",
+                    () => { MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main/Group/Local").GetComponent<Button>().onClick.Invoke(); },
+                    MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject,
                     60, true, false, null, true, 1);
 
                 var content = newLocalMenu.transform.Find("Group/Grid/Scroll View/Viewport/Content");
@@ -98,7 +98,7 @@ namespace UnboundLib.GameModes
                 newVersusGo.name = "Versus";
                 var newSandboxGo = Utils.UI.MenuHandler.CreateButton("SANDBOX", newLocalMenu, () => { MainMenuHandler.instance.Close(); SetGameMode(SandBoxID); CurrentHandler.StartGame(); });
                 newSandboxGo.name = "Test";
-            
+
                 // Select the local button so selection doesn't look weird
                 Unbound.Instance.ExecuteAfterFrames(15, () =>
                 {
@@ -159,10 +159,10 @@ namespace UnboundLib.GameModes
 
             // create gamemode buttons alphabetically (creating them in reverse order)
             // non-team gamemodes at the top, team gamemodes at the bottom
-            foreach (var id in handlers.Keys.Where(k => !handlers[k].OnlineOnly && handlers[k].AllowTeams).OrderByDescending(k => handlers[k].Name.ToLower()).Where(k => k!=SandBoxID && k!=ArmsRaceID))
+            foreach (var id in handlers.Keys.Where(k => !handlers[k].OnlineOnly && handlers[k].AllowTeams).OrderByDescending(k => handlers[k].Name.ToLower()).Where(k => k != SandBoxID && k != ArmsRaceID))
             {
                 // create a copy of the string to give to the anonymous function
-                string id_ = string.Copy(id); 
+                string id_ = string.Copy(id);
                 var gamemodeButtonGo = Utils.UI.MenuHandler.CreateButton(handlers[id].Name.ToUpper(), gameModeGo.gameObject, () => { characterSelectGo.GetComponent<ListMenuPage>().Open(); SetGameMode(id_); });
                 gamemodeButtonGo.name = id;
                 gamemodeButtonGo.transform.SetAsFirstSibling();
@@ -171,10 +171,10 @@ namespace UnboundLib.GameModes
             // add a small separator
             Utils.UI.MenuHandler.CreateText(" ", gameModeGo, out TextMeshProUGUI _, 30).transform.SetAsFirstSibling();
 
-            foreach (var id in handlers.Keys.Where(k => !handlers[k].OnlineOnly && !handlers[k].AllowTeams).OrderByDescending(k => handlers[k].Name.ToLower()).Where(k => k!=SandBoxID && k!=ArmsRaceID))
+            foreach (var id in handlers.Keys.Where(k => !handlers[k].OnlineOnly && !handlers[k].AllowTeams).OrderByDescending(k => handlers[k].Name.ToLower()).Where(k => k != SandBoxID && k != ArmsRaceID))
             {
                 // create a copy of the string to give to the anonymous function
-                string id_ = string.Copy(id); 
+                string id_ = string.Copy(id);
                 var gamemodeButtonGo = Utils.UI.MenuHandler.CreateButton(handlers[id].Name.ToUpper(), gameModeGo.gameObject, () => { characterSelectGo.GetComponent<ListMenuPage>().Open(); SetGameMode(id_); });
                 gamemodeButtonGo.name = id;
                 gamemodeButtonGo.transform.SetAsFirstSibling();
@@ -255,38 +255,55 @@ namespace UnboundLib.GameModes
             {
                 return;
             }
+            AddOnceHook(key, new GameModeHooks.Hook(action, priority));
+        }
+        /// <summary>
+        ///     Adds a hook that is automatically removed after it's triggered once.
+        /// </summary>
+        public static void AddOnceHook(string key, GameModeHooks.Hook hook)
+        {
+            if (hook == null)
+            {
+                return;
+            }
 
             // Case-insensitive keys for QoL
             key = key.ToLower();
 
             if (!onceHooks.ContainsKey(key))
             {
-                onceHooks.Add(key, new List<GameModeHooks.Hook>{ AddHook(key, action, priority) });
+                onceHooks.Add(key, new List<GameModeHooks.Hook> { hook });
             }
             else
             {
-                onceHooks[key].Add(AddHook(key, action, priority));
+                onceHooks[key].Add(hook);
             }
 
-            
+            AddHook(key, hook);
         }
 
         public static void AddHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
             AddHook(key, action, GameModeHooks.Priority.Normal);
-        } 
-        public static GameModeHooks.Hook AddHook(string key, Func<IGameModeHandler, IEnumerator> action, int priority)
+        }
+        public static void AddHook(string key, Func<IGameModeHandler, IEnumerator> action, int priority)
         {
             if (action == null)
             {
-                return null;
+                return;
             }
 
+            AddHook(key, new GameModeHooks.Hook(action, priority));
+
+        }
+        public static void AddHook(string key, GameModeHooks.Hook hook)
+        {
+            if (hook == null)
+            {
+                return;
+            }
             // Case-insensitive keys for QoL
             key = key.ToLower();
-
-            GameModeHooks.Hook hook = new GameModeHooks.Hook(action, priority);
-
             if (!hooks.ContainsKey(key))
             {
                 hooks.Add(key, new List<GameModeHooks.Hook> { hook });
@@ -295,7 +312,6 @@ namespace UnboundLib.GameModes
             {
                 hooks[key].Add(hook);
             }
-            return hook;
         }
         public static void RemoveHook(string key, GameModeHooks.Hook hook)
         {
