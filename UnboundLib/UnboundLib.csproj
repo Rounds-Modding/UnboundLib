@@ -35,10 +35,7 @@
   </PropertyGroup>
   
   <PropertyGroup>
-    <RoundsFolder>C:\Program Files (x86)\Steam\steamapps\common\ROUNDS</RoundsFolder>
-    <IndirectBuildTask>true</IndirectBuildTask>
-    <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
-    <LangVersion>7.1</LangVersion>
+    <RoundsFolder>F:\SteamLibrary\steamapps\common\ROUNDS</RoundsFolder>
   </PropertyGroup>
 
   <ItemGroup>
@@ -68,7 +65,7 @@
       <HintPath>..\Assemblies\MMHOOK_Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>$(RoundsFolder)\Rounds_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <HintPath>F:\SteamLibrary\steamapps\common\ROUNDS\Rounds_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Photon3Unity3D">
       <HintPath>$(RoundsFolder)\Rounds_Data\Managed\Photon3Unity3D.dll</HintPath>
