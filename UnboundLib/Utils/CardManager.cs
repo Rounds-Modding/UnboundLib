@@ -14,7 +14,7 @@ namespace UnboundLib.Utils
 {
     public class CardManager : MonoBehaviour
     {
-        public CardManager instance;
+        public static CardManager instance;
         
         // A string array of all cardInfos
         internal static CardInfo[] allCards
