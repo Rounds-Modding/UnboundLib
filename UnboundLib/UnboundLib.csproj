@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -35,7 +35,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <RoundsFolder>F:\SteamLibrary\steamapps\common\ROUNDS</RoundsFolder>
+    <RoundsFolder>C:\Program Files (x86)\Steam\steamapps\common\ROUNDS</RoundsFolder>
     <IndirectBuildTask>true</IndirectBuildTask>
     <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
     <LangVersion>7.1</LangVersion>
