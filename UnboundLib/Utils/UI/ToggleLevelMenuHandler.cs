@@ -357,6 +357,7 @@ namespace UnboundLib.Utils.UI
         private IEnumerator LoadScenesForRedrawing(IEnumerable<string> sceneNames)
         {
             isDrawingLevels = true;
+
             foreach (var sceneName in sceneNames)
             {
                 ArtHandler.instance.NextArt();
@@ -465,7 +466,7 @@ namespace UnboundLib.Utils.UI
                     scene.GetRootGameObjects()[0].transform.position = new Vector3(100, 100, 0);
                     unloadSceneAsync.completed += operation =>
                     {
-                        this.ExecuteAfterSeconds(0.1f, () =>
+                        this.ExecuteAfterFrames(30, () =>
                         {
                             isDone = true;
                         });
