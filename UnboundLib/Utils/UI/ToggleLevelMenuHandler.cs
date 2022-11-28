@@ -208,7 +208,7 @@ namespace UnboundLib.Utils.UI
                 // Create lvlObjs
                 foreach (var level in LevelManager.levels)
                 {
-                    if (!File.Exists(Path.Combine(Path.Combine(Paths.ConfigPath, "LevelImages"), LevelManager.GetVisualName(level.Value.name) + ".png")))
+                    if (!File.Exists(Path.Combine("./LevelImages", LevelManager.GetVisualName(level.Value.name) + ".png")))
                     {
                         levelsThatNeedToRedrawn.Add(level.Value.name);
                     }
@@ -219,7 +219,7 @@ namespace UnboundLib.Utils.UI
 
                     mapObject.name = level.Key;
 
-                    mapObject.GetComponentInChildren<TextMeshProUGUI>().text = LevelManager.GetVisualName(level.Key);
+                    mapObject.GetComponentInChildren<TextMeshProUGUI>().text = LevelManager.GetVisualName(level.Value.name);
                     mapObject.AddComponent<LvlObj>();
                     mapObject.GetComponent<Button>().onClick.AddListener(() =>
                     {
@@ -253,7 +253,7 @@ namespace UnboundLib.Utils.UI
                         LevelManager.DisableLevel(level.Key);
                         UpdateVisualsLevelObj(mapObject);
                     }
-                    UpdateImage(mapObject, Path.Combine(Path.Combine(Paths.ConfigPath, "LevelImages"), LevelManager.GetVisualName(level.Key) + ".png"));
+                    UpdateImage(mapObject, Path.Combine("./LevelImages", LevelManager.GetVisualName(level.Key) + ".png"));
                 }
 
                 var viewingText = mapMenuCanvas.transform.Find("MapMenu/Top/Viewing").gameObject.GetComponentInChildren<TextMeshProUGUI>();
@@ -376,7 +376,7 @@ namespace UnboundLib.Utils.UI
             foreach (var mapObject in lvlObjs)
             {
                 UpdateVisualsLevelObj(mapObject);
-                UpdateImage(mapObject, Path.Combine(Path.Combine(Paths.ConfigPath, "LevelImages"), LevelManager.GetVisualName(mapObject.name) + ".png"));
+                UpdateImage(mapObject, Path.Combine("./LevelImages", LevelManager.GetVisualName(mapObject.name) + ".png"));
             }
 
             foreach (var obj in mapMenuCanvas.scene.GetRootGameObjects())
@@ -497,7 +497,7 @@ namespace UnboundLib.Utils.UI
 
             var rt = new RenderTexture(resWidth, resHeight, 24);
             camera.targetTexture = rt;
-            var screenShot = new Texture2D(resWidth, resHeight, TextureFormat.RGBA32, false);
+            var screenShot = new Texture2D(resWidth, resHeight, TextureFormat.RGB24, false);
             camera.Render();
             RenderTexture.active = rt;
             screenShot.ReadPixels(new Rect(0, 0, resWidth, resHeight), 0, 0);
@@ -544,7 +544,7 @@ namespace UnboundLib.Utils.UI
 
             // Write the screenshot to disk
             var bytes = screenShot.EncodeToPNG();
-            var dir = Directory.CreateDirectory(Path.Combine(Paths.ConfigPath, "LevelImages"));
+            var dir = Directory.CreateDirectory("./LevelImages");
             var filename = Path.Combine(dir.FullName, LevelManager.GetVisualName(levelName) + ".png");
             File.WriteAllBytes(filename, bytes);
 #if DEBUG
@@ -662,12 +662,12 @@ namespace UnboundLib.Utils.UI
             }
 
             if (redrawAllText.text != "Draw Thumbnails" &&
-                !Directory.Exists(Path.Combine(Paths.ConfigPath, "LevelImages")))
+                !Directory.Exists("./LevelImages"))
             {
                 redrawAllText.text = "Draw Thumbnails";
             }
             else if (redrawAllText.text == "Draw Thumbnails" &&
-                     Directory.Exists(Path.Combine(Paths.ConfigPath, "LevelImages")))
+                     Directory.Exists("./LevelImages"))
             {
                 redrawAllText.text = "Redraw All";
             }

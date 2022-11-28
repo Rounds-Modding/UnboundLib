@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using BepInEx.Configuration;
+using ExitGames.Client.Photon.StructWrapping;
 using Photon.Pun;
 using UnboundLib.Networking;
 using UnboundLib.Utils.UI;
@@ -249,27 +251,17 @@ namespace UnboundLib.Utils
 
         public static void RegisterMaps(IEnumerable<string> paths, string category = "Modded")
         {
+            RegisterNamedMaps(paths, new Dictionary<string, string>(), category);
+        }
+        public static void RegisterNamedMaps(IEnumerable<string> paths, IDictionary<string, string> mapNames , string category = "Modded")
+        {
+            UnityEngine.Debug.Log($"regestering {paths.Count()} maps, with {mapNames.Count()} names, in {category}");
             foreach (var path in paths.Distinct())
             {
-                activeLevels.Add(path);
-                if (!levels.ContainsKey(path))
-                {
-                    levels[path] = new Level(path, true, false, category);
-                }
+                if (mapNames.ContainsKey(path))
+                    RegisterMap(path, mapNames[path], category);
                 else
-                {
-                    levels[path].category = category;
-                }
-
-                if (!categories.Contains(category))
-                {
-                    categories.Add(category);
-                    categoryBools[category] = Unbound.config.Bind("Level categories", category, true);
-                }
-                if (!Unbound.config.Bind("Levels: " + levels[path].category, GetVisualName(path), true).Value)
-                {
-                    DisableLevel(path);
-                }
+                    RegisterMap(path, path, category);
             }
             // Sort activeLevels
             activeLevels = new ObservableCollection<string>(activeLevels.OrderBy(i => i));
@@ -278,6 +270,30 @@ namespace UnboundLib.Utils
             activeLevels = new ObservableCollection<string>(activeLevels.Distinct().ToList());
             activeLevels.CollectionChanged += LevelsChanged;
             MapManager.instance.levels = activeLevels.ToArray();
+        }
+        private static void RegisterMap(string path, string name, string category)
+        {
+            UnityEngine.Debug.Log($"regestering {path}, under name {name}, in {category}");
+            if (!levels.ContainsKey(path))
+            {
+                levels[path] = new Level(name, true, false, category);
+            }
+            else
+            {
+                levels[path].category = category;
+            }
+
+            activeLevels.Add(path);
+
+            if (!categories.Contains(category))
+            {
+                categories.Add(category);
+                categoryBools[category] = Unbound.config.Bind("Level categories", category, true);
+            }
+            if (!Unbound.config.Bind("Levels: " + levels[path].category, GetVisualName(path), true).Value)
+            {
+                DisableLevel(path);
+            }
         }
 
         // loads a map in via its name prefixed with a forward-slash
@@ -460,6 +476,7 @@ namespace UnboundLib.Utils
             this.enabled = enabled;
             this.selected = selected;
             this.category = category;
+            UnityEngine.Debug.Log(name);
         }
     }
     public class Category
