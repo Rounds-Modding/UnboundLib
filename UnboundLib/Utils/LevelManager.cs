@@ -255,7 +255,6 @@ namespace UnboundLib.Utils
         }
         public static void RegisterNamedMaps(IEnumerable<string> paths, IDictionary<string, string> mapNames , string category = "Modded")
         {
-            UnityEngine.Debug.Log($"regestering {paths.Count()} maps, with {mapNames.Count()} names, in {category}");
             foreach (var path in paths.Distinct())
             {
                 if (mapNames.ContainsKey(path))
