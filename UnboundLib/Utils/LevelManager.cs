@@ -273,7 +273,6 @@ namespace UnboundLib.Utils
         }
         private static void RegisterMap(string path, string name, string category)
         {
-            UnityEngine.Debug.Log($"regestering {path}, under name {name}, in {category}");
             if (!levels.ContainsKey(path))
             {
                 levels[path] = new Level(name, true, false, category);
@@ -476,7 +475,6 @@ namespace UnboundLib.Utils
             this.enabled = enabled;
             this.selected = selected;
             this.category = category;
-            UnityEngine.Debug.Log(name);
         }
     }
     public class Category
