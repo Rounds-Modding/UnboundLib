@@ -208,9 +208,9 @@ namespace UnboundLib.Utils.UI
                 // Create lvlObjs
                 foreach (var level in LevelManager.levels)
                 {
-                    if (!File.Exists(Path.Combine("./LevelImages", LevelManager.GetVisualName(level.Value.name) + ".png")))
+                    if (!File.Exists(Path.Combine("./LevelImages", LevelManager.GetVisualName(level.Key) + ".png")))
                     {
-                        levelsThatNeedToRedrawn.Add(level.Value.name);
+                        levelsThatNeedToRedrawn.Add(level.Key);
                     }
 
                     var parentScroll = ScrollViews[level.Value.category].Find("Viewport/Content");
