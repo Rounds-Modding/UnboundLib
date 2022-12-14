@@ -10,6 +10,7 @@ using UnboundLib.Utils.UI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace UnboundLib.Networking
 {
@@ -39,7 +40,6 @@ namespace UnboundLib.Networking
         internal static void RequestSync()
         {
             if (PhotonNetwork.OfflineMode) return;
-            //UnityEngine.Debug.Log("REQUESTING SYNC...");
 
             NetworkingManager.RPC(typeof(SyncModClients), "SyncLobby", new object[] { });
         }
@@ -49,13 +49,10 @@ namespace UnboundLib.Networking
         {
             Reset();
             LocalSetup();
-            if (PhotonNetwork.IsMasterClient)
-            {
-                //UnityEngine.Debug.Log("SYNCING...");
-                CheckLobby();
-                Unbound.Instance.StartCoroutine(Check());
-
-            }
+            if (!PhotonNetwork.IsMasterClient) return;
+            
+            CheckLobby();
+            Unbound.Instance.StartCoroutine(Check());
         }
 
         internal static IEnumerator Check()
@@ -63,8 +60,6 @@ namespace UnboundLib.Networking
             float startTime = Time.time;
             while (clientsServerSideGUIDs.Keys.Count < PhotonNetwork.PlayerList.Except(new List<Photon.Realtime.Player> { PhotonNetwork.LocalPlayer }).ToList().Count)
             {
-                //UnityEngine.Debug.Log("WAITING");
-
                 if (Time.time > startTime + timeoutTime)
                 {
                     break;
@@ -73,24 +68,19 @@ namespace UnboundLib.Networking
                 yield return null;
             }
             yield return new WaitForSecondsRealtime(1f);
-            //UnityEngine.Debug.Log("FINISHED WAITING.");
             FindDifferences();
             MakeFlags();
-            yield break;
         }
 
         internal static void LocalSetup()
         {
             loadedMods = BepInEx.Bootstrap.Chainloader.PluginInfos;
 
-            foreach (string ID in loadedMods.Keys)
+            foreach (var modId in loadedMods.Keys.Where(id => !clientSideGUIDs.Contains(loadedMods[id].Metadata.GUID)))
             {
-                if (!clientSideGUIDs.Contains(loadedMods[ID].Metadata.GUID))
-                {
-                    loadedGUIDs.Add(loadedMods[ID].Metadata.GUID);
-                    loadedModNames.Add(loadedMods[ID].Metadata.Name);
-                    loadedVersions.Add(loadedMods[ID].Metadata.Version.ToString());
-                }
+                loadedGUIDs.Add(loadedMods[modId].Metadata.GUID);
+                loadedModNames.Add(loadedMods[modId].Metadata.Name);
+                loadedVersions.Add(loadedMods[modId].Metadata.Version.ToString());
             }
         }
 
@@ -122,12 +112,11 @@ namespace UnboundLib.Networking
 
         internal static void FindDifferences()
         {
-
-            foreach (int actorID in clientsServerSideGUIDs.Keys)
+            foreach (int actorId in clientsServerSideGUIDs.Keys)
             {
-                missing[actorID] = hostsServerSideGUIDs.Except(clientsServerSideGUIDs[actorID]).ToArray();
-                extra[actorID] = clientsServerSideGUIDs[actorID].Except(hostsServerSideGUIDs).ToArray();
-                mismatch[actorID] = clientsServerSideGUIDs[actorID].Except(extra[actorID]).Except(missing[actorID]).Where(guid => HostVersionFromGUID(guid) != VersionFromGUID(actorID, guid)).ToArray();
+                missing[actorId] = hostsServerSideGUIDs.Except(clientsServerSideGUIDs[actorId]).ToArray();
+                extra[actorId] = clientsServerSideGUIDs[actorId].Except(hostsServerSideGUIDs).ToArray();
+                mismatch[actorId] = clientsServerSideGUIDs[actorId].Except(extra[actorId]).Except(missing[actorId]).Where(guid => HostVersionFromGUID(guid) != VersionFromGUID(actorId, guid)).ToArray();
             }
 
         }
@@ -151,47 +140,37 @@ namespace UnboundLib.Networking
 
         internal static void MakeFlags()
         {
+            if (!PhotonNetwork.IsMasterClient) { return; }
             //UnityEngine.Debug.Log("MAKING FLAGS...");
 
             // add a host flag for the host
             NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { PhotonNetwork.LocalPlayer.ActorNumber, new string[] { "✓ " + PhotonNetwork.CurrentRoom.GetPlayer(PhotonNetwork.LocalPlayer.ActorNumber).NickName, "HOST"}, false });
 
             // detect unmodded clients
-            foreach (int actorID in PhotonNetwork.CurrentRoom.Players.Values.Select(p => p.ActorNumber).Except(clientsServerSideGUIDs.Keys).Except(new int[] { PhotonNetwork.LocalPlayer.ActorNumber }).ToArray())
+            foreach (int actorId in PhotonNetwork.CurrentRoom.Players.Values.Select(p => p.ActorNumber).Except(clientsServerSideGUIDs.Keys).Except(new int[] { PhotonNetwork.LocalPlayer.ActorNumber }).ToArray())
             {
-                NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { actorID, new string[] { "✗ " + PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName, "UNMODDED" }, true });
+                NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { actorId, new string[] { "✗ " + PhotonNetwork.CurrentRoom.GetPlayer(actorId).NickName, "UNMODDED" }, true });
             }
 
-            foreach (int actorID in clientsServerSideGUIDs.Keys.Intersect(PhotonNetwork.CurrentRoom.Players.Select(kv => kv.Value.ActorNumber)))
+            foreach (int actorId in clientsServerSideGUIDs.Keys.Intersect(PhotonNetwork.CurrentRoom.Players.Select(kv => kv.Value.ActorNumber)))
             {
                 List<string> flags = new List<string>();
 
-                if (missing[actorID].Length == 0 && extra[actorID].Length == 0 && mismatch[actorID].Length == 0)
+                if (missing[actorId].Length == 0 && extra[actorId].Length == 0 && mismatch[actorId].Length == 0)
                 {
-                    flags.Add("✓ " + PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName);
+                    flags.Add("✓ " + PhotonNetwork.CurrentRoom.GetPlayer(actorId).NickName);
                     flags.Add("ALL MODS SYNCED");
                     //UnityEngine.Debug.Log(PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName + " is synced!");
 
-                    NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] {actorID, flags.ToArray(), false});
+                    NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] {actorId, flags.ToArray(), false});
                     continue;
                 }
-                else
-                {
-                    flags.Add("✗ " + PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName);
-                }
-                foreach (string missingGUID in missing[actorID])
-                {
-                    flags.Add("MISSING: " + ModIDFromGUID(actorID, missingGUID) + " (" + missingGUID + ")");
-                }
-                foreach (string versionGUID in mismatch[actorID])
-                {
-                    flags.Add("VERSION: " + ModIDFromGUID(actorID, versionGUID) + " (" + versionGUID + ") Version: " + VersionFromGUID(actorID, versionGUID) + " <b>Host has: " + HostVersionFromGUID(versionGUID)+"</b>");
-                }
-                foreach (string extraGUID in extra[actorID])
-                {
-                    flags.Add("EXTRA: " + ModIDFromGUID(actorID, extraGUID) + " (" + extraGUID + ") Version: " + VersionFromGUID(actorID, extraGUID));
-                }
-                NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { actorID, flags.ToArray(), true });
+
+                flags.Add("✗ " + PhotonNetwork.CurrentRoom.GetPlayer(actorId).NickName);
+                flags.AddRange(missing[actorId].Select(missingGUID => "MISSING: " + ModIDFromGUID(actorId, missingGUID) + " (" + missingGUID + ")"));
+                flags.AddRange(mismatch[actorId].Select(versionGUID => "VERSION: " + ModIDFromGUID(actorId, versionGUID) + " (" + versionGUID + ") Version: " + VersionFromGUID(actorId, versionGUID) + " <b>Host has: " + HostVersionFromGUID(versionGUID) + "</b>"));
+                flags.AddRange(extra[actorId].Select(extraGUID => "EXTRA: " + ModIDFromGUID(actorId, extraGUID) + " (" + extraGUID + ") Version: " + VersionFromGUID(actorId, extraGUID)));
+                NetworkingManager.RPC(typeof(SyncModClients), nameof(AddFlags), new object[] { actorId, flags.ToArray(), true });
             }
 
 
@@ -202,21 +181,14 @@ namespace UnboundLib.Networking
         private static void AddFlags(int actorID, string[] flags, bool error)
         {
             //UnityEngine.Debug.Log("ADDING FLAGS");
-
             // display the sync status of each player here
-
             // each player has a unique actorID, which is tied to their Nickname (displayed in the lobby) by PhotonNetwork.CurrentLobby.GetPlayer(actorID).NickName
-
             // AddFlags adds an array of strings for one actorID when called. the array of strings are the status and warning messages for syncing mods
-
             // the first entry in the array is a simple "Good" "Bad" (checkmark or X) and ideally would always be shown next to the player's name in the lobby
-
             // if (error=true) then the text should ideally be red
-
             // when a player hovers over (with mouse) the green/red check/X it should display a textbox or something with the full error/warning messages - each entry on a new line
-
-            
             var nickName = PhotonNetwork.CurrentRoom.GetPlayer(actorID).NickName;
+            var objName = actorID.ToString();
 
             var _uiHolder = MenuHandler.modOptionsUI.LoadAsset<GameObject>("uiHolder");
             var _checkmark =  MenuHandler.modOptionsUI.LoadAsset<GameObject>("checkmark");
@@ -225,14 +197,11 @@ namespace UnboundLib.Networking
             // Check if uiHolder has already been made
             if (!UIHandler.instance.transform.Find("Canvas/UIHolder"))
             {
-                // var t = new GameObject();
-                // t.transform.parent = UIHandler.instance.transform.Find("Canvas");
-                // t.transform.localScale = Vector3.one;
-                // t.AddComponent<RectTransform>();
-                uiParent = GameObject.Instantiate(_uiHolder,UIHandler.instance.transform.Find("Canvas"));
+                uiParent = Object.Instantiate(_uiHolder,UIHandler.instance.transform.Find("Canvas"));
                 uiParent.name = "UIHolder";
                 uiParent.GetComponent<RectTransform>().localPosition = new Vector3(-975, 486, 2565);
                 uiParent.GetOrAddComponent<DetectUnmodded>();
+                uiParent.GetOrAddComponent<DetectMissingPlayers>();
                 uiParent.GetComponent<VerticalLayoutGroup>().spacing = -60;
             }
             else
@@ -241,36 +210,37 @@ namespace UnboundLib.Networking
             }
             
             GameObject playerObj;
-            if (!uiParent.transform.Find(nickName))
+            if (!uiParent.transform.Find(objName))
             {
                 playerObj = new GameObject();
                 playerObj.AddComponent<RectTransform>();
                 playerObj.transform.SetParent(uiParent.transform, true);
                 playerObj.transform.localScale = Vector3.one;
-                playerObj.name = nickName;
+                playerObj.name = objName;
             }
             else
             {
-                playerObj = uiParent.transform.Find(nickName).gameObject;
+                playerObj = uiParent.transform.Find(objName).gameObject;
             }
 
             // destroy sync object and remake it
             while (playerObj.transform.childCount > 0)
             {
-                UnityEngine.GameObject.DestroyImmediate(playerObj.transform.GetChild(0).gameObject);
+                Object.DestroyImmediate(playerObj.transform.GetChild(0).gameObject);
             }
+
             if (!playerObj.transform.Find(nickName))
             {
                 var flag = flags[0];
                 if (flag.Contains("✓ "))
                 {
-                    var check = GameObject.Instantiate(_checkmark, playerObj.transform);
+                    var check = Object.Instantiate(_checkmark, playerObj.transform);
                     var _hover = check.AddComponent<CheckHover>();
                     _hover.texts = flags;
                     check.transform.localPosition = new Vector3(-15, 25, 0);
                 } else if (flag.Contains("✗ "))
                 {
-                    var redcheck = GameObject.Instantiate(_redx, playerObj.transform);
+                    var redcheck = Object.Instantiate(_redx, playerObj.transform);
                     var _hover = redcheck.AddComponent<CheckHover>();
                     _hover.texts = flags;
                     redcheck.transform.localPosition = new Vector3(-15, 25, 0);
@@ -282,9 +252,6 @@ namespace UnboundLib.Networking
                 var hover = text.AddComponent<CheckHover>();
                 hover.texts = flags;
                 hover.actorId = actorID;
-                //var uGUIMargin = uGUI.margin;
-                //uGUIMargin.z = 1600;
-                //uGUI.margin = uGUIMargin;
                 uGUI.fontSizeMin = 25;
                 var layout = text.AddComponent<LayoutElement>();
                 layout.preferredWidth = 300;
@@ -296,46 +263,41 @@ namespace UnboundLib.Networking
                 rectTrans.pivot = Vector2.zero;
                 text.transform.localPosition = Vector3.zero;
             }
-            Unbound.Instance.ExecuteAfterSeconds(0.1f, () =>
+
+            Unbound.Instance.ExecuteAfterFrames(5, () =>
             {
                 uiParent.GetComponent<VerticalLayoutGroup>().SetLayoutVertical();
             });
-            //var UIHolder = new GameObject();
         }
 
-        public static IEnumerator disableSyncModUI(GameObject parent)
+        public static IEnumerator DisableSyncModUi(GameObject parent)
         {
-            GameObject.Destroy(parent);
+            Object.Destroy(parent);
             yield break;
         } 
 
         [UnboundRPC]
         private static void SendModList()
         {
-            //UnityEngine.Debug.Log("SENDING MODS...");
             NetworkingManager.RPC(typeof(SyncModClients), "ReceiveModList", new object[] { loadedGUIDs.ToArray(), loadedModNames.ToArray(), loadedVersions.ToArray(), PhotonNetwork.LocalPlayer.ActorNumber });
         }
 
         [UnboundRPC]
         private static void ReceiveModList(string[] serverSideGUIDs, string[] serverSideMods, string[] versions, int actorID)
         {
-            if (PhotonNetwork.IsMasterClient)
+            if (!PhotonNetwork.IsMasterClient) return;
+            
+            if (PhotonNetwork.LocalPlayer.ActorNumber == actorID)
             {
-                //UnityEngine.Debug.Log("RECEIVING MODS...");
-
-                if (PhotonNetwork.LocalPlayer.ActorNumber == actorID)
-                {
-                    hostsServerSideGUIDs = serverSideGUIDs.ToList();
-                    hostsServerSideMods = serverSideMods.ToList();
-                    hostsModVersions = versions.ToList();
-                }
-                else
-                {
-                    clientsServerSideGUIDs[actorID] = serverSideGUIDs;
-                    clientsServerSideMods[actorID] = serverSideMods;
-                    clientsModVersions[actorID] = versions;
-                }
-
+                hostsServerSideGUIDs = serverSideGUIDs.ToList();
+                hostsServerSideMods = serverSideMods.ToList();
+                hostsModVersions = versions.ToList();
+            }
+            else
+            {
+                clientsServerSideGUIDs[actorID] = serverSideGUIDs;
+                clientsServerSideMods[actorID] = serverSideMods;
+                clientsModVersions[actorID] = versions;
             }
         }
     }
@@ -381,38 +343,75 @@ namespace UnboundLib.Networking
 
     internal class DetectUnmodded : MonoBehaviour
     {
-        private readonly float baseDelay = 1f;
+        private const float BaseDelay = 1f;
         private float delay = 1f;
         private float startTime;
         private int prevPlayers;
-        private bool update = false;
+        private bool update;
 
-        void Start()
+        private void Start()
         {
             startTime = Time.time;
             prevPlayers = PhotonNetwork.CurrentRoom.PlayerCount;
-            delay = baseDelay;
+            delay = BaseDelay;
         }
-        void Update()
+
+        private void Update()
         {
-            if (Time.time > startTime + delay)
+            if(Time.time <= startTime + delay) return;
+            
+            if (update)
             {
-                if (update)
+                SyncModClients.MakeFlags();
+                update = false;
+                delay = BaseDelay;
+            }
+            else
+            {
+                startTime = Time.time;
+                if (prevPlayers == PhotonNetwork.CurrentRoom.PlayerCount) return;
+                
+                prevPlayers = PhotonNetwork.CurrentRoom.PlayerCount;
+                delay = SyncModClients.timeoutTime + 2f;
+                update = true;
+            }
+        }
+    }
+
+    internal class DetectMissingPlayers : MonoBehaviour
+    {
+        private const float BaseDelay = 1f;
+        private float delay = BaseDelay;
+
+        private void Start()
+        {
+            delay = BaseDelay;
+        }
+
+        private void Update()
+        {
+            if (delay <= 0f)
+            {
+                delay = BaseDelay;
+
+                // look through all of the mod syncing objects and make sure there is a photon client with the same actor number
+                List<int> toDestroy = new List<int>();
+                for (int i = 0; i < gameObject.transform.childCount; i++)
                 {
-                    SyncModClients.MakeFlags();
-                    update = false;
-                    delay = baseDelay;
-                }
-                else
-                {
-                    startTime = Time.time;
-                    if (prevPlayers != PhotonNetwork.CurrentRoom.PlayerCount)
+                    GameObject playerObj = gameObject.transform.GetChild(i).gameObject;
+                    if (!PhotonNetwork.CurrentRoom.Players.Keys.Select(aID => aID.ToString()).Contains(playerObj.name))
                     {
-                        prevPlayers = PhotonNetwork.CurrentRoom.PlayerCount;
-                        delay = SyncModClients.timeoutTime + 2f;
-                        update = true;
+                        toDestroy.Add(i);
                     }
                 }
+                foreach (int i in toDestroy)
+                {
+                    Destroy(gameObject.transform.GetChild(i).gameObject);
+                }
+            }
+            else
+            {
+                delay -= TimeHandler.deltaTime;
             }
         }
     }
@@ -425,16 +424,18 @@ namespace UnboundLib.Networking
         private GUIStyle guiStyleFore;
         private string pingString = "";
 
-        private bool inBounds = false;
+        private bool inBounds;
 
         private void Start()
         {
-            guiStyleFore = new GUIStyle();
-            guiStyleFore.richText = true;
-            guiStyleFore.normal.textColor = Color.white;  
-            guiStyleFore.alignment = TextAnchor.UpperLeft ;
-            guiStyleFore.wordWrap = false;
-            guiStyleFore.stretchWidth = true;
+            guiStyleFore = new GUIStyle
+            {
+                richText = true,
+                normal = { textColor = Color.white },
+                alignment = TextAnchor.UpperLeft,
+                wordWrap = false,
+                stretchWidth = true
+            };
             var background = new Texture2D(1, 1);
             background.SetPixel(0,0, Color.gray);
             background.Apply();
@@ -445,42 +446,41 @@ namespace UnboundLib.Networking
         }
         private void OnGUI()
         {
-            if (this.inBounds && texts != Array.Empty<string>() && Input.mousePosition.x < Screen.width/4)
+            if (!inBounds || texts == Array.Empty<string>() || !(Input.mousePosition.x < Screen.width / 4f)) return;
+            
+            Vector2 size = guiStyleFore.CalcSize(new GUIContent(string.Join("\n",texts)));
+            GUILayout.BeginArea(new Rect(Input.mousePosition.x + 25, Screen.height - Input.mousePosition.y + 25, size.x + 10, size.y+10));
+            GUILayout.BeginVertical();
+            foreach (var t in texts)
             {
-                Vector2 size = guiStyleFore.CalcSize(new GUIContent(String.Join("\n",texts)));
-                GUILayout.BeginArea(new Rect(Input.mousePosition.x + 25, Screen.height - Input.mousePosition.y + 25, size.x + 10, size.y+10));
-                GUILayout.BeginVertical();
-                foreach (var t in texts)
-                {
-                    GUILayout.Label (t, guiStyleFore);
-                }
-                GUILayout.EndVertical();
-                GUILayout.EndArea();
+                GUILayout.Label (t, guiStyleFore);
             }
+
+            GUILayout.EndVertical();
+            GUILayout.EndArea();
         }
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            this.inBounds = true;
+            inBounds = true;
         }
         public void OnPointerExit(PointerEventData eventData)
         {
-            this.inBounds = false;
+            inBounds = false;
         }
 
         private void OnPingUpdate(int updatedActorId, int ping)
         {
-            if (updatedActorId == actorId)
+            if (updatedActorId != actorId) return;
+
+            if (pingString == "")
             {
-                if (pingString == "")
-                {
-                    pingString = texts[0];
-                }
-
-                var color = PingMonitor.instance.GetPingColors(ping);
-
-                texts[0] = $"{pingString} - <color={color.HTMLCode}>{ping}ms</color>";
+                pingString = texts[0];
             }
+
+            var color = PingMonitor.instance.GetPingColors(ping);
+
+            texts[0] = $"{pingString} - <color={color.HTMLCode}>{ping}ms</color>";
         }
 
         private void OnDestroy()

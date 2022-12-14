@@ -1,10 +1,10 @@
-﻿using System;
+﻿using ExitGames.Client.Photon;
+using Photon.Pun;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
-using Photon.Pun;
 using UnboundLib.Networking;
-using ExitGames.Client.Photon;
+using UnityEngine;
 
 namespace UnboundLib
 {
@@ -14,19 +14,15 @@ namespace UnboundLib
         public Dictionary<int, bool> ConnectedPlayers = new Dictionary<int, bool>();
         public Dictionary<int, int> PlayerPings = new Dictionary<int, int>();
         public Action<int, int> PingUpdateAction;
-
         public static PingMonitor instance;
-
-        private int pingUpdate = 0;
+        private int pingUpdate;
 
         private void Start()
         {
-            if (!PhotonNetwork.OfflineMode && PhotonNetwork.CurrentRoom != null)
+            if (PhotonNetwork.OfflineMode || PhotonNetwork.CurrentRoom == null) return;
+            foreach (var player in PhotonNetwork.CurrentRoom.Players.Values)
             {
-                foreach (var player in PhotonNetwork.CurrentRoom.Players.Values)
-                {
-                    ConnectedPlayers.Add(player.ActorNumber, true);
-                }
+                ConnectedPlayers.Add(player.ActorNumber, true);
             }
         }
 
@@ -39,24 +35,18 @@ namespace UnboundLib
             else if (instance != this)
             {
                 DestroyImmediate(this);
-                return;
             }
         }
 
         private void FixedUpdate()
         {
             // We only check ping if connected to a room.
-            if (!PhotonNetwork.OfflineMode)
-            {
-                pingUpdate++;
-            }
-
-            // We want to check our ping every 100 frames, roughly every 2 secs.
-            if (pingUpdate > 99)
-            {
-                pingUpdate = 0;
-                RPCA_UpdatePings();
-            }
+            if (PhotonNetwork.OfflineMode) return;
+            pingUpdate++;
+            // We want to check our ping every 25 frames.
+            if (pingUpdate <= 25) return;
+            pingUpdate = 0;
+            RPCA_UpdatePings();
         }
 
         public override void OnJoinedRoom()
@@ -74,7 +64,7 @@ namespace UnboundLib
             }
 
             // Run an RPC after a half second, to give the client time to connect to the lobby completely.
-            this.ExecuteAfterSeconds(0.5f, () =>
+            this.ExecuteAfterFrames(15, () =>
             {
                 NetworkingManager.RPC_Others(typeof(PingMonitor), nameof(RPCA_UpdatePings));
                 RPCA_UpdatePings();
@@ -106,21 +96,17 @@ namespace UnboundLib
         public override void OnPlayerPropertiesUpdate(Photon.Realtime.Player targetPlayer, Hashtable changedProps)
         {
             // If ping was updated, we run any actions for it now.
-            if (changedProps.TryGetValue("Ping", out var ping))
-            {
-                PlayerPings[targetPlayer.ActorNumber] = (int)ping;
+            if (!changedProps.TryGetValue("Ping", out var ping)) return;
+            PlayerPings[targetPlayer.ActorNumber] = (int) ping;
 
-                if (PingUpdateAction != null)
-                {
-                    try
-                    {
-                        PingUpdateAction(targetPlayer.ActorNumber, (int)ping);
-                    }
-                    catch (Exception e)
-                    {
-                        UnityEngine.Debug.LogException(e);
-                    }
-                }
+            if (PingUpdateAction == null) return;
+            try
+            {
+                PingUpdateAction(targetPlayer.ActorNumber, (int)ping);
+            }
+            catch (Exception e)
+            {
+                UnityEngine.Debug.LogException(e);
             }
         }
 
@@ -132,46 +118,46 @@ namespace UnboundLib
         public Player[] GetPlayersByOwnerActorNumber(int actorNumber)
         {
             // Get each player with the same actor number
-            var players = PlayerManager.instance.players.Where((player) => player.data.view.OwnerActorNr == actorNumber).ToArray();
+            var players = PlayerManager.instance.players.Where(player => player.data.view.OwnerActorNr == actorNumber).ToArray();
 
-            // If it's not an empty array, return it.
-            if (players.Length > 0)
-            {
-                return players;
-            }
-
-            // Default to null.
-            return null;
+            // If it's not an empty array, return it or default to null.
+            return players.Length > 0 ? players : null;
         }
 
         public PingColor GetPingColors(int ping)
         {
-            PingColor result;
-
-            if (ping <= 150)
-            {
-                result = new PingColor(new Color(255f / 255f, 255f / 255f, 255f / 255f), "#FFFFFF");
-            }
-            else if (ping <= 200)
-            {
-                result = new PingColor(new Color(191f / 255f, 101f / 255f, 17f / 255f), "#bf6511");
-            }
-            else
-            {
-                result = new PingColor(new Color(219f / 255f, 0f / 255f, 0f / 255f), "#db0000");
-            }
-
+            var gradient = GetColorGradient(Normalize(ping, 40, 220, 0, 1));
+            PingColor result = new PingColor("#" + ColorUtility.ToHtmlStringRGB(gradient));
             return result;
+        }
+
+        private static float Normalize(float val, float valmin, float valmax, float min, float max)
+        {
+            return ((val - valmin) / (valmax - valmin) * (max - min)) + min;
+        }
+
+        private static Color GetColorGradient(float percentage)
+        {
+            Gradient gradient = new Gradient();
+            GradientColorKey[] colorKeys = new GradientColorKey[3];
+
+            colorKeys[0].color = Color.green;
+            colorKeys[0].time = 0;
+            colorKeys[1].color = Color.yellow;
+            colorKeys[1].time = 0.5f;
+            colorKeys[2].color = Color.red;
+            colorKeys[2].time = 1;
+
+            gradient.SetKeys(colorKeys, new GradientAlphaKey[3]);
+            return gradient.Evaluate(percentage);
         }
 
         public struct PingColor
         {
-            public Color color;
             public string HTMLCode;
 
-            public PingColor(Color colorColor, string code)
+            public PingColor(string code)
             {
-                color = colorColor;
                 HTMLCode = code;
             }
         }

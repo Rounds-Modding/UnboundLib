@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -33,7 +33,7 @@
     <DebugType>portable</DebugType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <RoundsFolder>D:\Program Files (x86)\Steam\steamapps\common\ROUNDS</RoundsFolder>
     <IndirectBuildTask>true</IndirectBuildTask>
@@ -42,6 +42,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\togglemenuui" />
     <None Remove="UnboundLib.csproj.user.dist" />
     <None Remove="PostBuild.msbuild" />
     <None Remove="unboundlinks" />
@@ -50,10 +51,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\AssetsEmbedded\unboundui" />
-    <EmbeddedResource Include="..\AssetsEmbedded\modoptionsui" />
-    <EmbeddedResource Include="..\AssetsEmbedded\toggle ui" />
-    <EmbeddedResource Include="..\AssetsEmbedded\unboundlinks" />
+    <EmbeddedResource Include="..\AssetsEmbedded\unboundui" Link="Assets\unboundui" />
+    <EmbeddedResource Include="..\AssetsEmbedded\modoptionsui" Link="Assets\modoptionsui" />
+    <EmbeddedResource Include="..\AssetsEmbedded\unboundlinks" Link="Assets\unboundlinks" />
+    <EmbeddedResource Include="Assets\togglemenuui" />
   </ItemGroup>
 
   <ItemGroup>
@@ -134,7 +135,7 @@
       <PackageVersion>%(PackAssembly.Version)</PackageVersion>
     </PropertyGroup>
   </Target>
-  
+
   <Target Name="PostBuildTaskWin" Condition="'$(OS)' == 'Windows_NT'" DependsOnTargets="Build" AfterTargets="Build">
     <CallTarget Targets="ReadPackageVersionFromOutputAssembly">
       <Output TaskParameter="TargetOutputs" PropertyName="PackageVersion" />

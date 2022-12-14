@@ -17,6 +17,11 @@ namespace UnboundLib.GameModes
 
         GameSettings Settings { get; }
 
+        UISettings UISettings { get; }
+
+        bool OnlineOnly { get; }
+        bool AllowTeams { get; }
+
         string Name { get; }
 
         void SetSettings(GameSettings settings);
@@ -47,6 +52,24 @@ namespace UnboundLib.GameModes
         /// <param name="teamID">ID of the team whose score should be changed.</param>
         /// <param name="score">Score to set for the team.</param>
         void SetTeamScore(int teamID, TeamScore score);
+
+        /// <summary>
+        ///     Returns an array of all teamIDs for which the team has satisfied the win condition.
+        ///     Should return an empty array when there are no winners
+        /// </summary>
+        int[] GetGameWinners();
+
+        /// <summary>
+        ///     Returns an array of all teamIDs for which won the most recent round
+        ///     Should return an empty array when there has yet to be any round winners in the game so far
+        /// </summary>
+        int[] GetRoundWinners();
+
+        /// <summary>
+        ///     Returns an array of all teamIDs for which won the most recent point
+        ///     Should return an empty array when there has yet to be any point winners in the game so far
+        /// </summary>
+        int[] GetPointWinners();
 
         /// <summary>
         ///     When true, should tell the game mode to activate and run any initialization code it might have.

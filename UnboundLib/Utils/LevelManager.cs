@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using BepInEx.Configuration;
+using ExitGames.Client.Photon.StructWrapping;
 using Photon.Pun;
 using UnboundLib.Networking;
 using UnboundLib.Utils.UI;
@@ -73,12 +75,9 @@ namespace UnboundLib.Utils
             }
 
             // Populate the categories list
-            foreach (var level in levels.Values)
+            foreach (var level in levels.Values.Where(level => !categories.Contains(level.category)))
             {
-                if (!categories.Contains(level.category))
-                {
-                    categories.Add(level.category);
-                }
+                categories.Add(level.category);
             }
 
             // Populate the categoryBools dictionary
@@ -144,11 +143,9 @@ namespace UnboundLib.Utils
             }
 
 
-            if (saved)
-            {
-                levels[levelName].enabled = true;
-                Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = true;
-            }
+            if (!saved) return;
+            levels[levelName].enabled = true;
+            Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = true;
         }
 
         public static void DisableLevels(string[] levelNames, bool saved = true)
@@ -169,15 +166,12 @@ namespace UnboundLib.Utils
             if (!inactiveLevels.Contains(levelName))
             {
                 inactiveLevels.Add(levelName);
-                inactiveLevels.Sort((x, y) => string.CompareOrdinal(x, y));
+                inactiveLevels.Sort(string.CompareOrdinal);
             }
 
-
-            if (saved)
-            {
-                levels[levelName].enabled = false;
-                Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = false;
-            }
+            if (!saved) return;
+            levels[levelName].enabled = false;
+            Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = false;
         }
 
 
@@ -257,27 +251,16 @@ namespace UnboundLib.Utils
 
         public static void RegisterMaps(IEnumerable<string> paths, string category = "Modded")
         {
+            RegisterNamedMaps(paths, new Dictionary<string, string>(), category);
+        }
+        public static void RegisterNamedMaps(IEnumerable<string> paths, IDictionary<string, string> mapNames , string category = "Modded")
+        {
             foreach (var path in paths.Distinct())
             {
-                activeLevels.Add(path);
-                if (!levels.ContainsKey(path))
-                {
-                    levels[path] = new Level(path, true, false, category);
-                }
+                if (mapNames.ContainsKey(path))
+                    RegisterMap(path, mapNames[path], category);
                 else
-                {
-                    levels[path].category = category;
-                }
-
-                if (!categories.Contains(category))
-                {
-                    categories.Add(category);
-                    categoryBools[category] = Unbound.config.Bind("Level categories", category, true);
-                }
-                if (!Unbound.config.Bind("Levels: " + levels[path].category, GetVisualName(path), true).Value)
-                {
-                    DisableLevel(path);
-                }
+                    RegisterMap(path, path, category);
             }
             // Sort activeLevels
             activeLevels = new ObservableCollection<string>(activeLevels.OrderBy(i => i));
@@ -286,6 +269,29 @@ namespace UnboundLib.Utils
             activeLevels = new ObservableCollection<string>(activeLevels.Distinct().ToList());
             activeLevels.CollectionChanged += LevelsChanged;
             MapManager.instance.levels = activeLevels.ToArray();
+        }
+        private static void RegisterMap(string path, string name, string category)
+        {
+            if (!levels.ContainsKey(path))
+            {
+                levels[path] = new Level(name, true, false, category);
+            }
+            else
+            {
+                levels[path].category = category;
+            }
+
+            activeLevels.Add(path);
+
+            if (!categories.Contains(category))
+            {
+                categories.Add(category);
+                categoryBools[category] = Unbound.config.Bind("Level categories", category, true);
+            }
+            if (!Unbound.config.Bind("Levels: " + levels[path].category, GetVisualName(path), true).Value)
+            {
+                DisableLevel(path);
+            }
         }
 
         // loads a map in via its name prefixed with a forward-slash
@@ -306,7 +312,6 @@ namespace UnboundLib.Utils
                 var formattedMessage = message.ToUpper()
                     .Replace(" ", "_")
                     .Replace("/", "");
-
                 for (var i = 0; i < currentLevels.Length; i++)
                 {
                     var text = currentLevels[i].ToUpper()
@@ -325,11 +330,9 @@ namespace UnboundLib.Utils
                         }
                     }
                     currentMatches -= Mathf.Abs(formattedMessage.Length - text.Length) * 0.001f;
-                    if (currentMatches > 0.1f && currentMatches > bestMatches)
-                    {
-                        bestMatches = currentMatches;
-                        levelId = i;
-                    }
+                    if (!(currentMatches > 0.1f) || !(currentMatches > bestMatches)) continue;
+                    bestMatches = currentMatches;
+                    levelId = i;
                 }
                 if (levelId != -1)
                 {
@@ -400,29 +403,26 @@ namespace UnboundLib.Utils
             List<string> disabledLevels = new List<string>();
 
             // disable any levels which aren't shared by other players
-            foreach (var c in allLevels)
+            foreach (var map in allLevels)
             {
-                if (!levels.Contains(c))
+                if (levels.Contains(map)) continue;
+                DisableLevel(map, false);
+                disabledLevels.Add(map);
+                foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == map))
                 {
-                    DisableLevel(c, false);
-                    disabledLevels.Add(c);
-                    foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == c))
-                    {
-                        ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
-                    }
+                    ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
                 }
-                //c.SetValue(levels.Contains(c.info.cardName) && c.isEnabled.Value);
             }
 
             if (disabledLevels.Count != 0)
             {
                 Unbound.BuildModal()
                     .Title("These levels have been disabled because someone didn't have them")
-                    .Message(String.Join(", ", disabledLevels.ToArray()))
+                    .Message(string.Join(", ", disabledLevels.ToArray()))
                     .CancelButton("Copy", () =>
                     {
                         Unbound.BuildInfoPopup("Copied Message!");
-                        GUIUtility.systemCopyBuffer = String.Join(", ", disabledLevels.ToArray());
+                        GUIUtility.systemCopyBuffer = string.Join(", ", disabledLevels.ToArray());
                     })
                     .CancelButton("Cancel", () => { })
                     .Show();
@@ -432,26 +432,25 @@ namespace UnboundLib.Utils
             NetworkingManager.RPC_Others(typeof(LevelManager), nameof(RPC_HostMapHandshakeResponse), (object) activeLevels.Select(c => c).ToArray());
         }
 
-
         [UnboundRPC]
         private static void RPC_HostMapHandshakeResponse(string[] levels)
         {
             // enable and disable only levels that the host has specified are allowed
-            foreach (var c in allLevels)
+            foreach (var map in allLevels)
             {
                 //c.SetValue(cards.Contains(c.info.cardName));
-                if (levels.Contains(c))
+                if (levels.Contains(map))
                 {
-                    EnableLevel(c);
-                    foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == c))
+                    EnableLevel(map);
+                    foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == map))
                     {
                         ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
                     }
                 }
                 else
                 {
-                    DisableLevel(c);
-                    foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == c))
+                    DisableLevel(map);
+                    foreach (var obj in ToggleLevelMenuHandler.instance.lvlObjs.Where(t => t.name == map))
                     {
                         ToggleLevelMenuHandler.UpdateVisualsLevelObj(obj);
                     }
@@ -477,7 +476,6 @@ namespace UnboundLib.Utils
             this.category = category;
         }
     }
-
     public class Category
     {
         public string name;

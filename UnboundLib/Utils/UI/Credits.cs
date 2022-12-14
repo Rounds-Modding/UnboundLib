@@ -35,7 +35,7 @@ namespace UnboundLib.Utils.UI
         }
         internal void CreateCreditsMenu(bool firstTime)
         {
-            Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.2f : 0f, () =>
+            Unbound.Instance.ExecuteAfterSeconds(firstTime ? 0.1f : 0f, () =>
             {
                 // Create credits menu
                 CreditsMenu = MenuHandler.CreateMenu("CREDITS", null, MainMenuHandler.instance.transform.Find("Canvas/ListSelector/Main").gameObject, 60, true, false, null,true, 5);
@@ -119,24 +119,24 @@ namespace UnboundLib.Utils.UI
 
     public class ModCredits
     {
-        public string modName = "";
+        public string modName;
         public string[] credits = null;
-        public string[] linkTexts = new string[] { "" };
-        public string[] linkURLs = new string[] { "" };
+        public string[] linkTexts;
+        public string[] linkURLs;
 
         public ModCredits(string modName = "", string[] credits = null,  string[] linkTexts = null, string[] linkURLs = null)
         {
             this.modName = modName;
             this.credits = credits;
-            this.linkTexts = linkTexts ?? new string[] { "" };
-            this.linkURLs = linkURLs ?? new string[] { "" };
+            this.linkTexts = linkTexts ?? new[] { "" };
+            this.linkURLs = linkURLs ?? new[] { "" };
         }
         public ModCredits(string modName = "", string[] credits = null, string linkText = "", string linkURL = "")
         {
             this.modName = modName;
             this.credits = credits;
-            linkTexts = new string[] { linkText };
-            linkURLs = new string[] { linkURL };
+            linkTexts = new[] { linkText };
+            linkURLs = new[] { linkURL };
         }
     }
 }

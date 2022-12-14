@@ -2,14 +2,13 @@
 {
     public class SandboxHandler : GameModeHandler<GM_Test>
     {
-        public override string Name
-        {
-            get { return "Sandbox"; }
-        }
+        public override string Name => "Sandbox";
+        public override bool AllowTeams => true;
+        public override UISettings UISettings => new UISettings("A sandbox mode where you can play around, test out builds, and fight bots.");
 
         public override GameSettings Settings { get; protected set; }
 
-        public SandboxHandler() : base("Test") {
+        public SandboxHandler() : base(GameModeManager.SandBoxID) {
             Settings = new GameSettings();
         }
 

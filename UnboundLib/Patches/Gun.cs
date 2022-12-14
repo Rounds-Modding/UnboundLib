@@ -22,11 +22,9 @@ namespace UnboundLib.Patches
             for (int i = 0; i < ins.Count(); i++)
             {
                 // we only want to change the first occurence here
-                if (ins[i].LoadsField(f_playerID))
-                {
-                    idx = i;
-                    break;
-                }
+                if (!ins[i].LoadsField(f_playerID)) continue;
+                idx = i;
+                break;
             }
             if (idx == -1)
             {

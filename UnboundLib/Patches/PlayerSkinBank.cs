@@ -31,28 +31,28 @@ namespace UnboundLib.Patches
             if (player.gameObject.GetComponentInChildren<PlayerSkinHandler>().simpleSkin)
             {
                 SpriteMask[] sprites = player.gameObject.GetComponentInChildren<SetPlayerSpriteLayer>().transform.root.GetComponentsInChildren<SpriteMask>();
-                for (int i = 0; i < sprites.Length; i++)
+                foreach (var sprite in sprites)
                 {
-                    sprites[i].GetComponent<SpriteRenderer>().color = colorMaxToSet;
+                    sprite.GetComponent<SpriteRenderer>().color = colorMaxToSet;
                 }
-
                 return;
             }
 
-            PlayerSkinParticle[] componentsInChildren2 = player.gameObject.GetComponentsInChildren<PlayerSkinParticle>();
-            for (int j = 0; j < componentsInChildren2.Length; j++)
+            PlayerSkinParticle[] playerSkinParticles = player.gameObject.GetComponentsInChildren<PlayerSkinParticle>();
+            foreach (var playerSkinParticle in playerSkinParticles)
             {
-                ParticleSystem particleSystem2 = (ParticleSystem) componentsInChildren2[j].GetFieldValue("part");
+                ParticleSystem particleSystem2 = (ParticleSystem) playerSkinParticle.GetFieldValue("part");
                 ParticleSystem.MainModule main2 = particleSystem2.main;
                 ParticleSystem.MinMaxGradient startColor2 = particleSystem2.main.startColor;
                 startColor2.colorMin = colorMinToSet;
                 startColor2.colorMax = colorMaxToSet;
                 main2.startColor = startColor2;
             }
+
             SetTeamColor[] teamColors = player.transform.root.GetComponentsInChildren<SetTeamColor>();
-            for (int j = 0; j < teamColors.Length; j++)
+            foreach (var teamColor in teamColors)
             {
-                teamColors[j].Set(new PlayerSkin
+                teamColor.Set(new PlayerSkin
                 {
                     color = colorMaxToSet,
                     backgroundColor = colorMaxToSet,
