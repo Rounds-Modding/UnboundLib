@@ -64,6 +64,10 @@ namespace UnboundLib.Cards
         protected abstract CardInfo.Rarity GetRarity();
         protected abstract GameObject GetCardArt();
         protected abstract CardThemeColor.CardThemeColorType GetTheme();
+        protected virtual GameObject GetCardBase()
+        {
+            return Unbound.templateCard.cardBase;
+        }
 
         public virtual void SetupCard(CardInfo cardInfo, Gun gun, ApplyCardStats cardStats, CharacterStatModifiers statModifiers) { }
 
@@ -126,13 +130,12 @@ namespace UnboundLib.Cards
                 DestroyImmediate(newCard.transform.GetChild(0).gameObject);
                 newCard.transform.SetParent(null, true);
                 var newCardInfo = newCard.GetComponent<CardInfo>();
-                newCardInfo.cardBase = Unbound.templateCard.cardBase;
                 DontDestroyOnLoad(newCard);
 
                 // Add custom ability handler
                 var customCard = newCard.AddComponent<T>();
                 customCard.isPrefab = true;
-
+                newCardInfo.cardBase = customCard.GetCardBase();
                 // Apply card data
                 newCardInfo.cardStats = customCard.GetStats() ?? Array.Empty<CardInfoStat>();
                 newCardInfo.cardName = customCard.GetTitle();
