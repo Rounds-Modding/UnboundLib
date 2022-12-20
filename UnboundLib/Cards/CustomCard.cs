@@ -191,7 +191,7 @@ namespace UnboundLib.Cards
                 CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
             }
 
-            cardInfo.ExecuteAfterFrames(5, () =>
+            Unbound.Instance.ExecuteAfterFrames(5, () =>
             {
                 callback?.Invoke(cardInfo);
             });
@@ -220,7 +220,7 @@ namespace UnboundLib.Cards
                 CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
             }
 
-            cardInfo.ExecuteAfterFrames(5, () =>
+            Unbound.Instance.ExecuteAfterFrames(5, () =>
             {
                 callback?.Invoke(cardInfo);
             });
@@ -240,7 +240,7 @@ namespace UnboundLib.Cards
                 CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
             }
 
-            cardInfo.ExecuteAfterFrames(5, () =>
+            Unbound.Instance.ExecuteAfterFrames(5, () =>
             {
                 callback?.Invoke(cardInfo);
             });
@@ -259,7 +259,7 @@ namespace UnboundLib.Cards
                 CardManager.cards.Add(cardInfo.gameObject.name, new Card(cardname.Sanitize(), Unbound.config.Bind("Cards: " + cardname.Sanitize(), cardInfo.gameObject.name, true), cardInfo));
             }
 
-            cardInfo.ExecuteAfterFrames(5, () =>
+            Unbound.Instance.ExecuteAfterFrames(5, () =>
             {
                 callback?.Invoke(cardInfo);
             });
@@ -278,7 +278,7 @@ namespace UnboundLib.Cards
                 CardManager.cards.Add(cardInfo.gameObject.name, new Card(this.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + this.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
             }
 
-            cardInfo.ExecuteAfterFrames(5, () =>
+            Unbound.Instance.ExecuteAfterFrames(5, () =>
             {
                 callback?.Invoke(cardInfo);
             });
