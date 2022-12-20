@@ -236,6 +236,25 @@ namespace UnboundLib.Cards
             });
         }
 
+        public void RegisterUnityCard(Action<CardInfo> callback)
+        {
+            CardInfo cardInfo = this.gameObject.GetComponent<CardInfo>();
+
+            cardInfo.gameObject.name = $"__{this.GetModName()}__{this.GetTitle()}".Sanitize();
+
+            PhotonNetwork.PrefabPool.RegisterPrefab(cardInfo.gameObject.name, this.gameObject);
+
+            if (this.GetEnabled())
+            {
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(this.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + this.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+            }
+
+            cardInfo.ExecuteAfterFrames(5, () =>
+            {
+                callback?.Invoke(cardInfo);
+            });
+        }
+
         private static void DestroyChildren(GameObject t)
         {
             while (t.transform.childCount > 0)
