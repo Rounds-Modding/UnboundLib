@@ -169,6 +169,54 @@ namespace UnboundLib.Cards
             });
         }
 
+        public static void BuildUnityCard<T>(GameObject cardPrefab, Action<CardInfo> callback) where T : CustomCard
+        {
+            CardInfo cardInfo = cardPrefab.GetComponent<CardInfo>();
+            CustomCard customCard = cardPrefab.GetOrAddComponent<T>();
+
+            cardInfo.cardBase = customCard.GetCardBase();
+            cardInfo.cardStats = customCard.GetStats();
+            cardInfo.cardName = customCard.GetTitle();
+            cardInfo.gameObject.name = $"__{customCard.GetModName()}__{customCard.GetTitle()}".Sanitize();
+            cardInfo.cardDestription = customCard.GetDescription();
+            cardInfo.sourceCard = cardInfo;
+            cardInfo.rarity = customCard.GetRarity();
+            cardInfo.colorTheme = customCard.GetTheme();
+            cardInfo.cardArt = customCard.GetCardArt();
+
+            PhotonNetwork.PrefabPool.RegisterPrefab(cardInfo.gameObject.name, cardPrefab);
+
+            if (customCard.GetEnabled())
+            {
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+            }
+
+            cardInfo.ExecuteAfterFrames(5, () =>
+            {
+                callback?.Invoke(cardInfo);
+            });
+        }
+
+        public static void RegisterUnityCard<T>(GameObject cardPrefab, Action<CardInfo> callback) where T : CustomCard
+        {
+            CardInfo cardInfo = cardPrefab.GetComponent<CardInfo>();
+            CustomCard customCard = cardPrefab.GetOrAddComponent<T>();
+
+            cardInfo.gameObject.name = $"__{customCard.GetModName()}__{customCard.GetTitle()}".Sanitize();
+
+            PhotonNetwork.PrefabPool.RegisterPrefab(cardInfo.gameObject.name, cardPrefab);
+
+            if (customCard.GetEnabled())
+            {
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+            }
+
+            cardInfo.ExecuteAfterFrames(5, () =>
+            {
+                callback?.Invoke(cardInfo);
+            });
+        }
+
         private static void DestroyChildren(GameObject t)
         {
             while (t.transform.childCount > 0)
