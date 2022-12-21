@@ -14,7 +14,7 @@ namespace UnboundLib.Patches
                 if ((__instance.cards[i].gameObject.name + "(Clone)") == info.gameObject.name)
                 {
                     __result = __instance.cards[i];
-                    break;
+                    return false;
                 }
             }
             __result = null;
