@@ -191,6 +191,8 @@ namespace UnboundLib.Cards
                 CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
             }
 
+            customCard.Awake();
+
             Unbound.Instance.ExecuteAfterFrames(5, () =>
             {
                 callback?.Invoke(cardInfo);
@@ -219,6 +221,8 @@ namespace UnboundLib.Cards
             {
                 CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
             }
+
+            this.Awake();
 
             Unbound.Instance.ExecuteAfterFrames(5, () =>
             {
