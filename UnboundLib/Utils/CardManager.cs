@@ -142,10 +142,6 @@ namespace UnboundLib.Utils
             }
 
             string cardName = cardInfo.gameObject.name;
-            if (cardInfo.gameObject.GetComponent<CustomCard>() == null)
-            {
-                cardName = cardInfo.cardName;
-            }
             if (!cards.ContainsKey(cardName)) return;
             
             cards[cardName].enabled = true;
@@ -177,10 +173,6 @@ namespace UnboundLib.Utils
             }
 
             string cardName = cardInfo.gameObject.name;
-            if (cardInfo.gameObject.GetComponent<CustomCard>() == null)
-            {
-                cardName = cardInfo.cardName;
-            }
             if (!cards.ContainsKey(cardName)) return;
 
             cards[cardName].enabled = false;

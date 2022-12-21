@@ -25,7 +25,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "3.2.0";
+        public const string Version = "3.2.1";
 
         public static Unbound Instance { get; private set; }
         public static readonly ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
@@ -176,6 +176,22 @@ namespace UnboundLib
             // Add menu handlers
             gameObject.AddComponent<ToggleLevelMenuHandler>();
             gameObject.AddComponent<ToggleCardsMenuHandler>();
+
+            On.CardChoice.Start += (orig, self) =>
+            {
+                for (int i = 0; i < self.cards.Length; i++)
+                {
+                    if (!((DefaultPool) PhotonNetwork.PrefabPool).ResourceCache.ContainsKey(self.cards[i].gameObject.name))
+                        PhotonNetwork.PrefabPool.RegisterPrefab(self.cards[i].gameObject.name, self.cards[i].gameObject);
+                }
+                var children = new Transform[self.transform.childCount];
+                for (int j = 0; j < children.Length; j++)
+                {
+                    children[j] = self.transform.GetChild(j);
+                }
+                self.SetFieldValue("children", children);
+                self.cards = CardManager.activeCards.ToArray();
+            };
         }
 
         private static IEnumerator CloseLobby(IGameModeHandler gm)
@@ -274,8 +290,8 @@ namespace UnboundLib
             // register default cards with toggle menu
             foreach (var card in CardManager.defaultCards)
             {
-                CardManager.cards.Add(card.cardName,
-                    new Card("Vanilla", config.Bind("Cards: Vanilla", card.cardName, true), card));
+                CardManager.cards.Add(card.name,
+                    new Card("Vanilla", config.Bind("Cards: Vanilla", card.name, true), card));
             }
 
             // hook up Photon callbacks
