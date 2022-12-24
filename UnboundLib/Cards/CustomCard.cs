@@ -169,6 +169,125 @@ namespace UnboundLib.Cards
             });
         }
 
+        public static void BuildUnityCard<T>(GameObject cardPrefab, Action<CardInfo> callback) where T : CustomCard
+        {
+            CardInfo cardInfo = cardPrefab.GetComponent<CardInfo>();
+            CustomCard customCard = cardPrefab.GetOrAddComponent<T>();
+
+            cardInfo.cardBase = customCard.GetCardBase();
+            cardInfo.cardStats = customCard.GetStats();
+            cardInfo.cardName = customCard.GetTitle();
+            cardInfo.gameObject.name = $"__{customCard.GetModName()}__{customCard.GetTitle()}".Sanitize();
+            cardInfo.cardDestription = customCard.GetDescription();
+            cardInfo.sourceCard = cardInfo;
+            cardInfo.rarity = customCard.GetRarity();
+            cardInfo.colorTheme = customCard.GetTheme();
+            cardInfo.cardArt = customCard.GetCardArt();
+
+            PhotonNetwork.PrefabPool.RegisterPrefab(cardInfo.gameObject.name, cardPrefab);
+
+            if (customCard.GetEnabled())
+            {
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+            }
+
+            customCard.Awake();
+
+            Unbound.Instance.ExecuteAfterFrames(5, () =>
+            {
+                callback?.Invoke(cardInfo);
+            });
+        }
+
+        public void BuildUnityCard(Action<CardInfo> callback)
+        {
+            CardInfo cardInfo = this.gameObject.GetComponent<CardInfo>();
+            CustomCard customCard = this;
+            GameObject cardPrefab = this.gameObject;
+
+            cardInfo.cardBase = customCard.GetCardBase();
+            cardInfo.cardStats = customCard.GetStats();
+            cardInfo.cardName = customCard.GetTitle();
+            cardInfo.gameObject.name = $"__{customCard.GetModName()}__{customCard.GetTitle()}".Sanitize();
+            cardInfo.cardDestription = customCard.GetDescription();
+            cardInfo.sourceCard = cardInfo;
+            cardInfo.rarity = customCard.GetRarity();
+            cardInfo.colorTheme = customCard.GetTheme();
+            cardInfo.cardArt = customCard.GetCardArt();
+
+            PhotonNetwork.PrefabPool.RegisterPrefab(cardInfo.gameObject.name, cardPrefab);
+
+            if (customCard.GetEnabled())
+            {
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+            }
+
+            this.Awake();
+
+            Unbound.Instance.ExecuteAfterFrames(5, () =>
+            {
+                callback?.Invoke(cardInfo);
+            });
+        }
+
+        public static void RegisterUnityCard<T>(GameObject cardPrefab, Action<CardInfo> callback) where T : CustomCard
+        {
+            CardInfo cardInfo = cardPrefab.GetComponent<CardInfo>();
+            CustomCard customCard = cardPrefab.GetOrAddComponent<T>();
+
+            cardInfo.gameObject.name = $"__{customCard.GetModName()}__{customCard.GetTitle()}".Sanitize();
+
+            PhotonNetwork.PrefabPool.RegisterPrefab(cardInfo.gameObject.name, cardPrefab);
+
+            if (customCard.GetEnabled())
+            {
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+            }
+
+            Unbound.Instance.ExecuteAfterFrames(5, () =>
+            {
+                callback?.Invoke(cardInfo);
+            });
+        }
+
+        public static void RegisterUnityCard(GameObject cardPrefab, string modInitials, string cardname, bool enabled, Action<CardInfo> callback)
+        {
+            CardInfo cardInfo = cardPrefab.GetComponent<CardInfo>();
+
+            cardInfo.gameObject.name = $"__{modInitials}__{cardname}".Sanitize();
+
+            PhotonNetwork.PrefabPool.RegisterPrefab(cardInfo.gameObject.name, cardPrefab);
+
+            if (enabled)
+            {
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(cardname.Sanitize(), Unbound.config.Bind("Cards: " + cardname.Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+            }
+
+            Unbound.Instance.ExecuteAfterFrames(5, () =>
+            {
+                callback?.Invoke(cardInfo);
+            });
+        }
+
+        public void RegisterUnityCard(Action<CardInfo> callback)
+        {
+            CardInfo cardInfo = this.gameObject.GetComponent<CardInfo>();
+
+            cardInfo.gameObject.name = $"__{this.GetModName()}__{this.GetTitle()}".Sanitize();
+
+            PhotonNetwork.PrefabPool.RegisterPrefab(cardInfo.gameObject.name, this.gameObject);
+
+            if (this.GetEnabled())
+            {
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(this.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + this.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+            }
+
+            Unbound.Instance.ExecuteAfterFrames(5, () =>
+            {
+                callback?.Invoke(cardInfo);
+            });
+        }
+
         private static void DestroyChildren(GameObject t)
         {
             while (t.transform.childCount > 0)
