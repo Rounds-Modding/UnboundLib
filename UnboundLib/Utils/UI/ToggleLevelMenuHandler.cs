@@ -259,7 +259,8 @@ namespace UnboundLib.Utils.UI
                 var viewingText = mapMenuCanvas.transform.Find("MapMenu/Top/Viewing").gameObject.GetComponentInChildren<TextMeshProUGUI>();
 
                 // Create category buttons
-                foreach (var category in LevelManager.categories)
+                List<string> sortedCategories = new[] { "Vanilla", "Default physics" }.Concat(LevelManager.categories.OrderBy(c => c).Except(new[] { "Vanilla", "Default physics" })).ToList();
+                foreach (var category in sortedCategories)
                 {
                     var categoryObj = Instantiate(categoryButton, categoryContent);
                     categoryObj.SetActive(true);

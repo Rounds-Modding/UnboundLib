@@ -219,7 +219,7 @@ namespace UnboundLib.Utils.UI
                 // Create category buttons
                 // sort categories
                 // always have Vanilla first, then sort most cards -> least cards, followed by "Modded" at the end (if it exists)
-                List<string> sortedCategories = new[] { "Vanilla" }.Concat(CardManager.categories.OrderByDescending(x => CardManager.GetCardsInCategory(x).Length).ThenBy(x => x).Except(new[] { "Vanilla" })).ToList();
+                List<string> sortedCategories = new[] { "Vanilla" }.Concat(CardManager.categories.OrderBy(x => x).Except(new[] { "Vanilla" })).ToList();
                 
                 foreach (var category in sortedCategories)
                 {
