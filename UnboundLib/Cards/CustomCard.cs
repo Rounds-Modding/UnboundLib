@@ -260,7 +260,7 @@ namespace UnboundLib.Cards
 
             if (enabled)
             {
-                CardManager.cards.Add(cardInfo.gameObject.name, new Card(cardname.Sanitize(), Unbound.config.Bind("Cards: " + cardname.Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(modInitials.Sanitize(), Unbound.config.Bind("Cards: " + cardname.Sanitize(), cardInfo.gameObject.name, true), cardInfo));
             }
 
             Unbound.Instance.ExecuteAfterFrames(5, () =>
