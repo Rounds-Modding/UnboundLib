@@ -25,7 +25,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "3.2.1";
+        public const string Version = "3.2.2";
 
         public static Unbound Instance { get; private set; }
         public static readonly ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
@@ -228,6 +228,9 @@ namespace UnboundLib
 
             LoadAssets();
             GameModeManager.Init();
+
+            // fetch card to use as a template for all custom cards
+            templateCard = Resources.Load<GameObject>("0 Cards/0. PlainCard").GetComponent<CardInfo>();
         }
 
         private void Start()
@@ -257,17 +260,6 @@ namespace UnboundLib
                 GameModeManager.SetGameMode((string) data[0], false);
                 GameModeManager.CurrentHandler.SetSettings((GameSettings) data[1]);
             });
-
-            // fetch card to use as a template for all custom cards
-            CardInfo huge = CardChoice.instance.cards.FirstOrDefault(c => c.cardName.ToLower() == "huge");
-            templateCard = Instantiate(huge.gameObject, Vector3.up * 100f, Quaternion.identity)
-                .GetComponent<CardInfo>();
-            templateCard.cardBase = huge.cardBase;
-
-            templateCard.gameObject.name = "__UNBOUND_TEMPLATE_CARD__";
-            DestroyImmediate(templateCard.transform.GetChild(0).gameObject);
-            templateCard.GetComponent<CharacterStatModifiers>().health = 1f; // remove huge's stats
-            DontDestroyOnLoad(templateCard.gameObject);
 
             CardManager.defaultCards = CardChoice.instance.cards;
 
