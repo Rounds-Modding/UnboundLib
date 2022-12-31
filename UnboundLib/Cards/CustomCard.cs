@@ -22,10 +22,10 @@ namespace UnboundLib.Cards
 
         private void Awake()
         {
-            cardInfo = GetComponent<CardInfo>();
-            gun = GetComponent<Gun>();
-            cardStats = GetComponent<ApplyCardStats>();
-            statModifiers = GetComponent<CharacterStatModifiers>();
+            cardInfo = gameObject.GetOrAddComponent<CardInfo>();
+            gun = gameObject.GetOrAddComponent<Gun>();
+            cardStats = gameObject.GetOrAddComponent<ApplyCardStats>();
+            statModifiers = gameObject.GetOrAddComponent<CharacterStatModifiers>();
             block = gameObject.GetOrAddComponent<Block>();
             SetupCard(cardInfo, gun, cardStats, statModifiers, block);
         }
