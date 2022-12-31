@@ -35,7 +35,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <RoundsFolder>C:\Program Files (x86)\Steam\steamapps\common\ROUNDS</RoundsFolder>
+    <RoundsFolder>E:\Program Files (x86)\Steam\steamapps\common\ROUNDS</RoundsFolder>
     <IndirectBuildTask>true</IndirectBuildTask>
     <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
     <LangVersion>7.1</LangVersion>
@@ -64,6 +64,7 @@
     <Reference Include="BepInEx">
       <HintPath>..\Assemblies\BepInEx.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="MMHOOK_Assembly-CSharp">
       <HintPath>..\Assemblies\MMHOOK_Assembly-CSharp.dll</HintPath>
     </Reference>
