@@ -22,10 +22,10 @@ namespace UnboundLib.Cards
 
         private void Awake()
         {
-            cardInfo = GetComponent<CardInfo>();
-            gun = GetComponent<Gun>();
-            cardStats = GetComponent<ApplyCardStats>();
-            statModifiers = GetComponent<CharacterStatModifiers>();
+            cardInfo = gameObject.GetOrAddComponent<CardInfo>();
+            gun = gameObject.GetOrAddComponent<Gun>();
+            cardStats = gameObject.GetOrAddComponent<ApplyCardStats>();
+            statModifiers = gameObject.GetOrAddComponent<CharacterStatModifiers>();
             block = gameObject.GetOrAddComponent<Block>();
             SetupCard(cardInfo, gun, cardStats, statModifiers, block);
         }
@@ -43,17 +43,17 @@ namespace UnboundLib.Cards
             {
                 GameObject bottomLeftCorner = edgeTransform.gameObject;
                 modNameObj.gameObject.transform.SetParent(bottomLeftCorner.transform);
+
+                TextMeshProUGUI modText = modNameObj.gameObject.AddComponent<TextMeshProUGUI>();
+                modText.text = GetModName().Sanitize();
+                modNameObj.transform.localEulerAngles = new Vector3(0f, 0f, 135f);
+
+                modNameObj.transform.localScale = Vector3.one;
+                modNameObj.AddComponent<SetLocalPos>();
+                modText.alignment = TextAlignmentOptions.Bottom;
+                modText.alpha = 0.1f;
+                modText.fontSize = 54;
             }
-
-            TextMeshProUGUI modText = modNameObj.gameObject.AddComponent<TextMeshProUGUI>();
-            modText.text = GetModName().Sanitize();
-            modNameObj.transform.localEulerAngles = new Vector3(0f, 0f, 135f);
-
-            modNameObj.transform.localScale = Vector3.one;
-            modNameObj.AddComponent<SetLocalPos>();
-            modText.alignment = TextAlignmentOptions.Bottom;
-            modText.alpha = 0.1f;
-            modText.fontSize = 54;
 
             Callback();
         }
