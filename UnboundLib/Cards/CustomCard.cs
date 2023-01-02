@@ -172,6 +172,7 @@ namespace UnboundLib.Cards
         public static void BuildUnityCard<T>(GameObject cardPrefab, Action<CardInfo> callback) where T : CustomCard
         {
             CardInfo cardInfo = cardPrefab.GetOrAddComponent<CardInfo>();
+            PhotonView view = cardPrefab.GetOrAddComponent<PhotonView>();
             CustomCard customCard = cardPrefab.GetOrAddComponent<T>();
 
             cardInfo.cardBase = customCard.GetCardBase();
@@ -202,6 +203,7 @@ namespace UnboundLib.Cards
         public void BuildUnityCard(Action<CardInfo> callback)
         {
             CardInfo cardInfo = this.gameObject.GetOrAddComponent<CardInfo>();
+            PhotonView view = this.gameObject.GetOrAddComponent<PhotonView>();
             CustomCard customCard = this;
             GameObject cardPrefab = this.gameObject;
 
