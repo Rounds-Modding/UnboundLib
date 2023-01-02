@@ -24,9 +24,21 @@ namespace UnboundLib.Cards
         {
             cardInfo = gameObject.GetOrAddComponent<CardInfo>();
             gun = gameObject.GetOrAddComponent<Gun>();
+            if (gun.objectsToSpawn == null)
+            {
+                gun.objectsToSpawn = new ObjectsToSpawn[0];
+            }
+            if (gun.projectiles == null)
+            {
+                gun.projectiles = new ProjectilesToSpawn[0];
+            }
             cardStats = gameObject.GetOrAddComponent<ApplyCardStats>();
             statModifiers = gameObject.GetOrAddComponent<CharacterStatModifiers>();
             block = gameObject.GetOrAddComponent<Block>();
+            if (block.objectsToSpawn == null)
+            {
+                block.objectsToSpawn = new List<GameObject>();
+            }
             SetupCard(cardInfo, gun, cardStats, statModifiers, block);
         }
 
