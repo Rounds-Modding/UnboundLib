@@ -247,6 +247,7 @@ namespace UnboundLib
 
             // fetch card to use as a template for all custom cards
             templateCard = Resources.Load<GameObject>("0 Cards/0. PlainCard").GetComponent<CardInfo>();
+            templateCard.allowMultiple = true;
         }
 
         private void Start()
