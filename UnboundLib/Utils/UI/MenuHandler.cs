@@ -49,6 +49,12 @@ namespace UnboundLib.Utils.UI
         // Creates a menu and returns its gameObject
         public static GameObject CreateMenu(string Name, UnityAction buttonAction, GameObject parentForButton, int size = 50, bool forceUpper = true, bool setBarHeight = true, GameObject parentForMenu = null,  bool setFontSize = true, int siblingIndex = -1)
         {
+            return CreateMenu(Name, buttonAction, parentForButton, out GameObject menuButton, size, forceUpper, setBarHeight, parentForMenu, setFontSize, siblingIndex);
+        }
+
+        // Creates a menu and returns its gameObject along with outputting the menubutton it created.
+        public static GameObject CreateMenu(string Name, UnityAction buttonAction, GameObject parentForButton, out GameObject menuButton, int size = 50, bool forceUpper = true, bool setBarHeight = true, GameObject parentForMenu = null, bool setFontSize = true, int siblingIndex = -1)
+        {
             var obj = parentForMenu is null ? Object.Instantiate(menuBase, MainMenuHandler.instance.transform.Find("Canvas/ListSelector")) : Object.Instantiate(menuBase, parentForMenu.transform);
             obj.name = Name;
             
@@ -62,7 +68,8 @@ namespace UnboundLib.Utils.UI
             Transform buttonParent = null;
             if (parentForButton.transform.Find("Group/Grid/Scroll View/Viewport/Content")) buttonParent = parentForButton.transform.Find("Group/Grid/Scroll View/Viewport/Content");
             else if (parentForButton.transform.Find("Group")) buttonParent = parentForButton.transform.Find("Group");
-            
+            else buttonParent = parentForButton.transform;
+
             // Create button to menu
             var button = Object.Instantiate(buttonBase, buttonParent);
             button.GetComponent<ListMenuButton>().setBarHeight = setBarHeight ? size : 0;
@@ -92,6 +99,8 @@ namespace UnboundLib.Utils.UI
                 };
             }
             button.GetComponent<Button>().onClick.AddListener(buttonAction);
+
+            menuButton = button;
 
             return obj;
         }
