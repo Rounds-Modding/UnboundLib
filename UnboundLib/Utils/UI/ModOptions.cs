@@ -131,7 +131,12 @@ namespace UnboundLib.Utils.UI
                 mmenu.transform.Find("Group/Back").gameObject.GetComponent<Button>().onClick
                     .AddListener(disableOldMenu);
 
-                menu.guiAction.Invoke(mmenu);
+                try { menu.guiAction.Invoke(mmenu); }
+                catch (Exception e) 
+                {
+                    UnityEngine.Debug.LogError($"Exception thrown when attempting to build menu '{menu.menuName}', see log below for details.");
+                    UnityEngine.Debug.LogException(e);
+                }
             }
 
             // Create menu's for mods that do not use the new UI
