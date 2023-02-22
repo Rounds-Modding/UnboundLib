@@ -74,9 +74,11 @@ namespace UnboundLib
 
         public static readonly Dictionary<string, bool> lockInputBools = new Dictionary<string, bool>();
 
-        internal static AssetBundle UIAssets;
         public static AssetBundle toggleUI;
+        internal static AssetBundle UIAssets;
         internal static AssetBundle linkAssets;
+        internal static AssetBundle mapInfoAssets;
+
         private static GameObject modalPrefab;
 
         private TextMeshProUGUI text;
@@ -371,6 +373,7 @@ namespace UnboundLib
                 modalPrefab = UIAssets.LoadAsset<GameObject>("Modal");
                 //Instantiate(UIAssets.LoadAsset<GameObject>("Card Toggle Menu"), canvas.transform).AddComponent<CardToggleMenuHandler>();
             }
+            mapInfoAssets = AssetUtils.LoadAssetBundleFromResources("mapinfo", typeof(Unbound).Assembly);
         }
 
         private static void OnJoinedRoomAction()
