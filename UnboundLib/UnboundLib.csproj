@@ -46,6 +46,7 @@
     <None Remove="UnboundLib.csproj.user.dist" />
     <None Remove="PostBuild.msbuild" />
     <None Remove="unboundlinks" />
+    <EmbeddedResource Include="..\AssetsEmbedded\mapinfo" Link="Assets\mapinfo" />
     <None Include="..\README.md" />
     <None Include="..\.gitignore" />
   </ItemGroup>
