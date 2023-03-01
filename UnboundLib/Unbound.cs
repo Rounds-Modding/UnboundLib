@@ -25,7 +25,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "3.2.7";
+        public const string Version = "3.2.8";
 
         public static Unbound Instance { get; private set; }
         public static readonly ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
@@ -163,20 +163,6 @@ namespace UnboundLib
             // hook for closing ongoing lobbies
             GameModeManager.AddHook(GameModeHooks.HookGameStart, CloseLobby);
 
-            // Load toggleUI asset bundle
-            toggleUI = AssetUtils.LoadAssetBundleFromResources("togglemenuui", typeof(ToggleLevelMenuHandler).Assembly);
-
-            // Load toggleUI asset bundle
-            linkAssets = AssetUtils.LoadAssetBundleFromResources("unboundlinks", typeof(Unbound).Assembly);
-
-            // Add managers
-            gameObject.AddComponent<LevelManager>();
-            gameObject.AddComponent<CardManager>();
-
-            // Add menu handlers
-            gameObject.AddComponent<ToggleLevelMenuHandler>();
-            gameObject.AddComponent<ToggleCardsMenuHandler>();
-
             On.CardChoice.Start += (orig, self) =>
             {
                 for (int i = 0; i < self.cards.Length; i++)
@@ -241,6 +227,14 @@ namespace UnboundLib
             // Patch game with Harmony
             var harmony = new Harmony(ModId);
             harmony.PatchAll();
+
+            // Add managers
+            gameObject.AddComponent<LevelManager>();
+            gameObject.AddComponent<CardManager>();
+
+            // Add menu handlers
+            gameObject.AddComponent<ToggleLevelMenuHandler>();
+            gameObject.AddComponent<ToggleCardsMenuHandler>();
 
             LoadAssets();
             GameModeManager.Init();
@@ -365,7 +359,10 @@ namespace UnboundLib
 
         private static void LoadAssets()
         {
+            toggleUI = AssetUtils.LoadAssetBundleFromResources("togglemenuui", typeof(ToggleLevelMenuHandler).Assembly);
+            linkAssets = AssetUtils.LoadAssetBundleFromResources("unboundlinks", typeof(Unbound).Assembly);
             UIAssets = AssetUtils.LoadAssetBundleFromResources("unboundui", typeof(Unbound).Assembly);
+
             if (UIAssets != null)
             {
                 modalPrefab = UIAssets.LoadAsset<GameObject>("Modal");
