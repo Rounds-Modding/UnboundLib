@@ -248,7 +248,7 @@ namespace UnboundLib.Utils.UI
 
                     lvlObjs.Add(mapObject);
                     UpdateVisualsLevelObj(mapObject);
-                    if (!Unbound.config.Bind("Levels: " + level.Value.category, LevelManager.GetVisualName(level.Key), true).Value)
+                    if (!Unbound.BindConfig("Levels: " + level.Value.category, LevelManager.GetVisualName(level.Key), true).Value)
                     {
                         LevelManager.DisableLevel(level.Key);
                         UpdateVisualsLevelObj(mapObject);
@@ -275,7 +275,7 @@ namespace UnboundLib.Utils.UI
 
                         ScrollViews[category].GetComponent<ScrollRect>().normalizedPosition = new Vector2(0, 1);
                         ScrollViews[category].gameObject.SetActive(true);
-                        
+
                         viewingText.text = "Viewing: " + category;
                     });
                     var toggle = categoryObj.GetComponentInChildren<Toggle>();
@@ -440,7 +440,7 @@ namespace UnboundLib.Utils.UI
                     }
             }
             cellSize *= localScale;
-            
+
             mapAmountText.text = "Maps Per Line: " + amount;
             foreach (GridLayoutGroup gridLayout in from category in LevelManager.categories select ScrollViews[category].Find("Viewport/Content") into categoryMenu where categoryMenu != null select categoryMenu.gameObject.GetComponent<GridLayoutGroup>())
             {

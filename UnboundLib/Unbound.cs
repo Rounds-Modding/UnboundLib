@@ -25,10 +25,10 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "3.2.8";
+        public const string Version = "3.2.9";
 
         public static Unbound Instance { get; private set; }
-        public static readonly ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
+        private static readonly ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
 
         private Canvas _canvas;
         public Canvas canvas
@@ -480,6 +480,24 @@ namespace UnboundLib
         {
             return (GameManager.instance && !GameManager.instance.battleOngoing) &&
                    (PhotonNetwork.OfflineMode || !PhotonNetwork.IsConnected);
+        }
+
+        internal static ConfigEntry<T> BindConfig<T>(string section, string key, T defaultValue, ConfigDescription configDescription = null)
+        {
+            return config.Bind(EscapeConfigKey(section), EscapeConfigKey(key), defaultValue, configDescription);
+        }
+
+        private static string EscapeConfigKey(string key)
+        {
+            return key
+                .Replace("=", "&eq;")
+                .Replace("\n", "&nl;")
+                .Replace("\t", "&tab;")
+                .Replace("\\", "&esc;")
+                .Replace("\"", "&dquot;")
+                .Replace("'", "&squot;")
+                .Replace("[", "&lsq;")
+                .Replace("]", "&rsq;");
         }
 
         internal static readonly ModCredits modCredits = new ModCredits("UNBOUND", new[]

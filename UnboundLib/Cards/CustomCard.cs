@@ -158,7 +158,7 @@ namespace UnboundLib.Cards
                     CardManager.activeCards.CollectionChanged += CardManager.CardsChanged;
                     // Register card with the toggle menu
                     CardManager.cards.Add(newCard.gameObject.name,
-                        new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), newCard.gameObject.name, true), newCardInfo));
+                        new Card(customCard.GetModName().Sanitize(), Unbound.BindConfig("Cards: " + customCard.GetModName().Sanitize(), newCard.gameObject.name, true), newCardInfo));
                 }
 
                 // Post-creation clean up
@@ -188,7 +188,7 @@ namespace UnboundLib.Cards
 
             if (customCard.GetEnabled())
             {
-                CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.BindConfig("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
             }
 
             customCard.Awake();
@@ -219,7 +219,7 @@ namespace UnboundLib.Cards
 
             if (customCard.GetEnabled())
             {
-                CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.BindConfig("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
             }
 
             this.Awake();
@@ -241,7 +241,7 @@ namespace UnboundLib.Cards
 
             if (customCard.GetEnabled())
             {
-                CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(customCard.GetModName().Sanitize(), Unbound.BindConfig("Cards: " + customCard.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
             }
 
             Unbound.Instance.ExecuteAfterFrames(5, () =>
@@ -260,7 +260,7 @@ namespace UnboundLib.Cards
 
             if (enabled)
             {
-                CardManager.cards.Add(cardInfo.gameObject.name, new Card(modInitials.Sanitize(), Unbound.config.Bind("Cards: " + cardname.Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(modInitials.Sanitize(), Unbound.BindConfig("Cards: " + cardname.Sanitize(), cardInfo.gameObject.name, true), cardInfo));
             }
 
             Unbound.Instance.ExecuteAfterFrames(5, () =>
@@ -279,7 +279,7 @@ namespace UnboundLib.Cards
 
             if (this.GetEnabled())
             {
-                CardManager.cards.Add(cardInfo.gameObject.name, new Card(this.GetModName().Sanitize(), Unbound.config.Bind("Cards: " + this.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
+                CardManager.cards.Add(cardInfo.gameObject.name, new Card(this.GetModName().Sanitize(), Unbound.BindConfig("Cards: " + this.GetModName().Sanitize(), cardInfo.gameObject.name, true), cardInfo));
             }
 
             Unbound.Instance.ExecuteAfterFrames(5, () =>

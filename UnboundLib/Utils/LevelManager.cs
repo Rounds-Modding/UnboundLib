@@ -83,14 +83,14 @@ namespace UnboundLib.Utils
             // Populate the categoryBools dictionary
             foreach (var category in categories)
             {
-                categoryBools[category] = Unbound.config.Bind("Level categories", category, true);
+                categoryBools[category] = Unbound.BindConfig("Level categories", category, true);
             }
 
             // Disable all default levels that are disabled in config
             foreach (var level in allLevels)
             {
                 levelPaths[GetVisualName(level)] = level;
-                if (!Unbound.config.Bind("Levels: " + levels[level].category, GetVisualName(level), true).Value)
+                if (!Unbound.BindConfig("Levels: " + levels[level].category, GetVisualName(level), true).Value)
                 {
                     DisableLevel(level);
                 }
@@ -145,7 +145,7 @@ namespace UnboundLib.Utils
 
             if (!saved) return;
             levels[levelName].enabled = true;
-            Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = true;
+            Unbound.BindConfig("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = true;
         }
 
         public static void DisableLevels(string[] levelNames, bool saved = true)
@@ -171,7 +171,7 @@ namespace UnboundLib.Utils
 
             if (!saved) return;
             levels[levelName].enabled = false;
-            Unbound.config.Bind("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = false;
+            Unbound.BindConfig("Levels: " + levels[levelName].category, GetVisualName(levelName), true).Value = false;
         }
 
 
@@ -253,7 +253,7 @@ namespace UnboundLib.Utils
         {
             RegisterNamedMaps(paths, new Dictionary<string, string>(), category);
         }
-        public static void RegisterNamedMaps(IEnumerable<string> paths, IDictionary<string, string> mapNames , string category = "Modded")
+        public static void RegisterNamedMaps(IEnumerable<string> paths, IDictionary<string, string> mapNames, string category = "Modded")
         {
             foreach (var path in paths.Distinct())
             {
@@ -286,9 +286,9 @@ namespace UnboundLib.Utils
             if (!categories.Contains(category))
             {
                 categories.Add(category);
-                categoryBools[category] = Unbound.config.Bind("Level categories", category, true);
+                categoryBools[category] = Unbound.BindConfig("Level categories", category, true);
             }
-            if (!Unbound.config.Bind("Levels: " + levels[path].category, GetVisualName(path), true).Value)
+            if (!Unbound.BindConfig("Levels: " + levels[path].category, GetVisualName(path), true).Value)
             {
                 DisableLevel(path);
             }

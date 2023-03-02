@@ -23,8 +23,6 @@ namespace UnboundLib.GameModes
         private static Dictionary<string, List<GameModeHooks.Hook>> hooks = new Dictionary<string, List<GameModeHooks.Hook>>();
         private static Dictionary<string, List<GameModeHooks.Hook>> onceHooks = new Dictionary<string, List<GameModeHooks.Hook>>();
 
-        private static bool firstTime = true;
-
         // public properties that return deep copies of the handlers and gameModes dictionarys (the values in the dictionaries returned are shallow copies)
         public static ReadOnlyDictionary<string, IGameModeHandler> Handlers => new ReadOnlyDictionary<string, IGameModeHandler>(handlers.ToDictionary(kv => kv.Key, kv => kv.Value));
         public static ReadOnlyDictionary<string, Type> GameModes => new ReadOnlyDictionary<string, Type>(gameModes.ToDictionary(kv => kv.Key, kv => kv.Value));
@@ -117,10 +115,6 @@ namespace UnboundLib.GameModes
                     group.Find("CREDITS")?.SetAsLastSibling();
                     group.Find("Quit")?.SetAsLastSibling();
                 });
-
-                firstTime = false;
-
-
             }
             var gameModeGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/LOCAL");
             var onlineGo = GameObject.Find("/Game/UI/UI_MainMenu/Canvas/ListSelector/Online/Group");
