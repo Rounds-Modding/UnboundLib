@@ -25,10 +25,10 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "3.2.9";
+        public const string Version = "3.2.10";
 
         public static Unbound Instance { get; private set; }
-        private static readonly ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
+        public static readonly ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
 
         private Canvas _canvas;
         public Canvas canvas
