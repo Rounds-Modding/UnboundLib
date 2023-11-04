@@ -158,6 +158,21 @@ namespace UnboundLib
                 self.StartCoroutine(ArmsRaceStartCoroutine(orig, self));
             };
 
+            IEnumerator SandboxStartCoroutine(On.GM_Test.orig_Start orig, GM_Test self)
+            {
+                yield return GameModeManager.TriggerHook(GameModeHooks.HookInitStart);
+                yield return GameModeManager.TriggerHook(GameModeHooks.HookInitEnd);
+                yield return GameModeManager.TriggerHook(GameModeHooks.HookGameStart);
+                orig(self);
+                yield return GameModeManager.TriggerHook(GameModeHooks.HookRoundStart);
+                yield return GameModeManager.TriggerHook(GameModeHooks.HookBattleStart);
+            }
+
+            On.GM_Test.Start += (orig, self) =>
+            {
+                self.StartCoroutine(SandboxStartCoroutine(orig, self));
+            };
+
             GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.DisableSyncModUi(SyncModClients.uiParent));
 
             // hook for closing ongoing lobbies
