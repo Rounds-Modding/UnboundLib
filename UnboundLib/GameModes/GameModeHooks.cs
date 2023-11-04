@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections;
+using System.Diagnostics;
+using System.Reflection;
 namespace UnboundLib.GameModes
 {
     // When possible, use these keys when adding game hooks to a game mode
@@ -17,6 +19,7 @@ namespace UnboundLib.GameModes
             public const int VeryHigh = 700;
             public const int First = 800;
         }
+
         public class Hook
         {
             public Func<IGameModeHandler, IEnumerator> Action;
@@ -25,6 +28,20 @@ namespace UnboundLib.GameModes
             {
                 this.Action = hook;
                 this.Priority = priority;
+            }
+        }
+
+        internal class HookRegistration
+        {
+            public Hook Hook { get; private set; }
+            public string Identifier { get; private set; }
+            public string CallStack { get; private set; }
+
+            public HookRegistration(Hook hook, Assembly callingAssembly, StackTrace trace)
+            {
+                this.Hook = hook;
+                this.Identifier = callingAssembly.GetName().Name;
+                this.CallStack = trace.ToString();
             }
         }
 

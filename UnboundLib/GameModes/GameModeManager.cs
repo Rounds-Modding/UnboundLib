@@ -9,6 +9,8 @@ using System.Linq;
 using System.Collections.ObjectModel;
 using TMPro;
 using Object = UnityEngine.Object;
+using System.Reflection;
+using System.Diagnostics;
 
 namespace UnboundLib.GameModes
 {
@@ -20,8 +22,8 @@ namespace UnboundLib.GameModes
 
         private static Dictionary<string, IGameModeHandler> handlers = new Dictionary<string, IGameModeHandler>();
         private static Dictionary<string, Type> gameModes = new Dictionary<string, Type>();
-        private static Dictionary<string, List<GameModeHooks.Hook>> hooks = new Dictionary<string, List<GameModeHooks.Hook>>();
-        private static Dictionary<string, List<GameModeHooks.Hook>> onceHooks = new Dictionary<string, List<GameModeHooks.Hook>>();
+        private static Dictionary<string, List<GameModeHooks.HookRegistration>> hooks = new Dictionary<string, List<GameModeHooks.HookRegistration>>();
+        private static Dictionary<string, List<GameModeHooks.HookRegistration>> onceHooks = new Dictionary<string, List<GameModeHooks.HookRegistration>>();
 
         // public properties that return deep copies of the handlers and gameModes dictionarys (the values in the dictionaries returned are shallow copies)
         public static ReadOnlyDictionary<string, IGameModeHandler> Handlers => new ReadOnlyDictionary<string, IGameModeHandler>(handlers.ToDictionary(kv => kv.Key, kv => kv.Value));
@@ -190,43 +192,45 @@ namespace UnboundLib.GameModes
         {
             key = key.ToLower();
 
-            GameModeManager.hooks.TryGetValue(key, out List<GameModeHooks.Hook> hooks);
-            GameModeManager.onceHooks.TryGetValue(key, out List<GameModeHooks.Hook> onceHooks);
+            GameModeManager.hooks.TryGetValue(key, out List<GameModeHooks.HookRegistration> hooks);
+            GameModeManager.onceHooks.TryGetValue(key, out List<GameModeHooks.HookRegistration> onceHooks);
 
             if (hooks != null && CurrentHandler != null)
             {
-                foreach (var hook in hooks.OrderByDescending(h => h.Priority))
+                foreach (var hook in hooks.OrderByDescending(h => h.Hook.Priority))
                 {
-                    yield return ErrorTolerantHook(key, hook.Action(CurrentHandler));
+                    yield return ErrorTolerantHook(key, hook);
                 }
             }
 
             if (onceHooks == null || CurrentHandler == null) yield break;
             foreach (var hook in onceHooks)
             {
-                RemoveHook(key, hook);
+                RemoveHook(key, hook.Hook);
             }
 
             GameModeManager.onceHooks.Remove(key);
         }
 
-        private static IEnumerator ErrorTolerantHook(string key, IEnumerator hook)
+        private static IEnumerator ErrorTolerantHook(string key, GameModeHooks.HookRegistration hookReg)
         {
+            var current = hookReg.Hook.Action(CurrentHandler);
             while (true)
             {
-                object ret = null;
+                object ret;
                 try
                 {
-                    if (!hook.MoveNext())
+                    if (!current.MoveNext())
                     {
                         break;
                     }
-                    ret = hook.Current;
+                    ret = current.Current;
                 }
                 catch (Exception ex)
                 {
-                    UnityEngine.Debug.LogError($"[{key.ToUpper()} HOOK] threw the following exception:");
+                    UnityEngine.Debug.LogError($"[{key.ToUpper()} HOOK] [{hookReg.Identifier}] threw the following exception:");
                     UnityEngine.Debug.LogException(ex);
+                    UnityEngine.Debug.LogError($"Stack trace from when the above hook was added:\n{hookReg.CallStack}");
                     break;
                 }
                 yield return ret;
@@ -238,25 +242,32 @@ namespace UnboundLib.GameModes
         /// </summary>
         public static void AddOnceHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
-            AddOnceHook(key, action, GameModeHooks.Priority.Normal);
+            var hook = new GameModeHooks.Hook(action, GameModeHooks.Priority.Normal);
+            var reg = new GameModeHooks.HookRegistration(hook, Assembly.GetCallingAssembly(), new StackTrace());
+            AddOnceHook(key, reg);
         }
         /// <summary>
         ///     Adds a hook that is automatically removed after it's triggered once.
         /// </summary>
         public static void AddOnceHook(string key, Func<IGameModeHandler, IEnumerator> action, int priority)
         {
-            if (action == null)
-            {
-                return;
-            }
-            AddOnceHook(key, new GameModeHooks.Hook(action, priority));
+            var hook = new GameModeHooks.Hook(action, priority);
+            var reg = new GameModeHooks.HookRegistration(hook, Assembly.GetCallingAssembly(), new StackTrace());
+            AddOnceHook(key, reg);
         }
+
         /// <summary>
         ///     Adds a hook that is automatically removed after it's triggered once.
         /// </summary>
         public static void AddOnceHook(string key, GameModeHooks.Hook hook)
         {
-            if (hook == null)
+            var reg = new GameModeHooks.HookRegistration(hook, Assembly.GetCallingAssembly(), new StackTrace());
+            AddOnceHook(key, reg);
+        }
+
+        private static void AddOnceHook(string key, GameModeHooks.HookRegistration hookReg)
+        {
+            if (hookReg?.Hook == null)
             {
                 return;
             }
@@ -266,33 +277,39 @@ namespace UnboundLib.GameModes
 
             if (!onceHooks.ContainsKey(key))
             {
-                onceHooks.Add(key, new List<GameModeHooks.Hook> { hook });
+                onceHooks.Add(key, new List<GameModeHooks.HookRegistration> { hookReg });
             }
             else
             {
-                onceHooks[key].Add(hook);
+                onceHooks[key].Add(hookReg);
             }
 
-            AddHook(key, hook);
+            AddHook(key, hookReg);
         }
 
         public static void AddHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
-            AddHook(key, action, GameModeHooks.Priority.Normal);
+            var hook = new GameModeHooks.Hook(action, GameModeHooks.Priority.Normal);
+            var reg = new GameModeHooks.HookRegistration(hook, Assembly.GetCallingAssembly(), new StackTrace());
+            AddHook(key, reg);
         }
+
         public static void AddHook(string key, Func<IGameModeHandler, IEnumerator> action, int priority)
         {
-            if (action == null)
-            {
-                return;
-            }
-
-            AddHook(key, new GameModeHooks.Hook(action, priority));
-
+            var hook = new GameModeHooks.Hook(action, priority);
+            var reg = new GameModeHooks.HookRegistration(hook, Assembly.GetCallingAssembly(), new StackTrace());
+            AddHook(key, reg);
         }
+
         public static void AddHook(string key, GameModeHooks.Hook hook)
         {
-            if (hook == null)
+            var reg = new GameModeHooks.HookRegistration(hook, Assembly.GetCallingAssembly(), new StackTrace());
+            AddHook(key, reg);
+        }
+
+        private static void AddHook(string key, GameModeHooks.HookRegistration hookReg)
+        {
+            if (hookReg?.Hook == null)
             {
                 return;
             }
@@ -300,21 +317,27 @@ namespace UnboundLib.GameModes
             key = key.ToLower();
             if (!hooks.ContainsKey(key))
             {
-                hooks.Add(key, new List<GameModeHooks.Hook> { hook });
+                hooks.Add(key, new List<GameModeHooks.HookRegistration> { hookReg });
             }
             else
             {
-                hooks[key].Add(hook);
+                hooks[key].Add(hookReg);
             }
-        }
-        public static void RemoveHook(string key, GameModeHooks.Hook hook)
-        {
-            hooks[key.ToLower()].Remove(hook);
         }
 
         public static void RemoveHook(string key, Func<IGameModeHandler, IEnumerator> action)
         {
-            hooks[key.ToLower()].Remove(hooks[key.ToLower()].Where(h => h.Action == action).FirstOrDefault());
+            RemoveHook(key, hooks[key.ToLower()].Where(h => h.Hook.Action == action).FirstOrDefault());
+        }
+
+        public static void RemoveHook(string key, GameModeHooks.Hook hook)
+        {
+            RemoveHook(key, hooks[key.ToLower()].FirstOrDefault(h => h.Hook == hook));
+        }
+
+        private static void RemoveHook(string key, GameModeHooks.HookRegistration hookReg)
+        {
+            hooks[key.ToLower()].Remove(hookReg);
         }
 
         public static T GetGameMode<T>(string gameModeId) where T : Component
