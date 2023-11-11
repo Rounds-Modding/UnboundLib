@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using UnboundLib.GameModes;
 using System.Linq;
 using System.Collections.Generic;
 
@@ -9,19 +8,6 @@ namespace UnboundLib.Patches
     [HarmonyPatch(typeof(GM_Test), "Start")]
     class GM_Test_Patch_Start
     {
-        static void Prefix()
-        {
-            GameModeManager.TriggerHook(GameModeHooks.HookInitStart);
-            GameModeManager.TriggerHook(GameModeHooks.HookInitEnd);
-            GameModeManager.TriggerHook(GameModeHooks.HookGameStart);
-        }
-
-        static void Postfix()
-        {
-            GameModeManager.TriggerHook(GameModeHooks.HookRoundStart);
-            GameModeManager.TriggerHook(GameModeHooks.HookBattleStart);
-        }
-
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             // Remove the default player joined and died -hooks. We'll add them back through the GameMode abstraction layer.

@@ -25,7 +25,7 @@ namespace UnboundLib
     {
         private const string ModId = "com.willis.rounds.unbound";
         private const string ModName = "Rounds Unbound";
-        public const string Version = "3.2.10";
+        public const string Version = "3.2.11";
 
         public static Unbound Instance { get; private set; }
         public static readonly ConfigFile config = new ConfigFile(Path.Combine(Paths.ConfigPath, "UnboundLib.cfg"), true);
@@ -156,6 +156,21 @@ namespace UnboundLib
             On.GM_ArmsRace.Start += (orig, self) =>
             {
                 self.StartCoroutine(ArmsRaceStartCoroutine(orig, self));
+            };
+
+            IEnumerator SandboxStartCoroutine(On.GM_Test.orig_Start orig, GM_Test self)
+            {
+                yield return GameModeManager.TriggerHook(GameModeHooks.HookInitStart);
+                yield return GameModeManager.TriggerHook(GameModeHooks.HookInitEnd);
+                yield return GameModeManager.TriggerHook(GameModeHooks.HookGameStart);
+                orig(self);
+                yield return GameModeManager.TriggerHook(GameModeHooks.HookRoundStart);
+                yield return GameModeManager.TriggerHook(GameModeHooks.HookBattleStart);
+            }
+
+            On.GM_Test.Start += (orig, self) =>
+            {
+                self.StartCoroutine(SandboxStartCoroutine(orig, self));
             };
 
             GameModeManager.AddHook(GameModeHooks.HookGameStart, handler => SyncModClients.DisableSyncModUi(SyncModClients.uiParent));
