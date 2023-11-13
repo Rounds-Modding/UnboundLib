@@ -80,16 +80,43 @@ namespace UnboundLib.Patches
             return newInstructions;
         }
     }
+
     [HarmonyPatch(typeof(GM_ArmsRace), "StartGame")]
     class GM_ArmsRace_Patch_StartGame
     {
-        // Postfix to reset previousRound/PointWinners
         static void Postfix(GM_ArmsRace __instance)
         {
             __instance.GetAdditionalData().previousPointWinners = new int[] { };
             __instance.GetAdditionalData().previousRoundWinners = new int[] { };
         }
+
+        static IEnumerator DoStartGame(GM_ArmsRace __instance)
+        {
+            return (IEnumerator) __instance.InvokeMethod("DoStartGame");
+        }
+
+        /* Patch to reset previousRound/PointWinners when starting a new game. The compiler does something
+         * weird with GM_ArmsRace.DoStartGame in some builds and isn't called without this transpiler.
+         */
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var m_doStartOrig = AccessTools.Method(typeof(GM_ArmsRace), "DoStartGame");
+            var m_doStart = AccessTools.Method(typeof(GM_ArmsRace_Patch_StartGame), nameof(DoStartGame));
+
+            foreach (var ins in instructions)
+            {
+                if (ins.Calls(m_doStartOrig))
+                {
+                    yield return new CodeInstruction(OpCodes.Call, m_doStart);
+                }
+                else
+                {
+                    yield return ins;
+                }
+            }
+        }
     }
+
     [HarmonyPatch(typeof(GM_ArmsRace), "DoStartGame")]
     class GM_ArmsRace_Patch_DoStartGame
     {
