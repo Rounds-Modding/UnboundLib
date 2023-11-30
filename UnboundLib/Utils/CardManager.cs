@@ -212,7 +212,7 @@ namespace UnboundLib.Utils
         }
         public static string[] GetCardsInCategory(string category)
         {
-            return (from card in cards where card.Value.category.Contains(category) select card.Key).ToArray();
+            return (from card in cards where card.Value.category == category select card.Key).ToArray();
         }
 
         #region Syncing
