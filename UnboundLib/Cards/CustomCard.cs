@@ -24,9 +24,21 @@ namespace UnboundLib.Cards
         {
             cardInfo = gameObject.GetOrAddComponent<CardInfo>();
             gun = gameObject.GetOrAddComponent<Gun>();
+            if (gun.objectsToSpawn == null)
+            {
+                gun.objectsToSpawn = new ObjectsToSpawn[0];
+            }
+            if (gun.projectiles == null)
+            {
+                gun.projectiles = new ProjectilesToSpawn[0];
+            }
             cardStats = gameObject.GetOrAddComponent<ApplyCardStats>();
             statModifiers = gameObject.GetOrAddComponent<CharacterStatModifiers>();
             block = gameObject.GetOrAddComponent<Block>();
+            if (block.objectsToSpawn == null)
+            {
+                block.objectsToSpawn = new List<GameObject>();
+            }
             SetupCard(cardInfo, gun, cardStats, statModifiers, block);
         }
 
@@ -171,7 +183,8 @@ namespace UnboundLib.Cards
 
         public static void BuildUnityCard<T>(GameObject cardPrefab, Action<CardInfo> callback) where T : CustomCard
         {
-            CardInfo cardInfo = cardPrefab.GetComponent<CardInfo>();
+            CardInfo cardInfo = cardPrefab.GetOrAddComponent<CardInfo>();
+            PhotonView view = cardPrefab.GetOrAddComponent<PhotonView>();
             CustomCard customCard = cardPrefab.GetOrAddComponent<T>();
 
             cardInfo.cardBase = customCard.GetCardBase();
@@ -201,7 +214,8 @@ namespace UnboundLib.Cards
 
         public void BuildUnityCard(Action<CardInfo> callback)
         {
-            CardInfo cardInfo = this.gameObject.GetComponent<CardInfo>();
+            CardInfo cardInfo = this.gameObject.GetOrAddComponent<CardInfo>();
+            PhotonView view = this.gameObject.GetOrAddComponent<PhotonView>();
             CustomCard customCard = this;
             GameObject cardPrefab = this.gameObject;
 
