@@ -249,7 +249,7 @@ namespace UnboundLib
                   "is not currently compatible with mods.\r\n\r\n\r\n" +
                   "To ensure proper compatability, please go to\r\n" +
                   "the game's properties by right-clicking on it in steam.\r\n\r\n\r\n" +
-                  "Select the Betas tab, and set the Beata Participation\r\n" +
+                  "Select the Betas tab, and set the Beta Participation\r\n" +
                   "to old-rounds-for-mods";
                 brokenText.fontSize = 2;
                 brokenText.fontSizeMin = 1;
