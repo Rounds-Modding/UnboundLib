@@ -239,6 +239,32 @@ namespace UnboundLib
                 return;
             }
 
+            //Check if we are on the correct build of ROUNDS (Version 0.1)
+            if (Application.version != "0.1")
+            {
+
+                var brokenText = new GameObject("Broken Text", typeof(TextMeshProUGUI), typeof(Canvas)).GetComponent<TextMeshProUGUI>();
+                brokenText.text =
+                  "The version of ROUNDS you are playing on\r\n" +
+                  "is not currently compatible with mods.\r\n\r\n\r\n" +
+                  "To ensure proper compatability, please go to\r\n" +
+                  "the game's properties by right-clicking on it in steam.\r\n\r\n\r\n" +
+                  "Select the Betas tab, and set the Beta Participation\r\n" +
+                  "to old-rounds-for-mods";
+                brokenText.fontSize = 2;
+                brokenText.fontSizeMin = 1;
+                brokenText.alignment = TextAlignmentOptions.Center;
+
+                //Modals dont work on the new version, so just replace the entire MainMenu with a textbox
+                this.ExecuteAfterFrames(5, () =>
+                {
+                    MainMenuHandler.instance.transform.parent.gameObject.SetActive(false);
+                });
+            }
+
+
+
+
             // Patch game with Harmony
             var harmony = new Harmony(ModId);
             harmony.PatchAll();
